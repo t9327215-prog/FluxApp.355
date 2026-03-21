@@ -1,26 +1,39 @@
 
 import { LoginUsuarioDTO as LoginDto } from '../../../types/Entrada/Dto.Estrutura.Usuario';
 import { Usuario } from '../../../types/Saida/Types.Estrutura.Usuario';
-import authApi from '../APIs/authApi';
 import ClienteBackend from '../Cliente.Backend';
-import { servicoGestaoPerfil } from './Servico.Gestao.Perfil';
 import { servicoGestaoSessao } from './Servico.Gestao.Sessao';
 import { config } from '../ValidaçãoDeAmbiente/config';
+import { servicoMetodoGoogle } from './Servico.Metodo.Google';
+import { servicoMetodoEmailSenha } from './Servico.Metodo.EmailSenha';
+import authApi from '../APIs/authApi';
 
 interface User extends Usuario {}
 
-// --- Real Login/Profile Service ---
-const realLoginService = {
+// --- Central Session Handler ---
+const handleSuccessfulLogin = (authResult: { token: string; user: Usuario | null }) => {
+    const { token, user } = authResult;
+    if (token && user) {
+        localStorage.setItem('userToken', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        ClienteBackend.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        return { token, user };
+    }
+    throw new Error('Resultado de autenticação inválido.');
+};
+
+// --- Login Service Implementation ---
+const loginService = {
     login: async (dadosLogin: LoginDto) => {
-        const { data } = await authApi.login(dadosLogin.email, dadosLogin.password);
-        if (data && data.token && data.user) {
-            localStorage.setItem('userToken', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            ClienteBackend.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
-            return data;
-        }
-        throw new Error('Resposta de login inválida do servidor.');
+        const authResult = await servicoMetodoEmailSenha.autenticar(dadosLogin);
+        return handleSuccessfulLogin(authResult);
     },
+
+    loginComGoogle: async () => {
+        const authResult = await servicoMetodoGoogle.autenticar();
+        return handleSuccessfulLogin(authResult);
+    },
+
     completeProfile: async (profileData: Partial<Usuario>): Promise<User> => {
         const { data } = await authApi.updateProfile(profileData);
         if (data && data.user) {
@@ -31,19 +44,19 @@ const realLoginService = {
     },
 };
 
-// --- Simulated Login/Profile Service ---
-const simulatedLoginService = {
-    login: async (dados: LoginDto) => ({ token: 'abc-simulated', user: await servicoGestaoPerfil.getOwnProfile() as User }),
-    completeProfile: async (profileData: Partial<Usuario>): Promise<User> => {
-        const currentUser = servicoGestaoSessao.getCurrentUser();
-        if (!currentUser) throw new Error("Usuário não encontrado na simulação.");
-        const updatedUser = { ...currentUser, ...profileData, perfilCompleto: true };
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return updatedUser as User;
-    }
+// --- Simulated Profile Completion ---
+const simulatedCompleteProfile = async (profileData: Partial<Usuario>): Promise<User> => {
+    const currentUser = servicoGestaoSessao.getCurrentUser();
+    if (!currentUser) throw new Error("Usuário não encontrado na simulação.");
+    const updatedUser = { ...currentUser, ...profileData, perfilCompleto: true };
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return updatedUser as User;
 };
 
-// --- Exporting the correct service based on environment ---
-export const servicoGestaoLogin = config.VITE_APP_ENV === 'simulation'
-    ? simulatedLoginService
-    : realLoginService;
+// --- Exporting the correct service ---
+export const servicoGestaoLogin = {
+    ...loginService,
+    completeProfile: config.VITE_APP_ENV === 'simulation' 
+        ? simulatedCompleteProfile 
+        : loginService.completeProfile
+};
