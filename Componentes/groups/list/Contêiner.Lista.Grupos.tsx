@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { Group } from '../../../types';
 import { CardMenuConteinerListaGrupo } from './Card.Menu.Conteiner.Lista.Grupo';
 import { useConfiguracaoGrupo } from '../../../hooks/Hook.Configuracao.Grupo';
+import { useUsuarioSessao } from '../../../hooks/Hook.Usuario.Sessao'; // Importa o hook da sessão
 
 interface GroupListItemProps {
     group: Group & { navigateTo?: string; isSalesPlatformEnabled?: boolean };
-    currentUserEmail: string | null;
+    // currentUserEmail: string | null; // <-- Prop removida
     unreadCount: number;
     isMenuActive: boolean;
     onToggleMenu: (e: React.MouseEvent) => void;
@@ -18,7 +19,7 @@ interface GroupListItemProps {
 
 export const ContêinerListaGrupos: React.FC<GroupListItemProps> = ({
     group,
-    currentUserEmail,
+    // currentUserEmail, // <-- Prop removida
     unreadCount,
     isMenuActive,
     onToggleMenu,
@@ -27,10 +28,11 @@ export const ContêinerListaGrupos: React.FC<GroupListItemProps> = ({
 }) => {
     const navigate = useNavigate();
     const { resolverAcaoDoClique } = useConfiguracaoGrupo();
-    const isCreator = group.donoId === currentUserEmail;
+    const { user: currentUser } = useUsuarioSessao(); // Obtém o usuário da sessão
 
-    // Lógica de simulação de chat removida.
-    // A informação da última mensagem deve vir do backend.
+    // Lógica corrigida: Compara o ID do dono com o ID do usuário da sessão
+    const isCreator = currentUser ? group.donoId === currentUser.id : false;
+
     const displayMsg = group.isSalesPlatformEnabled 
         ? 'Acesse o catálogo do grupo' 
         : (group.descricao || 'Toque para abrir a comunidade');

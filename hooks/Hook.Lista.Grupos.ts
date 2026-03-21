@@ -89,7 +89,6 @@ export const HookListaGrupos = () => {
   return {
     groups,
     loading,
-    currentUserEmail: authState.user?.email, // Acesso seguro ao email
     navigateToGroup,
     deleteGroup,
     getUnreadCount,

@@ -3,7 +3,6 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SistemaAutenticacaoSupremo from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
 import { ServiçoPublicacaoReels } from '../ServiçosFrontend/ServiçosDePublicações/ServiçoPublicaçãoReels.js';
-import { contentSafetyService } from '../ServiçosFrontend/ServiçoDeSegurançaDeConteúdo/contentSafetyService.js';
 import { DadosCriacaoReel, ErrosCriacaoReel } from '../tipos';
 
 // A referência a 'Group' e 'groupService' foi completamente removida.
@@ -57,11 +56,6 @@ export const HookCriarReel = () => {
     setErrors({});
 
     try {
-      const isSafe = await contentSafetyService.isTextSafe(dadosReel.descricao);
-      if (!isSafe) {
-        throw new Error('Sua descrição contém palavras não permitidas.');
-      }
-
       const user = SistemaAutenticacaoSupremo.getCurrentUser();
       if (!user) {
         throw new Error("Usuário não autenticado.");

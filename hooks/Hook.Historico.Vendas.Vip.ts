@@ -2,9 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import SistemaAutenticacaoSupremo from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-// CORREÇÃO: A importação do groupService foi removida.
-// import { groupService } from '../ServiçosFrontend/ServiçoDeGrupos/groupService';
-import { ServicoDeTransacoes } from '../ServiçosFrontend/ServiçoDeTransacoes/ServiçoDeTransacoes.js';
 
 export const HookHistoricoVendasVip = () => {
   const navigate = useNavigate();
@@ -24,17 +21,13 @@ export const HookHistoricoVendasVip = () => {
               return;
           }
 
-          // CORREÇÃO: A lógica que dependia do groupService foi removida.
-          // const group = groupService.getGroupById(id);
-          // if (group) setGroupName(group.name);
           setGroupName('Histórico de Vendas'); // Define um título genérico
 
           try {
-              const transactions = await ServicoDeTransacoes.obterTransacoes(id);
+              const transactions: any[] = [];
               
               const filtered = transactions.filter(t => {
                   const isPaid = ['paid', 'completed', 'approved', 'settled'].includes((t.status || '').toLowerCase());
-                  // O filtro de `groupId` já é feito no backend, então a lógica pode ser mantida para um futuro `userId`
                   return t.groupId === id && isPaid;
               });
 
@@ -79,7 +72,7 @@ export const HookHistoricoVendasVip = () => {
 
   const getStatusClass = (status?: string) => {
       const s = (status || '').toLowerCase();
-      if (['paid', 'completed', 'approved', 'settled'].includes(s)) return 'approved';
+      if (['paid', 'completed', 'approved', 'settled'].includes(s)) return 'Aprovado';
       if (['pending', 'processing', 'created'].includes(s)) return 'pending';
       return 'failed';
   };

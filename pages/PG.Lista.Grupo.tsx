@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
-import { HookListaGrupos } from '../hooks/Hook.Lista.Grupos'; // ATUALIZADO
+import { HookListaGrupos } from '../hooks/Hook.Lista.Grupos';
 import { useModal } from '../Componentes/ComponenteDeInterfaceDeUsuario/ModalSystem';
 import { Group } from '../tipos';
 import { Footer } from '../Componentes/layout/Footer';
@@ -12,8 +12,7 @@ import { CreateGroupFAB } from '../Componentes/groups/list/CreateGroupFAB';
 const TrackingModal = lazy(() => import('../Componentes/groups/TrackingModal').then(m => ({ default: m.TrackingModal })));
 
 export const PG_Lista_Grupo: React.FC = () => {
-  // A lógica de UI permanece aqui, enquanto a lógica de dados vem do hook específico.
-  const { groups, loading, currentUserEmail, navigate, navigateToGroup, deleteGroup, getUnreadCount } = HookListaGrupos(); // ATUALIZADO
+  const { groups, loading, navigate, navigateToGroup, deleteGroup, getUnreadCount } = HookListaGrupos();
   const { showAlert, showConfirm } = useModal();
 
   const [uiVisible, setUiVisible] = useState(true);
@@ -22,7 +21,6 @@ export const PG_Lista_Grupo: React.FC = () => {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const lastScrollY = useRef(0);
 
-  // Efeito para controlar a visibilidade da UI no scroll
   useEffect(() => {
     const handleScroll = () => {
       const currentScroll = window.scrollY;
@@ -79,7 +77,6 @@ export const PG_Lista_Grupo: React.FC = () => {
             <ContêinerListaGrupos 
               key={group.id}
               group={group}
-              currentUserEmail={currentUserEmail}
               unreadCount={getUnreadCount(group.id)}
               isMenuActive={activeMenuId === group.id}
               onToggleMenu={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === group.id ? null : group.id); }}

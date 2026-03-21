@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { groupSystem } from '../ServiçosFrontend/ServiçoDeGrupos/Sistema.Grupos.js';
 import SistemaAutenticacaoSupremo from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-import { ServicoDeTransacoes } from '../ServiçosFrontend/ServiçoDeTransacoes/ServiçoDeTransacoes.js';
 import { Group, CurrencyCode } from '../types';
 
 interface UnifiedMetric {
@@ -59,7 +58,7 @@ export const useGroupRevenue = () => {
                 return;
             }
 
-            const groupTransactions = await ServicoDeTransacoes.obterTransacoes(id);
+            const groupTransactions: any[] = [];
 
             const now = Date.now();
             const oneDay = 24 * 60 * 60 * 1000;

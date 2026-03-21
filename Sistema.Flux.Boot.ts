@@ -1,6 +1,5 @@
 
 // Importações para inicialização de serviços de baixo nível.
-import './ServiçosFrontend/ServiçoDeSegurançaDeConteúdo/i18n.js';
 import { initAuditorDeRequisições } from './ServiçosFrontend/ServiçoDeTelemetria/AuditorDeRequisições.js';
 
 /**

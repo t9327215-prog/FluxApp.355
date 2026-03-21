@@ -1,7 +1,15 @@
 
 import { Grupo } from '../../../../types/Saida/Types.Estrutura.Grupos';
+import { Usuario } from '../../../../types/Saida/Types.Estrutura.Usuario';
 
-const SEU_ID_DE_USUARIO = 'uuid-proprio-simulado-123';
+// Objeto simulado do dono para ser reutilizado
+const donoSimulado: Partial<Usuario> = {
+    id: 'uuid-proprio-simulado-123',
+    email: 'proprio@email.simulado.com',
+    nome: 'Usuario Proprio Simulado',
+    apelido: 'proprio_simulado',
+    urlFoto: 'https://i.pravatar.cc/150?u=proprio',
+};
 
 export const mockMeusGrupos: Grupo[] = [
   {
@@ -9,7 +17,8 @@ export const mockMeusGrupos: Grupo[] = [
     nome: 'Amantes da Fotografia',
     descricao: 'Um espaço para compartilhar suas melhores fotos, técnicas e equipamentos.',
     tipo: 'publico',
-    donoId: SEU_ID_DE_USUARIO, // <- Seu ID aqui
+    donoId: donoSimulado.id!,
+    dono: donoSimulado, // <- Dados completos do dono adicionados
     dataCriacao: '2023-11-01T12:00:00Z',
     imagemCapa: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=1200',
     tipoAcesso: 'direto',
@@ -19,7 +28,8 @@ export const mockMeusGrupos: Grupo[] = [
     nome: 'Clube do Livro Secreto',
     descricao: 'Discussões literárias sem spoilers. Apenas para membros convidados.',
     tipo: 'privado',
-    donoId: SEU_ID_DE_USUARIO, // <- Seu ID aqui
+    donoId: donoSimulado.id!,
+    dono: donoSimulado, // <- Dados completos do dono adicionados
     dataCriacao: '2023-10-26T10:00:00Z',
     imagemCapa: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=1200',
     tipoAcesso: 'convite',
@@ -31,7 +41,8 @@ export const mockMeusGrupos: Grupo[] = [
     tipo: 'pago',
     preco: 99.90,
     moeda: 'BRL',
-    donoId: SEU_ID_DE_USUARIO, // <- Seu ID aqui
+    donoId: donoSimulado.id!,
+    dono: donoSimulado, // <- Dados completos do dono adicionados
     dataCriacao: '2024-01-15T14:30:00Z',
     limiteMembros: 100,
     imagemCapa: 'https://images.unsplash.com/photo-1640622300473-977435c38c04?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=1200',
@@ -54,6 +65,12 @@ export const mockMeusGrupos: Grupo[] = [
     descricao: 'Comunidade para desenvolvedores React trocarem experiências, dicas e vagas.',
     tipo: 'publico',
     donoId: 'user-dev-lead-456', 
+    dono: { // Adicionando dados parciais para o outro usuário também
+        id: 'user-dev-lead-456',
+        nome: 'Líder Dev',
+        apelido: 'react_guru',
+        urlFoto: 'https://i.pravatar.cc/150?u=devlead',
+    },
     dataCriacao: '2022-05-20T20:00:00Z',
     imagemCapa: 'https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=1200',
     tipoAcesso: 'direto',
