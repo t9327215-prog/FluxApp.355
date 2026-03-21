@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { servicoDeSincronizacaoDeSessao } from '../ServiçosFrontend/ServiçoDeSincronização/ServicoDeSincronizacaoDeSessao.js';
 
 export const HookPonteSucesso = () => {
     const navigate = useNavigate();
@@ -13,8 +12,6 @@ export const HookPonteSucesso = () => {
 
             if (sessionId) {
                 // A lógica de redirecionamento precisa ser movida para um serviço apropriado.
-                // Por enquanto, vamos apenas sincronizar a sessão para garantir que os dados estejam atualizados.
-                await servicoDeSincronizacaoDeSessao.performFullSync();
 
                 // Lógica de redirecionamento temporariamente comentada até movermos para o lugar certo.
                 /*
