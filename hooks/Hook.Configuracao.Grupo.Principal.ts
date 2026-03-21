@@ -1,0 +1,60 @@
+
+import { useState, useEffect, useCallback } from 'react';
+import { groupSystem } from '../ServiçosFrontend/ServiçoDeGrupos/Sistema.Grupos.js';
+import { useUsuarioSessao } from './Hook.Usuario.Sessao';
+
+interface Group {
+    id: string;
+    ownerId: string;
+    name: string;
+    description: string;
+    isSalesPlatformEnabled?: boolean;
+    isVip?: boolean;
+    imagemCapa?: string;
+    tipo?: string;
+    creatorEmail?: string;
+    price?: number;
+    donoId?: string;
+    descricao?: string;
+    nome?: string;
+}
+
+export const HookConfiguracaoGrupoPrincipal = (groupId: string | undefined) => {
+    const { user } = useUsuarioSessao();
+    const [group, setGroup] = useState<Group | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [isOwner, setIsOwner] = useState(false);
+
+    const fetchGroupDetails = useCallback(async () => {
+        if (!groupId) {
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const groupData = await groupSystem.getGroupDetails(groupId);
+            setGroup(groupData);
+            if (user && groupData.ownerId === user.id) {
+                setIsOwner(true);
+            } else {
+                setIsOwner(false);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar detalhes do grupo:", error);
+            setGroup(null);
+        } finally {
+            setLoading(false);
+        }
+    }, [groupId, user?.id]);
+
+    useEffect(() => {
+        fetchGroupDetails();
+    }, [fetchGroupDetails]);
+
+    const refreshGroup = () => {
+        fetchGroupDetails();
+    };
+
+    return { group, loading, isOwner, refreshGroup };
+};

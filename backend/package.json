@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "dependencies": {
+    "cls-hooked": "^4.2.2",
+    "uuid": "^13.0.0"
+  }
+}

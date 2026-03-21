@@ -1,0 +1,48 @@
+📜 Diretrizes Obrigatórias 📜
+─────────────────────────────
+A camada de Rotas é a porta de entrada da API do backend.
+A camada de Rotas utiliza o framework Express.js.
+A camada de Rotas é responsável por definir os endpoints HTTP.
+A camada de Rotas mapeia as URLs para a camada de Controles.
+A camada de Rotas é o ponto de entrada para os Serviços Frontend.
+A camada de Rotas importa a camada de Controles.
+A lógica de negócio nunca deve residir na camada de Rotas.
+A função principal da camada de Rotas é validar a entrada e delegar a requisição.
+🔄 Fluxo de Dados 🔄
+─────────────────────────────
+Fluxo de dados começa recebendo uma requisição HTTP do Serviço Frontend.
+Fluxo de dados continua aplicando middlewares para validações básicas (como autenticação).
+Fluxo de dados direciona a requisição para a função correspondente na camada de Controles.
+Fluxo de dados termina quando a camada de Controles assume o processamento.
+⚡ Responsabilidades ⚡
+─────────────────────────────
+Responsabilidade de definição de Endpoints mapeia cada rota (URL) e método HTTP para uma função no Controle.
+Responsabilidade de validação de Entrada (Middleware) utiliza middlewares para verificações básicas, como JWT.
+Responsabilidade de delegação para os Controles atua como um "porteiro", chamando a função de controle apropriada.
+🗂️ Lista dos Arquivos Existentes 🗂️
+─────────────────────────────
+001.Informacoes
+Rotas.Criacao.Conta.Flux.js
+Rotas.Criacao.Grupo.Pago.js
+Rotas.Criacao.Grupo.Privado.js
+Rotas.Criacao.Grupo.Publico.js
+Rotas.Criacao.Perfil.Flux.js
+Rotas.Gestao.Credencial.Stripe.js
+Rotas.Gestao.Variaveis.js
+Rotas.Metricas.Comentario.Feed.js
+Rotas.Metricas.Comentario.Marketplace.js
+Rotas.Metricas.Comentario.Reels.js
+Rotas.Metricas.Publicacao.Feed.js
+Rotas.Metricas.Publicacao.Reels.js
+Rotas.Provedor.PayPal.js
+Rotas.Provedor.Stripe.js
+Rotas.Provedor.SyncPay.js
+Rotas.Publicacao.Campanha.js
+Rotas.Publicacao.Comentarios.Feed.js
+Rotas.Publicacao.Comentarios.Marketplace.js
+Rotas.Publicacao.Comentarios.Reels.js
+Rotas.Publicacao.Feed.js
+Rotas.Publicacao.Grupos.js
+Rotas.Publicacao.Marketplace.js
+Rotas.Publicacao.Reels.js
+Rotas.js

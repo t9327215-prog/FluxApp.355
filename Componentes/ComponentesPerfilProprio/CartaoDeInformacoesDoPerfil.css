@@ -1,0 +1,99 @@
+/* Card geral */
+.profile-info-card {
+    background: linear-gradient(145deg, #1A202C, #10141A);
+    color: #E2E8F0;
+    padding: 2rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 194, 255, 0.2);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 400px;
+    margin: 2rem auto; /* Margem ajustada */
+    font-family: sans-serif;
+    position: relative;
+}
+
+/* Container do Avatar */
+.avatar-container {
+    margin-top: 0; /* Remove a margem negativa */
+    margin-bottom: 1.5rem; /* Ajusta o espaçamento abaixo do avatar */
+    display: flex;
+    justify-content: center;
+}
+
+/* Detalhes do Usuário */
+.user-details {
+    margin-bottom: 1.5rem;
+}
+
+.user-details .handle {
+    color: #718096;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.user-details .bio {
+    color: #A0AEC0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-top: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Container de Estatísticas */
+.stats-container {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 2rem;
+    padding: 1rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.stat .value {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #FFFFFF;
+}
+
+.stat .label {
+    color: #A0AEC0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Ações do Perfil (Botões) */
+.profile-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+/* Estilo unificado para ambos os botões (inspirado no CardCategorias) */
+.profile-actions .btn-edit,
+.profile-actions .btn-share {
+    background: linear-gradient(145deg, #1e293b, #0f172a); /* Gradiente slate-800 to slate-900 */
+    color: #cbd5e1; /* slate-300 */
+    border: 1px solid rgba(6, 182, 212, 0.2); /* Borda ciano/20 */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Sombra sutil */
+    font-weight: bold;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem; /* Um pouco mais arredondado */
+    cursor: pointer;
+    flex-grow: 1;
+    max-width: 200px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Efeito de hover unificado (inspirado no CardCategorias) */
+.profile-actions .btn-edit:hover,
+.profile-actions .btn-share:hover {
+    background: linear-gradient(145deg, #334155, #1e293b); /* Gradiente mais claro (slate-700 to slate-800) */
+    color: #f1f5f9; /* Texto slate-100 */
+    transform: translateY(-2px); /* Mantém o efeito de elevação */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Sombra mais pronunciada no hover */
+}

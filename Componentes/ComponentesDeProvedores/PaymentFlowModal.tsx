@@ -1,0 +1,118 @@
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ModalOpcoesPagamentosSyncPay } from './CardsOpcoesDePagamentos/ModalOpcoesPagamentosSyncPay';
+import { ModalOpcoesPagamentosPayPal } from './CardsOpcoesDePagamentos/ModalOpcoesPagamentosPayPal';
+import { ModalOpcoesPagamentosStripe } from './CardsOpcoesDePagamentos/ModalOpcoesPagamentosStripe';
+import SistemaAutenticacaoSupremo from '../../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+import { GeoData } from '../../ServiçosFrontend/geoService';
+import { ConversionResult } from '../../ServiçosFrontend/currencyService';
+import { Group } from '../../types';
+
+interface PaymentFlowModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    group: Group;
+    provider: 'syncpay' | 'paypal' | 'stripe';
+    convertedPriceInfo: ConversionResult | null;
+    geo: GeoData | null;
+    // A flag de simulação que recebemos do ModalPreviasPaises
+    isSimulation?: boolean;
+}
+
+export const PaymentFlowModal: React.FC<PaymentFlowModalProps> = (props) => {
+    const { isOpen, onClose, group, provider, convertedPriceInfo, geo, isSimulation } = props;
+    const navigate = useNavigate();
+    const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [errorMessage, setErrorMessage] = useState('');
+    const [txId, setTxId] = useState('');
+
+    const user = SistemaAutenticacaoSupremo.getCurrentUser();
+    const isCreator = user?.email === group.creatorEmail;
+
+    useEffect(() => {
+        if (!isOpen) {
+            setStatus('idle');
+        }
+    }, [isOpen]);
+
+    const handleSuccess = () => setStatus('success');
+    const handleError = (msg: string) => { setStatus('error'); setErrorMessage(msg); };
+
+    const handleRedeem = () => {
+        const email = SistemaAutenticacaoSupremo.getCurrentUserEmail() || localStorage.getItem('guest_email_capture');
+        if (!email) {
+            sessionStorage.setItem('redirect_after_login', `/payment-success-bridge/${group.id}`);
+            navigate('/register');
+            return;
+        }
+        navigate(`/payment-success-bridge/${group.id}`, { replace: true });
+    };
+    
+    if (!isOpen) return null;
+
+    // Renderização principal do modal
+    return (
+        <div className="fixed inset-0 bg-black/95 z-[100] flex justify-center items-center backdrop-blur-md animate-fade-in" 
+             onClick={(e) => { if(e.target === e.currentTarget && status !== 'success') onClose(); }}>
+            
+            <style>{`
+                .payment-modal-card { 
+                    background: #0c0f14; padding: 30px 24px; border-radius: 20px; 
+                    width: 90%; max-width: 380px; text-align: center;
+                    border: 1px solid #00c2ff; box-shadow: 0 0 40px rgba(0, 194, 255, 0.2);
+                    max-height: 90vh; overflow-y: auto;
+                    position: relative;
+                }
+                .sim-badge {
+                    position: absolute; top: 0; left: 0; transform: translateY(-100%); width: 100%;
+                    background: #FFD700; color: #000; font-size: 10px; font-weight: 900;
+                    padding: 4px; text-transform: uppercase; letter-spacing: 1px;
+                    border-radius: 20px 20px 0 0;
+                }
+            `}</style>
+
+            <div className="payment-modal-card animate-pop-in">
+                {(isCreator || isSimulation) && <div className="sim-badge"><i className="fa-solid fa-wand-magic-sparkles mr-1"></i> {isSimulation ? 'MODO SIMULAÇÃO' : 'Visualização de Proprietário'}</div>}
+
+                {status === 'idle' && (
+                    // A lógica agora é a mesma para produção e simulação.
+                    // O componente filho (ModalOpcoesPagamentosStripe) vai receber o geo correto (real ou simulado)
+                    // e renderizar as opções de pagamento de acordo.
+                    <>
+                        {provider === 'syncpay' && <ModalOpcoesPagamentosSyncPay group={group} onSuccess={handleSuccess} onError={handleError} onTransactionId={setTxId} />}
+                        {provider === 'paypal' && <ModalOpcoesPagamentosPayPal group={group} convertedPriceInfo={convertedPriceInfo} onSuccess={handleSuccess} onError={handleError} onTransactionId={setTxId} />}
+                        {provider === 'stripe' && <ModalOpcoesPagamentosStripe group={group} geo={geo} convertedPriceInfo={convertedPriceInfo} onSuccess={handleSuccess} onError={handleError} onTransactionId={setTxId} />}
+                    </>
+                )}
+
+                {status === 'success' && (
+                    <div className="py-6 animate-fade-in">
+                         <div className="w-20 h-20 bg-[#00ff82]/10 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-[#00ff82]">
+                            <i className="fa-solid fa-check text-4xl text-[#00ff82]"></i>
+                        </div>
+                        <h2 className="text-2xl font-black text-white mb-2">PAGAMENTO {isSimulation ? 'SIMULADO' : 'APROVADO'}</h2>
+                        <p className="text-gray-400 text-sm mb-8">Sua vaga na área VIP foi liberada com sucesso!</p>
+                        {isSimulation ? (
+                            <button onClick={onClose} className="w-full py-4 bg-gray-600 text-white rounded-xl font-bold text-lg">FECHAR SIMULAÇÃO</button>
+                        ) : (
+                            <button onClick={handleRedeem} className="w-full py-4 bg-[#00ff82] text-black rounded-xl font-bold text-lg shadow-[0_0_20px_rgba(0,255,130,0.3)]">
+                                ACESSAR AGORA <i className="fa-solid fa-arrow-right ml-2"></i>
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {status === 'error' && (
+                     <div className="py-6">
+                        <i className="fa-solid fa-circle-exclamation text-5xl text-red-500 mb-4"></i>
+                        <p className="text-red-400 mb-6">{errorMessage}</p>
+                        <button onClick={() => setStatus('idle')} className="w-full py-3 bg-white/5 text-white rounded-lg font-bold border border-white/10">
+                            TENTAR NOVAMENTE
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
