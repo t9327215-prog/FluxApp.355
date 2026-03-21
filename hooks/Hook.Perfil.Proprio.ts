@@ -1,17 +1,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import SistemaAutenticacaoSupremo from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-import { servicoPerfilUsuario } from '../ServiçosFrontend/ServiçosDePerfil/Servico.Perfil.Usuario';
 import { feedPublicationService } from '../ServiçosFrontend/ServiçosDePublicações/Servico.Publicacao.Feed';
 import { marketplacePublicationService } from '../ServiçosFrontend/ServiçosDePublicações/Servico.Publicacao.Marketplace';
 import { Usuario } from '../../types/Saida/Types.Estrutura.Usuario';
 import { PublicacaoFeed } from '../../types/Saida/Types.Estrutura.Publicacao.Feed';
 import { PublicacaoMarketplace } from '../../types/Saida/Types.Estrutura.Publicacao.Marketplace';
 
-// Estendendo o tipo de Usuário para incluir posts e produtos que podem ser undefined inicialmente.
+// Estendendo o tipo de Usuário para incluir posts e produtos.
 type PerfilCompleto = Usuario & {
-    posts?: PublicacaoFeed[];
-    products?: PublicacaoMarketplace[];
+    posts: PublicacaoFeed[];
+    products: PublicacaoMarketplace[];
 };
 
 export const HookPerfilProprio = () => {
@@ -19,6 +18,7 @@ export const HookPerfilProprio = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Se inscreve no estado de autenticação
     const [authState, setAuthState] = useState(SistemaAutenticacaoSupremo.getState());
     const isAuthenticated = !!authState.user;
 
@@ -27,55 +27,54 @@ export const HookPerfilProprio = () => {
         return () => unsubscribe();
     }, []);
 
-    const fetchProfile = useCallback(async () => {
+    const fetchProfileData = useCallback(async () => {
+        // Não faz nada se não estiver autenticado ou se já estiver carregando
         if (!isAuthenticated || !authState.user?.id) {
             setIsLoading(false);
-            setError("Usuário não autenticado ou ID do usuário não encontrado.");
             setProfile(null);
             return;
         }
 
         setIsLoading(true);
         setError(null);
+
         try {
             const userId = authState.user.id;
-            
-            // Buscas em paralelo para otimização
-            const [userData, allPosts, allProducts] = await Promise.all([
-                servicoPerfilUsuario.getOwnProfile(),
+            const userData = authState.user; // Usando o usuário do estado de autenticação
+
+            // Busca posts e produtos em paralelo
+            const [allPosts, allProducts] = await Promise.all([
                 feedPublicationService.getPosts(),
                 marketplacePublicationService.getProducts()
             ]);
 
-            if (userData) {
-                // Filtrando posts e produtos para o usuário logado
-                const userPosts = allPosts.filter(post => post.autorId === userId);
-                const userProducts = allProducts.filter(product => product.usuarioId === userId);
+            // Filtra as publicações para o usuário atual
+            const userPosts = allPosts.filter(post => post.autorId === userId);
+            const userProducts = allProducts.filter(product => product.usuarioId === userId);
 
-                // Combinando todos os dados em um único objeto de perfil
-                const perfilCompleto: PerfilCompleto = {
-                    ...userData,
-                    posts: userPosts,
-                    products: userProducts,
-                };
+            // Combina os dados do usuário com suas publicações
+            const perfilCompleto: PerfilCompleto = {
+                ...userData,
+                posts: userPosts,
+                products: userProducts,
+            };
 
-                setProfile(perfilCompleto);
-            } else {
-                throw new Error('Não foi possível carregar o perfil a partir do serviço.');
-            }
+            setProfile(perfilCompleto);
         } catch (err) {
-            if (err instanceof Error) {
-              setError(err.message || 'Erro ao carregar o perfil');
-            }
+            const errorMessage = err instanceof Error ? err.message : 'Ocorreu um erro desconhecido';
+            setError(errorMessage);
+            console.error("Erro ao buscar dados do perfil:", errorMessage);
             setProfile(null);
         } finally {
             setIsLoading(false);
         }
-    }, [isAuthenticated, authState.user?.id]);
+    }, [isAuthenticated, authState.user]); // Depende do usuário do authState
 
+    // Lógica para buscar o perfil quando o estado de autenticação muda
     useEffect(() => {
-        fetchProfile();
-    }, [fetchProfile]);
+        fetchProfileData();
+    }, [fetchProfileData]);
 
-    return { profile, isLoading, error, refetch: fetchProfile };
+    // Retorna o estado do perfil e uma função para recarregar
+    return { profile, isLoading, error, refetch: fetchProfileData };
 };

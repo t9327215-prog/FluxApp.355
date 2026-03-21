@@ -5,7 +5,7 @@ import { CriarUsuarioDTO, LoginUsuarioDTO as LoginDto } from '../../../types/Ent
 import { Usuario } from '../../../types/Saida/Types.Estrutura.Usuario';
 import authApi from '../APIs/authApi';
 import ClienteBackend from '../Cliente.Backend';
-import { mockServicoPerfilUsuario } from '../ServiçoDeSimulação/simulacoes/Simulacao.Perfil.Usuario';
+import { servicoPerfilUsuario } from './Servico.Perfil.Usuario';
 
 // --- Types & Interfaces ---
 interface User extends Usuario {}
@@ -88,7 +88,7 @@ const simulatedBaseService = {
             });
         });
     },
-    login: async (dados: LoginDto) => ({ token: 'abc-simulated', user: await mockServicoPerfilUsuario.getOwnProfile() as User }),
+    login: async (dados: LoginDto) => ({ token: 'abc-simulated', user: await servicoPerfilUsuario.getOwnProfile() as User }),
     logout: () => {
         localStorage.removeItem('userToken');
         localStorage.removeItem('user');

@@ -6,22 +6,19 @@ import { SessaoConfiguracoesDeModeracao } from '../Componentes/ComponentesDeGrou
 import { SessaoZonaCritica } from '../Componentes/ComponentesDeGroups/SessaoZonaCritica';
 import { SessaoConfiguracoesDeMarketing } from '../Componentes/ComponentesDeGroups/SessaoConfiguracoesDeMarketing';
 import { SessaoConfiguracoesDeAuditoria } from '../Componentes/ComponentesDeGroups/SessaoConfiguracoesDeAuditoria';
-import { groupSystem } from '../ServiçosFrontend/ServiçoDeGrupos/Sistema.Grupos.js';
+import { groupSystem } from '../ServiçosFrontend/ServiçoDeGrupos/Sistema.Grupos';
 
 export const PG_Configuracoes_Grupo: React.FC = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
 
-    // Estados para dados, carregamento, erros e propriedade
     const [group, setGroup] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isOwner, setIsOwner] = useState(false); // Assumir falso por padrão
+    const [isOwner, setIsOwner] = useState(false);
 
-    // Estado para a plataforma de vendas
     const [isSalesPlatformEnabled, setIsSalesPlatformEnabled] = useState(false);
 
-    // Função para buscar dados do grupo
     const fetchGroupData = async () => {
         if (!id) {
             setError("ID do grupo não fornecido.");
@@ -30,15 +27,10 @@ export const PG_Configuracoes_Grupo: React.FC = () => {
         }
         setLoading(true);
         try {
-            // Assumindo que o groupSystem tem um método para buscar detalhes do grupo
-            // O ideal é ter um sistema de autenticação para verificar a propriedade real
-            const { data: groupData } = await groupSystem.getGroupDetails(id); 
+            const groupData = await groupSystem.getGroupDetails(id);
             setGroup(groupData);
             setIsSalesPlatformEnabled(groupData.isSalesPlatformEnabled || false);
-            
-            // Simplesmente assumindo a propriedade para fins de desenvolvimento, como antes
-            // TODO: Substituir pela verificação de propriedade real (ex: `groupData.ownerId === currentUser.id`)
-            setIsOwner(true); 
+            setIsOwner(true);
 
         } catch (err) {
             console.error("Falha ao buscar detalhes do grupo:", err);
@@ -48,7 +40,6 @@ export const PG_Configuracoes_Grupo: React.FC = () => {
         }
     };
 
-    // Efeito para buscar os dados na montagem do componente
     useEffect(() => {
         fetchGroupData();
     }, [id]);
@@ -62,7 +53,7 @@ export const PG_Configuracoes_Grupo: React.FC = () => {
 
         try {
             await groupSystem.updateGroupSettings(id, { isSalesPlatformEnabled: newState });
-            fetchGroupData(); // Re-sincronizar com o backend
+            fetchGroupData();
         } catch (error) {
             console.error("Falha ao atualizar o Modo Hub:", error);
             setIsSalesPlatformEnabled(originalState);
@@ -105,7 +96,7 @@ export const PG_Configuracoes_Grupo: React.FC = () => {
                 <button onClick={() => navigate(-1)} className="bg-none border-none text-white text-2xl cursor-pointer pr-4">
                     <i className="fa-solid fa-arrow-left"></i>
                 </button>
-                <h1 className="font-bold text-lg text-white">configurações grupo</h1>
+                <h1 className="font-bold text-lg text-white">configurações do grupo</h1>
             </header>
 
             <main className="pt-[85px] pb-[100px] w-full max-w-2xl mx-auto px-5 overflow-y-auto flex-grow no-scrollbar">
