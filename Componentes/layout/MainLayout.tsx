@@ -1,10 +1,10 @@
 
 import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
-import { MainHeader } from "../Componentes/ComponenteDeInterfaceDeUsuario/layout/MainHeader";
-import { Footer } from "../Componentes/ComponenteDeInterfaceDeUsuario/layout/Footer";
+import { MainHeader } from "../ComponenteDeInterfaceDeUsuario/layout/MainHeader";
+import { Footer } from "../ComponenteDeInterfaceDeUsuario/layout/Footer";
 // CORREÇÃO: O caminho para o Loading estava incorreto e o nome do componente também.
-import { LoadingScreen } from "../Componentes/ComponenteDeInterfaceDeUsuario/LoadingScreen";
+import { LoadingScreen } from "../ComponenteDeInterfaceDeUsuario/LoadingScreen";
 
 export const MainLayout = () => {
   return (
