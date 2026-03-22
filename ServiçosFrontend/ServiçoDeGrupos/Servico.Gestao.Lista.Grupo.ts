@@ -1,12 +1,11 @@
 import { Grupo } from '../../../types/Saida/Types.Estrutura.Grupos';
-import { GroupModel } from '../../Models/Models.Estrutura.Grupo'; // Caminho corrigido
 import { apiServicoGestaoListaGrupo } from '../APIs/APIsServicoGrupos/API.Servico.Gestao.Lista.Grupo';
 import { mockMyGroups, mockPublicGroups } from '../ServiçoDeSimulação/simulacoes/Simulacao.Gestao.Lista.Grupo';
 import { config } from '../ValidaçãoDeAmbiente/config';
 
 class ServicoGestaoListaGrupo {
 
-  async obterGrupos(): Promise<GroupModel[]> {
+  async obterGrupos(): Promise<Grupo[]> {
     let publicGroupsData: Grupo[] = [];
     let myGroupsData: Grupo[] = [];
 
@@ -27,11 +26,7 @@ class ServicoGestaoListaGrupo {
       const allGroupsData = [...(myGroupsData || []), ...(publicGroupsData || [])];
       const uniqueGroupsData = Array.from(new Map(allGroupsData.map(group => [group.id, group])).values());
 
-      const groupModels = uniqueGroupsData
-        .map(groupData => GroupModel.fromObject(groupData))
-        .filter((group): group is GroupModel => group !== null);
-
-      return groupModels;
+      return uniqueGroupsData;
 
     } catch (error) {
       console.error("ServicoGestaoListaGrupo: Falha ao obter e processar grupos:", error);

@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import SistemaAutenticacaoSupremo from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-import { validadorFormularioCompletarPerfil, CompletarPerfilFormData } from '../Validators/Validadores de Formulário/Validador.Formulario.CompletarPerfil';
 
 export const useCompleteProfile = () => {
     const navigate = useNavigate();
@@ -21,8 +20,7 @@ export const useCompleteProfile = () => {
         handleSubmit,
         setError,
         formState: { errors, isSubmitting },
-    } = useForm<CompletarPerfilFormData>({
-        resolver: zodResolver(validadorFormularioCompletarPerfil),
+    } = useForm<any>({
         // Define um modo de validação mais interativo
         mode: 'onChange',
     });
@@ -65,7 +63,7 @@ export const useCompleteProfile = () => {
     };
 
     // Nova função de submissão, integrada com react-hook-form
-    const aoSubmeter = async (data: CompletarPerfilFormData) => {
+    const aoSubmeter = async (data: any) => {
         try {
             // TODO: Adicionar lógica de upload da imagem (arquivoSelecionado)
             // const urlDaFoto = arquivoSelecionado ? await servicoDeArquivos.upload(arquivoSelecionado) : '';

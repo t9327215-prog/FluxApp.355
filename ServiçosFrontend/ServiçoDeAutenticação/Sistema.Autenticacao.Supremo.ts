@@ -1,13 +1,24 @@
 
 import { config } from '../ValidaçãoDeAmbiente/config';
 import logger from '../logger';
-import { LoginUsuarioDTO as LoginDto } from '../../../types/Entrada/Dto.Estrutura.Usuario';
+import { RegistroUsuarioDTO, LoginUsuarioDTO } from '../../../types/Entrada/Dto.Estrutura.Usuario';
 import { Usuario } from '../../../types/Saida/Types.Estrutura.Usuario';
 import { servicoGestaoSessao } from './Servico.Gestao.Sessao';
-import { servicoGestaoLogin } from './Servico.Gestao.Login';
-import { servicoGestaoLogout } from './Servico.Gestao.Logout';
-import { servicoGestaoConta } from './Servico.Gestao.Conta';
-import { servicoSincronizacao } from './Servico.Sincronizacao'; // Importa o serviço de sincronização
+import { servicoSincronizacao } from './Servico.Sincronizacao';
+import {
+    processarRequisicao, 
+    criarRequisicaoLoginEmail,
+    criarRequisicaoRegistroEmail,
+    criarRequisicaoLoginGoogle,
+    criarRequisicaoLogout,
+    RequisicaoAutenticacao // Importando o tipo para checagem
+} from '../../GestaoRequisicoes/Sistema.Requisicoes.Supremo';
+import {
+    processarRespostaSuprema,
+    criarRespostaLogin,
+    criarRespostaRegistro,
+    criarRespostaLogout
+} from '../../GestaoRespostas/Sistema.Respostas.Supremo';
 
 // --- Types & Interfaces ---
 interface User extends Usuario {}
@@ -45,7 +56,7 @@ const createAuthService = () => {
 
         try {
             const userFromStorage = servicoGestaoSessao.getCurrentUser();
-            if (userFromStorage) setState({ user: userFromStorage });
+            if (userFromStorage) setState({ user: userFromStorage, loading: false });
             
             const validatedUser = await servicoGestaoSessao.validateSession(signal);
             if (!signal.aborted) setState({ user: validatedUser, loading: false });
@@ -54,54 +65,75 @@ const createAuthService = () => {
             if (!signal.aborted) {
                 logger.error('[AuthService] Falha na validação inicial:', error);
                 setState({ user: null, loading: false, error });
+                await service.logout();
             }
+        }
+    };
+
+    const executeAuthRequest = async (request: RequisicaoAutenticacao) => {
+        setState({ loading: true, error: null });
+        
+        // 1. Executa a requisição e obtém o resultado bruto.
+        const resultadoRequisicao = await processarRequisicao(request);
+
+        // 2. Cria uma resposta estruturada com base no contexto da requisição.
+        let respostaEstruturada;
+        switch (request.tipo) {
+            case 'LOGIN_EMAIL':
+            case 'LOGIN_GOOGLE':
+                respostaEstruturada = criarRespostaLogin(resultadoRequisicao.sucesso, resultadoRequisicao.dados, resultadoRequisicao.mensagem);
+                break;
+            case 'REGISTRO_EMAIL':
+                respostaEstruturada = criarRespostaRegistro(resultadoRequisicao.sucesso, resultadoRequisicao.mensagem);
+                break;
+            case 'LOGOUT':
+                respostaEstruturada = criarRespostaLogout(resultadoRequisicao.sucesso, resultadoRequisicao.mensagem);
+                break;
+            default:
+                // Fallback para um tipo de requisição não esperado.
+                const erroMsg = "Tipo de requisição de autenticação não reconhecido no Sistema Supremo.";
+                logger.error(erroMsg, request);
+                setState({ loading: false, error: new Error(erroMsg) });
+                throw new Error(erroMsg);
+        }
+
+        // 3. Delega o processamento de efeitos colaterais (logs, UI, etc.) ao sistema de respostas.
+        processarRespostaSuprema(respostaEstruturada);
+
+        // 4. Mantém o contrato original: atualiza o estado local e retorna/lança o resultado.
+        if (resultadoRequisicao.sucesso) {
+            const user = resultadoRequisicao.dados ? resultadoRequisicao.dados.user : null;
+            setState({ user, loading: false });
+            return resultadoRequisicao.dados;
+        } else {
+            const error = new Error(resultadoRequisicao.mensagem);
+            setState({ loading: false, error });
+            throw error;
         }
     };
 
     const service = {
         getState: () => currentState,
         getCurrentUser: () => currentState.user,
-        getProfile: () => currentState.user, // Adicionando a função getProfile
         subscribe: (listener: AuthChangeListener) => {
             listeners.push(listener);
             return () => { listeners = listeners.filter(l => l !== listener); };
         },
-        async login(dadosLogin: LoginDto) {
-            setState({ loading: true, error: null });
-            try {
-                const data = await servicoGestaoLogin.login(dadosLogin);
-                setState({ user: data.user, loading: false });
-                return data;
-            } catch (error: any) {
-                setState({ loading: false, error });
-                throw error;
-            }
+        async register(dadosRegistro: RegistroUsuarioDTO) {
+            const request = criarRequisicaoRegistroEmail(dadosRegistro);
+            return executeAuthRequest(request);
         },
-        async loginWithGoogle(credential: string, referredBy?: string) {
-            setState({ loading: true, error: null });
-            try {
-                const data = await servicoGestaoLogin.loginComGoogle(credential, referredBy);
-                setState({ user: data.user, loading: false });
-                return data;
-            } catch (error: any) {
-                setState({ loading: false, error });
-                throw error;
-            }
+        async login(dadosLogin: LoginUsuarioDTO) {
+            const request = criarRequisicaoLoginEmail(dadosLogin);
+            return executeAuthRequest(request);
         },
-        logout() {
-            servicoGestaoLogout.logout();
-            setState({ user: null, loading: false, error: null });
+        async loginWithGoogle(code: string) {
+            const request = criarRequisicaoLoginGoogle(code);
+            return executeAuthRequest(request);
         },
-        async completeProfile(profileData: Partial<Usuario>) {
-            setState({ loading: true, error: null });
-            try {
-                const updatedUser = await servicoGestaoConta.completeProfile(profileData);
-                setState({ user: updatedUser, loading: false });
-                return updatedUser;
-            } catch (error: any) {
-                setState({ loading: false, error });
-                throw error;
-            }
+        async logout() {
+            const request = criarRequisicaoLogout();
+            return executeAuthRequest(request);
         },
         async sincronizarDados() {
             setState({ loading: true, error: null });
@@ -124,6 +156,6 @@ const createAuthService = () => {
 // --- Singleton Export ---
 const SistemaAutenticacaoSupremo = createAuthService();
 
-logger.log(`[AuthService] Sistema de Autenticação inicializado em modo: ${config.VITE_APP_ENV}`);
+logger.log(`[AuthService] Sistema de Autenticação (full-cycle) inicializado em modo: ${config.VITE_APP_ENV}`);
 
 export default SistemaAutenticacaoSupremo;
