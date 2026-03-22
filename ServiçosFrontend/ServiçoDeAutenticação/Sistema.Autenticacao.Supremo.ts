@@ -6,6 +6,8 @@ import { Usuario } from '../../../types/Saida/Types.Estrutura.Usuario';
 import { servicoGestaoSessao } from './Servico.Gestao.Sessao';
 import { servicoGestaoLogin } from './Servico.Gestao.Login';
 import { servicoGestaoLogout } from './Servico.Gestao.Logout';
+import { servicoGestaoConta } from './Servico.Gestao.Conta';
+import { servicoSincronizacao } from './Servico.Sincronizacao'; // Importa o serviço de sincronização
 
 // --- Types & Interfaces ---
 interface User extends Usuario {}
@@ -91,7 +93,18 @@ const createAuthService = () => {
         async completeProfile(profileData: Partial<Usuario>) {
             setState({ loading: true, error: null });
             try {
-                const updatedUser = await servicoGestaoLogin.completeProfile(profileData);
+                const updatedUser = await servicoGestaoConta.completeProfile(profileData);
+                setState({ user: updatedUser, loading: false });
+                return updatedUser;
+            } catch (error: any) {
+                setState({ loading: false, error });
+                throw error;
+            }
+        },
+        async sincronizarDados() {
+            setState({ loading: true, error: null });
+            try {
+                const updatedUser = await servicoSincronizacao.sincronizarDadosUsuario();
                 setState({ user: updatedUser, loading: false });
                 return updatedUser;
             } catch (error: any) {

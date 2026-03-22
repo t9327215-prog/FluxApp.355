@@ -19,7 +19,7 @@ export const HookPesquisaFeed = () => {
     const [userResults, setUserResults] = useState<Autor[]>([]);
     const [loading, setLoading] = useState(false);
     
-    const currentUser = SistemaAutenticacaoSupremo.getCurrentUser();
+    const currentUser = SistemaAutenticacaoSupremo.getState().user;
 
     const handleSearch = useCallback(async (query: string, tab: SearchTab) => {
         if (!query.trim()) {
@@ -34,9 +34,8 @@ export const HookPesquisaFeed = () => {
                 const data = await feedPublicationService.search(query);
                 setPostResults(data);
             } else {
-                // Assumindo que SistemaAutenticacaoSupremo.searchUsers retorna uma lista de Autores
-                const data = await SistemaAutenticacaoSupremo.searchUsers(query);
-                setUserResults(data);
+                // Busca de usuários desabilitada temporariamente
+                setUserResults([]);
             }
         } catch (e) {
             console.error("Search error", e);

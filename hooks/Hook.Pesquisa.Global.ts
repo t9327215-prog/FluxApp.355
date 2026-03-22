@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { systemaRelacaoUsuarios } from '../ServiçosFrontend/ServiçoDeRelacionamento/Sistema.Relação.Usuários.js';
 import SistemaAutenticacaoSupremo from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
 import { chatService } from '../ServiçosFrontend/ServiçoDeChat/chatService';
 import { User } from '../types';
@@ -13,7 +12,7 @@ export const HookPesquisaGlobal = () => {
   const [loading, setLoading] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const currentUserEmail = SistemaAutenticacaoSupremo.getCurrentUserEmail();
+  const currentUserEmail = SistemaAutenticacaoSupremo.getState().user?.email;
 
   // Efeito para buscar usuários com base no termo de pesquisa
   useEffect(() => {
@@ -21,9 +20,8 @@ export const HookPesquisaGlobal = () => {
       if (searchTerm.trim().length > 0) {
         setLoading(true);
         try {
-          // SistemaAutenticacaoSupremo agora é a única fonte para buscar usuários
-          const results = await SistemaAutenticacaoSupremo.searchUsers(searchTerm);
-          setUsers(results);
+          // Temporariamente desabilitado até a implementação do backend para busca de usuários
+          setUsers([]);
         } catch (error) {
           console.error("Search error", error);
           setUsers([]);
@@ -38,67 +36,20 @@ export const HookPesquisaGlobal = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
 
-  // Efeito para se inscrever a mudanças nos relacionamentos
-  useEffect(() => {
-    const unsubscribe = systemaRelacaoUsuarios.subscribe(() => {
-      // Força a re-renderização para atualizar o status de seguir/seguindo
-      setUsers(prevUsers => [...prevUsers]); 
-    });
-    return () => unsubscribe();
-  }, []);
-
   // Memoiza os usuários enriquecidos para evitar recálculos desnecessários
   const enrichedUsers = useMemo(() => {
     return users.map(user => {
-        const username = user.profile?.name || 'unknown';
-        const status = systemaRelacaoUsuarios.isFollowing(username);
-        const isPrivate = user.profile?.isPrivate || false;
         const isMe = user.email === currentUserEmail;
-        const canMessage = (!isPrivate || status === 'following') && !isMe;
-
-        let btnText = 'Seguir';
-        let btnClass = 'action-btn btn-follow';
-
-        if (status === 'requested') {
-            btnText = 'Solicitado';
-            btnClass = 'action-btn btn-requested';
-        } else if (status === 'following') {
-            btnText = 'Seguindo';
-            btnClass = 'action-btn btn-following';
-        }
+        const canMessage = !isMe;
 
         return {
             ...user,
             isMe,
             canMessage,
-            followStatus: status,
-            btnText,
-            btnClass
         };
     });
-  }, [users, currentUserEmail]); // A dependência do 'tick' foi removida
+  }, [users, currentUserEmail]);
 
-  // Ação de seguir/deixar de seguir
-  const handleAction = async (user: User) => {
-    const username = user.profile?.name;
-    if (!username || processingId) return;
-
-    setProcessingId(user.id);
-    try {
-      const status = systemaRelacaoUsuarios.isFollowing(username);
-      if (status === 'none') {
-        await systemaRelacaoUsuarios.followUser(username);
-      } else {
-        await systemaRelacaoUsuarios.unfollowUser(username);
-      }
-      // O subscribe já vai cuidar de atualizar a UI
-    } catch (error: any) {
-      console.error("[Search] Follow error:", error);
-      // A UI pode mostrar um erro aqui
-    } finally {
-      setProcessingId(null);
-    }
-  };
 
   const handleProfileClick = (username: string) => {
     const cleanUsername = username.startsWith('@') ? username.substring(1) : username;
@@ -126,7 +77,6 @@ export const HookPesquisaGlobal = () => {
     filteredUsers: enrichedUsers,
     loading,
     processingId,
-    handleAction,
     handleProfileClick,
     handleMessageClick,
     handleBack
