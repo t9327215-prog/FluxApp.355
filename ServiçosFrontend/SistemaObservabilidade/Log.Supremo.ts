@@ -1,32 +1,66 @@
+
 /**
  * @file Log.Supremo.ts
- * @description Agregador central para todos os serviços de observabilidade e registro de logs.
- *
- * Este arquivo serve como um ponto de entrada único para o sistema de observabilidade,
- * importando e re-exportando todos os serviços relacionados, como rastreamento de eventos,
- * auditoria e logging geral. A centralização facilita a manutenção e o uso consistente
- * das ferramentas de observabilidade em toda a aplicação.
+ * @description Agregador central e ponto de entrada único para todos os serviços de observabilidade da aplicação.
+ * Ele re-exporta módulos especializados para cada aspecto do logging, desde performance até segurança,
+ * garantindo uma abordagem modular, organizada e ultra-precisa.
  */
 
+// Módulos Fundamentais
+import LogProvider from './Log.Provider';
+import LogRequisicoesAPI from './Log.Requisicoes.API';
 import { rastreadorDeEventos } from './Rastreador.Eventos.js';
-import  ServicoLog  from './ServicoDeLog.js';
-import LogRequisicoesAPI from './Log.Requisicoes.API.ts'; // Importa o novo módulo
-import DepuracaoLogger from './Depuracao.Logger.ts';
+
+// Módulos Especializados
+import AuditoriaDB from './Auditoria.DB';
+import LogErros from './Log.Erros';
+import LogPerformance from './Log.Performance';
+import LogEventosNegocio from './Log.Eventos.Negocio';
+import LogSeguranca from './Log.Seguranca';
+import LogIntegracoes from './Log.Integracoes';
+import LogCache from './Log.Cache';
+import Alertas from './Log.Alertas';
+import SnapshotEstado from './Log.Snapshot.Estado';
 
 /**
  * @object LogSupremo
  * @description Objeto consolidado que expõe todas as funcionalidades do sistema de observabilidade.
- *
- * @property {object} Rastreamento - Módulo de rastreamento de eventos do usuário.
- * @property {object} Auditoria - Módulo de auditoria para ações críticas.
- * @property {object} Log - Módulo de logging geral da aplicação.
- * @property {object} API - Módulo de logging para requisições da API.
- * @property {object} Depuracao - Módulo de logging para depuração.
+ * Cada propriedade é um módulo especializado, permitindo um logging focado e contextual.
  */
 export const LogSupremo = {
+  /** Log geral, estruturado e com níveis (info, erro, debug, etc.). */
+  Log: LogProvider,
+  
+  /** Monitoramento detalhado de todas as requisições e respostas de APIs externas. */
+  API: LogRequisicoesAPI,
+
+  /** Rastreamento de eventos de interação do usuário na interface (cliques, etc.). */
   Rastreamento: rastreadorDeEventos,
-  Auditoria: {},
-  Log: ServicoLog,
-  API: LogRequisicoesAPI, // Expõe o novo módulo
-  Depuracao: DepuracaoLogger,
+
+  /** Registro de exceções, com stack traces e contexto completo. */
+  Erros: LogErros,
+
+  /** Medição de performance de operações críticas. */
+  Performance: LogPerformance,
+
+  /** Trilha de auditoria para operações sensíveis no banco de dados. */
+  Auditoria: AuditoriaDB,
+
+  /** Registro de eventos chave da jornada do usuário (login, compra, etc.). */
+  Negocio: LogEventosNegocio,
+
+  /** Monitoramento de atividades suspeitas (tentativas de login, etc.). */
+  Seguranca: LogSeguranca,
+
+  /** Logs de comunicação com serviços de terceiros. */
+  Integracoes: LogIntegracoes,
+
+  /** Monitoramento de acertos e falhas do cache. */
+  Cache: LogCache,
+
+  /** Sistema para disparar alertas críticos (ex: para Slack, PagerDuty). */
+  Alertas: Alertas,
+
+  /** Captura de snapshots do estado da aplicação em momentos chave. */
+  Snapshot: SnapshotEstado,
 };
