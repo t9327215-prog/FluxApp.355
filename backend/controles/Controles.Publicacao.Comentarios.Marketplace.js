@@ -4,13 +4,11 @@ import ServicoComentariosMarketplace from '../ServicosBackend/Servicos.Publicaca
 import ServicoRespostaHTTP from '../ServicosBackend/Servico.HTTP.Resposta.js';
 import { validarCriacaoComentario } from '../validators/Validator.Estrutura.Comentario.js';
 
-const logger = Log.createLogger('MarketplaceComments');
-
 const criarComentario = async (req, res) => {
     const { itemId } = req.params;
     const userId = req.user.id;
 
-    logger.info('COMMENT_MARKETPLACE_CREATE_START', { itemId, userId, body: req.body });
+    Log.controller.info('Iniciando criação de comentário para item do Marketplace', { event: 'COMMENT_MARKETPLACE_CREATE_START', itemId, userId, body: req.body });
 
     try {
         // 1. Validar a entrada
@@ -22,20 +20,20 @@ const criarComentario = async (req, res) => {
         const dadosValidados = validarCriacaoComentario(dadosParaValidar);
 
         // 2. Chamar o serviço com o texto validado
-        // Assinatura do serviço: (idDoItem, idDoUsuario, textoDoComentario)
         const novoComentario = await ServicoComentariosMarketplace.criarComentario(
             itemId, 
             userId, 
             dadosValidados.texto
         );
         
-        logger.info('COMMENT_MARKETPLACE_CREATE_SUCCESS', { commentId: novoComentario.id, itemId, userId });
+        Log.controller.info('Comentário de Marketplace criado com sucesso', { event: 'COMMENT_MARKETPLACE_CREATE_SUCCESS', commentId: novoComentario.id, itemId, userId });
         
         // 3. Enviar a resposta
         return ServicoRespostaHTTP.criado(res, novoComentario, "Comentário criado com sucesso");
 
     } catch (error) {
-        logger.error('COMMENT_MARKETPLACE_CREATE_ERROR', { 
+        Log.controller.error('Erro ao criar comentário de Marketplace', { 
+            event: 'COMMENT_MARKETPLACE_CREATE_ERROR',
             errorMessage: error.message,
             itemId, 
             userId,
@@ -48,16 +46,16 @@ const criarComentario = async (req, res) => {
 
 const obterComentariosPorItemId = async (req, res) => {
     const { itemId } = req.params;
-    logger.info('COMMENT_MARKETPLACE_GET_START', { itemId });
+    Log.controller.info('Buscando comentários para item do Marketplace', { event: 'COMMENT_MARKETPLACE_GET_START', itemId });
 
     try {
         const comentarios = await ServicoComentariosMarketplace.obterComentariosPorItemId(itemId);
 
-        logger.info('COMMENT_MARKETPLACE_GET_SUCCESS', { itemId, count: comentarios.length });
+        Log.controller.info('Busca de comentários para item do Marketplace bem-sucedida', { event: 'COMMENT_MARKETPLACE_GET_SUCCESS', itemId, count: comentarios.length });
 
         return ServicoRespostaHTTP.sucesso(res, comentarios);
     } catch (error) {
-        logger.error('COMMENT_MARKETPLACE_GET_ERROR', { errorMessage: error.message, itemId });
+        Log.controller.error('Erro ao buscar comentários de Marketplace', { event: 'COMMENT_MARKETPLACE_GET_ERROR', errorMessage: error.message, itemId });
 
         return ServicoRespostaHTTP.erro(res, 'Falha ao buscar comentários.', 500, error.message);
     }
@@ -67,16 +65,16 @@ const atualizarComentario = async (req, res) => {
     const { commentId } = req.params;
     const userId = req.user.id;
 
-    logger.info('COMMENT_MARKETPLACE_UPDATE_START', { commentId, userId });
+    Log.controller.info('Iniciando atualização de comentário de Marketplace', { event: 'COMMENT_MARKETPLACE_UPDATE_START', commentId, userId });
 
     try {
         const comentarioAtualizado = await ServicoComentariosMarketplace.atualizarComentario(commentId, userId, req.body.content);
         
-        logger.info('COMMENT_MARKETPLACE_UPDATE_SUCCESS', { commentId, userId });
+        Log.controller.info('Comentário de Marketplace atualizado com sucesso', { event: 'COMMENT_MARKETPLACE_UPDATE_SUCCESS', commentId, userId });
         
         return ServicoRespostaHTTP.sucesso(res, comentarioAtualizado, "Comentário atualizado com sucesso");
     } catch (error) {
-        logger.error('COMMENT_MARKETPLACE_UPDATE_ERROR', { errorMessage: error.message, commentId, userId });
+        Log.controller.error('Erro ao atualizar comentário de Marketplace', { event: 'COMMENT_MARKETPLACE_UPDATE_ERROR', errorMessage: error.message, commentId, userId });
 
         return ServicoRespostaHTTP.erro(res, 'Falha ao atualizar comentário.', 500, error.message);
     }
@@ -86,16 +84,16 @@ const deletarComentario = async (req, res) => {
     const { commentId } = req.params;
     const userId = req.user.id;
 
-    logger.info('COMMENT_MARKETPLACE_DELETE_START', { commentId, userId });
+    Log.controller.info('Iniciando exclusão de comentário de Marketplace', { event: 'COMMENT_MARKETPLACE_DELETE_START', commentId, userId });
 
     try {
         await ServicoComentariosMarketplace.deletarComentario(commentId, userId);
 
-        logger.info('COMMENT_MARKETPLACE_DELETE_SUCCESS', { commentId, userId });
+        Log.controller.info('Comentário de Marketplace excluído com sucesso', { event: 'COMMENT_MARKETPLACE_DELETE_SUCCESS', commentId, userId });
 
         return ServicoRespostaHTTP.sucesso(res, null, "Comentário deletado com sucesso");
     } catch (error) {
-        logger.error('COMMENT_MARKETPLACE_DELETE_ERROR', { errorMessage: error.message, commentId, userId });
+        Log.controller.error('Erro ao excluir comentário de Marketplace', { event: 'COMMENT_MARKETPLACE_DELETE_ERROR', errorMessage: error.message, commentId, userId });
         
         return ServicoRespostaHTTP.erro(res, 'Falha ao deletar comentário.', 500, error.message);
     }

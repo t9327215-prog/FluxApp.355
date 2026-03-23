@@ -1,10 +1,9 @@
 
+// backend/controles/Controles.Criacao.Grupo.Pago.js
 import Log from '../Logs/BK.Log.Supremo.js';
 import ServicoHTTPResposta from '../ServicosBackend/Servico.HTTP.Resposta.js';
 import ServicoCriacaoGrupoPago from '../ServicosBackend/Servicos.Criacao.Grupo.Pago.js';
 import { validarCriacaoGrupo } from '../validators/Validator.Estrutura.Grupo.js';
-
-const logger = Log.createLogger('PaidGroup');
 
 class ControleCriacaoGrupoPago {
     async handle(req, res) {
@@ -18,17 +17,18 @@ class ControleCriacaoGrupoPago {
             };
             const dadosValidados = validarCriacaoGrupo(dadosParaValidar);
 
-            logger.info('GROUP_PAID_CREATE_START', { donoId, nome: dadosValidados.nome });
+            Log.controller.info('Iniciando criação de grupo pago', { event: 'GROUP_PAID_CREATE_START', donoId, nome: dadosValidados.nome });
 
             const grupoSalvo = await ServicoCriacaoGrupoPago.criar(dadosValidados);
 
-            logger.info('GROUP_PAID_CREATE_SUCCESS', { groupId: grupoSalvo.id, donoId });
+            Log.controller.info('Criação de grupo pago bem-sucedida', { event: 'GROUP_PAID_CREATE_SUCCESS', groupId: grupoSalvo.id, donoId });
 
             const resposta = grupoSalvo.paraRespostaHttp ? grupoSalvo.paraRespostaHttp() : grupoSalvo;
             return ServicoHTTPResposta.sucesso(res, resposta, 201);
 
         } catch (error) {
-            logger.error('GROUP_PAID_CREATE_ERROR', {
+            Log.controller.error('Erro na criação de grupo pago', {
+                event: 'GROUP_PAID_CREATE_ERROR',
                 errorMessage: error.message,
                 donoId,
                 requestBody: req.body

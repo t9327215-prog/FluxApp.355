@@ -7,7 +7,6 @@ import repositorioSessao from '../Repositorios/Repositorio.Sessao.js';
 import Log from '../Logs/BK.Log.Supremo.js';
 import Sessao from '../models/Models.Estrutura.Sessao.js';
 
-const logger = Log.createLogger('Servico.Sessao');
 const JWT_SECRET = process.env.JWT_SECRET || 'seu_segredo_jwt_super_secreto';
 
 /**
@@ -20,7 +19,7 @@ const prepararNovaSessao = async (data) => {
         throw new Error('Dados de usuário inválidos para criar sessão.');
     }
 
-    logger.info('SESSION_PREPARE_START', { userId: usuario.id });
+    Log.service.info('Preparando nova sessão', { event: 'SESSION_PREPARE_START', userId: usuario.id });
 
     const payload = { user: usuario.paraRespostaHttp() };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
@@ -39,7 +38,7 @@ const prepararNovaSessao = async (data) => {
  * Salva os dados de uma sessão validada no repositório.
  */
 const salvarSessao = async (dadosSessaoValidados) => {
-    logger.info('SESSION_SAVE_START', { userId: dadosSessaoValidados.idUsuario });
+    Log.service.info('Salvando sessão', { event: 'SESSION_SAVE_START', userId: dadosSessaoValidados.idUsuario });
     
     const novaSessao = new Sessao({
         id: uuidv4(),
@@ -48,7 +47,7 @@ const salvarSessao = async (dadosSessaoValidados) => {
     });
 
     await repositorioSessao.criar(novaSessao.paraBancoDeDados());
-    logger.info('SESSION_SAVE_SUCCESS', { userId: dadosSessaoValidados.idUsuario });
+    Log.service.info('Sessão salva com sucesso', { event: 'SESSION_SAVE_SUCCESS', userId: dadosSessaoValidados.idUsuario });
 };
 
 
@@ -56,11 +55,11 @@ const salvarSessao = async (dadosSessaoValidados) => {
  * Invalida um token de sessão (logout).
  */
 const encerrarSessao = async (token) => {
-    logger.info('SESSION_END_START', { message: "Iniciando processo de logout." });
+    Log.service.info("Iniciando processo de logout.", { event: 'SESSION_END_START' });
 
     await repositorioSessao.invalidar(token);
 
-    logger.info('SESSION_END_SUCCESS', { message: "Sessão invalidada com sucesso." });
+    Log.service.info("Sessão invalidada com sucesso.", { event: 'SESSION_END_SUCCESS' });
     return { message: "Logout bem-sucedido" };
 };
 

@@ -7,16 +7,10 @@ import Log from '../Logs/BK.Log.Supremo.js';
 import Usuario from '../models/Models.Estrutura.Usuario.js';
 import repositorioUsuario from '../Repositorios/Repositorio.Usuario.js';
 
-const logger = Log.createLogger('Servico.Usuario');
-
-/**
- * Registra um novo usuário no sistema.
- * @param {object} dadosUsuario - Dados já validados pelo controlador.
- */
 const registrarNovoUsuario = async (dadosUsuario) => {
-    const { nome, email, senha } = dadosUsuario; // O serviço espera dados já validados
+    const { nome, email, senha } = dadosUsuario;
     
-    logger.info('REGISTRATION_START', { email });
+    Log.service.info('Iniciando registro de novo usuário', { event: 'REGISTRATION_START', email });
 
     const usuarioExistente = await repositorioUsuario.encontrarPorEmail(email);
     if (usuarioExistente) {
@@ -34,19 +28,15 @@ const registrarNovoUsuario = async (dadosUsuario) => {
     await novoUsuario.criptografarSenha();
 
     const usuarioDb = await repositorioUsuario.criar(novoUsuario.paraBancoDeDados());
-    logger.info('REGISTRATION_SUCCESS', { userId: usuarioDb.id, email });
+    Log.service.info('Usuário registrado com sucesso', { event: 'REGISTRATION_SUCCESS', userId: usuarioDb.id, email });
 
     return Usuario.deBancoDeDados(usuarioDb);
 };
 
-/**
- * Autentica um usuário com base em e-mail e senha.
- * @param {object} credenciais - Credenciais já validadas pelo controlador.
- */
 const autenticarUsuarioPorCredenciais = async (credenciais) => {
-    const { email, senha } = credenciais; // O serviço espera dados já validados
+    const { email, senha } = credenciais;
     
-    logger.info('AUTH_CREDENTIALS_START', { email });
+    Log.service.info('Iniciando autenticação por credenciais', { event: 'AUTH_CREDENTIALS_START', email });
 
     const usuarioDb = await repositorioUsuario.encontrarPorEmail(email);
     if (!usuarioDb || !usuarioDb.password_hash) {
@@ -58,18 +48,14 @@ const autenticarUsuarioPorCredenciais = async (credenciais) => {
         throw new Error('Credenciais inválidas.');
     }
 
-    logger.info('AUTH_CREDENTIALS_SUCCESS', { email, userId: usuarioDb.id });
+    Log.service.info('Usuário autenticado com sucesso', { event: 'AUTH_CREDENTIALS_SUCCESS', email, userId: usuarioDb.id });
     return Usuario.deBancoDeDados(usuarioDb);
 };
 
-/**
- * Encontra um usuário existente ou cria um novo com base no perfil do Google.
- * @param {object} dadosGoogle - Dados do Google já validados pelo controlador.
- */
 const autenticarOuCriarPorGoogle = async (dadosGoogle) => {
-    const { nome, email, google_id } = dadosGoogle; // O serviço espera dados já validados
+    const { nome, email, google_id } = dadosGoogle;
     
-    logger.info('AUTH_GOOGLE_START', { email });
+    Log.service.info('Iniciando autenticação ou criação por Google', { event: 'AUTH_GOOGLE_START', email });
 
     let usuarioDb = await repositorioUsuario.encontrarPorGoogleId(google_id);
     let isNewUser = false;
@@ -91,7 +77,7 @@ const autenticarOuCriarPorGoogle = async (dadosGoogle) => {
         });
         
         usuarioDb = await repositorioUsuario.criar(novoUsuario.paraBancoDeDados());
-        logger.info('AUTH_GOOGLE_NEW_USER', { userId: usuarioDb.id, email });
+        Log.service.info('Novo usuário criado via Google', { event: 'AUTH_GOOGLE_NEW_USER', userId: usuarioDb.id, email });
     }
 
     return {
@@ -100,18 +86,14 @@ const autenticarOuCriarPorGoogle = async (dadosGoogle) => {
     };
 };
 
-/**
- * Atualiza o perfil de um usuário existente.
- */
 const atualizarPerfilUsuario = async (idUsuario, dadosPerfil) => {
-    logger.info('PROFILE_UPDATE_START', { userId: idUsuario });
+    Log.service.info('Iniciando atualização de perfil de usuário', { event: 'PROFILE_UPDATE_START', userId: idUsuario });
 
     const usuarioExistente = await repositorioUsuario.encontrarPorId(idUsuario);
     if (!usuarioExistente) {
         throw new Error('Usuário não encontrado.');
     }
 
-    // Filtra dados para evitar a atualização de campos sensíveis/imútaveis
     const dadosParaAtualizar = Object.keys(dadosPerfil).reduce((acc, key) => {
         if (dadosPerfil[key] !== undefined) {
             acc[key] = dadosPerfil[key];
@@ -122,17 +104,13 @@ const atualizarPerfilUsuario = async (idUsuario, dadosPerfil) => {
 
     const usuarioAtualizadoDb = await repositorioUsuario.atualizar(idUsuario, dadosParaAtualizar);
     
-    logger.info('PROFILE_UPDATE_SUCCESS', { userId: idUsuario });
+    Log.service.info('Perfil de usuário atualizado com sucesso', { event: 'PROFILE_UPDATE_SUCCESS', userId: idUsuario });
 
     return Usuario.deBancoDeDados(usuarioAtualizadoDb);
 };
 
-
-/**
- * Encontra um usuário pelo ID.
- */
 const encontrarUsuarioPorId = async (id) => {
-    logger.info('FIND_USER_BY_ID', { userId: id });
+    Log.service.info('Buscando usuário por ID', { event: 'FIND_USER_BY_ID', userId: id });
     const usuarioDb = await repositorioUsuario.encontrarPorId(id);
     if (!usuarioDb) {
         return null;

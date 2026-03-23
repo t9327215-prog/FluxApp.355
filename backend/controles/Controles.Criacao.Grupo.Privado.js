@@ -1,10 +1,9 @@
 
+// backend/controles/Controles.Criacao.Grupo.Privado.js
 import Log from '../Logs/BK.Log.Supremo.js';
 import ServicoHTTPResposta from '../ServicosBackend/Servico.HTTP.Resposta.js';
 import ServicoCriacaoGrupoPrivado from '../ServicosBackend/Servicos.Criacao.Grupo.Privado.js';
 import { validarCriacaoGrupo } from '../validators/Validator.Estrutura.Grupo.js';
-
-const logger = Log.createLogger('PrivateGroup');
 
 class ControleCriacaoGrupoPrivado {
     async handle(req, res) {
@@ -18,17 +17,18 @@ class ControleCriacaoGrupoPrivado {
             };
             const dadosValidados = validarCriacaoGrupo(dadosParaValidar);
 
-            logger.info('GROUP_PRIVATE_CREATE_START', { donoId, nome: dadosValidados.nome });
+            Log.controller.info('Iniciando criação de grupo privado', { event: 'GROUP_PRIVATE_CREATE_START', donoId, nome: dadosValidados.nome });
 
             const grupoSalvo = await ServicoCriacaoGrupoPrivado.criar(dadosValidados);
 
-            logger.info('GROUP_PRIVATE_CREATE_SUCCESS', { groupId: grupoSalvo.id, donoId });
+            Log.controller.info('Criação de grupo privado bem-sucedida', { event: 'GROUP_PRIVATE_CREATE_SUCCESS', groupId: grupoSalvo.id, donoId });
 
             const resposta = grupoSalvo.paraRespostaHttp ? grupoSalvo.paraRespostaHttp() : grupoSalvo;
             return ServicoHTTPResposta.sucesso(res, resposta, 201);
 
         } catch (error) {
-            logger.error('GROUP_PRIVATE_CREATE_ERROR', {
+            Log.controller.error('Erro na criação de grupo privado', {
+                event: 'GROUP_PRIVATE_CREATE_ERROR',
                 errorMessage: error.message,
                 donoId,
                 requestBody: req.body

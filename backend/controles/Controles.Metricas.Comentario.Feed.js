@@ -3,46 +3,44 @@ import Log from '../Logs/BK.Log.Supremo.js';
 import ServicoHTTPResposta from '../ServicosBackend/Servico.HTTP.Resposta.js';
 import * as feedCommentMetricsService from '../ServicosBackend/Servicos.Metricas.Comentario.Feed.js';
 
-const logger = Log.createLogger('FeedCommentMetrics');
-
 async function trackComment(req, res) {
     const { commentData } = req.body;
-    logger.info('METRIC_COMMENT_TRACK_START', { postId: commentData?.postId });
+    Log.controller.info('Iniciando rastreamento de métrica de comentário', { event: 'METRIC_COMMENT_TRACK_START', postId: commentData?.postId });
 
     try {
         await feedCommentMetricsService.trackComment(commentData);
-        logger.info('METRIC_COMMENT_TRACK_SUCCESS', { postId: commentData?.postId });
+        Log.controller.info('Métrica de comentário rastreada com sucesso', { event: 'METRIC_COMMENT_TRACK_SUCCESS', postId: commentData?.postId });
         return ServicoHTTPResposta.sucesso(res, { message: 'Metric tracked successfully' });
     } catch (error) {
-        logger.error('METRIC_COMMENT_TRACK_ERROR', { errorMessage: error.message, data: commentData });
+        Log.controller.error('Erro ao rastrear métrica de comentário', { event: 'METRIC_COMMENT_TRACK_ERROR', errorMessage: error.message, data: commentData });
         return ServicoHTTPResposta.erro(res, 'Error tracking metric', 500, error.message);
     }
 }
 
 async function trackCommentLike(req, res) {
     const { commentId } = req.body;
-    logger.info('METRIC_COMMENT_LIKE_TRACK_START', { commentId });
+    Log.controller.info('Iniciando rastreamento de curtida em comentário', { event: 'METRIC_COMMENT_LIKE_TRACK_START', commentId });
 
     try {
         await feedCommentMetricsService.trackCommentLike(commentId);
-        logger.info('METRIC_COMMENT_LIKE_TRACK_SUCCESS', { commentId });
+        Log.controller.info('Curtida em comentário rastreada com sucesso', { event: 'METRIC_COMMENT_LIKE_TRACK_SUCCESS', commentId });
         return ServicoHTTPResposta.sucesso(res, { message: 'Metric tracked successfully' });
     } catch (error) {
-        logger.error('METRIC_COMMENT_LIKE_TRACK_ERROR', { errorMessage: error.message, commentId });
+        Log.controller.error('Erro ao rastrear curtida em comentário', { event: 'METRIC_COMMENT_LIKE_TRACK_ERROR', errorMessage: error.message, commentId });
         return ServicoHTTPResposta.erro(res, 'Error tracking metric', 500, error.message);
     }
 }
 
 async function trackCommentReply(req, res) {
     const { commentId, replyData } = req.body;
-    logger.info('METRIC_COMMENT_REPLY_TRACK_START', { commentId });
+    Log.controller.info('Iniciando rastreamento de resposta a comentário', { event: 'METRIC_COMMENT_REPLY_TRACK_START', commentId });
 
     try {
         await feedCommentMetricsService.trackCommentReply(commentId, replyData);
-        logger.info('METRIC_COMMENT_REPLY_TRACK_SUCCESS', { commentId });
+        Log.controller.info('Resposta a comentário rastreada com sucesso', { event: 'METRIC_COMMENT_REPLY_TRACK_SUCCESS', commentId });
         return ServicoHTTPResposta.sucesso(res, { message: 'Metric tracked successfully' });
     } catch (error) {
-        logger.error('METRIC_COMMENT_REPLY_TRACK_ERROR', { errorMessage: error.message, commentId, data: replyData });
+        Log.controller.error('Erro ao rastrear resposta a comentário', { event: 'METRIC_COMMENT_REPLY_TRACK_ERROR', errorMessage: error.message, commentId, data: replyData });
         return ServicoHTTPResposta.erro(res, 'Error tracking metric', 500, error.message);
     }
 }

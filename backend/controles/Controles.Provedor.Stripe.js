@@ -1,37 +1,37 @@
 
+// backend/controles/Controles.Provedor.Stripe.js
 import Stripe from 'stripe';
 import Log from '../Logs/BK.Log.Supremo.js';
 import config from '../config/Variaveis.Backend.js';
 import SistemaTaxasStripe from '../ServicosBackend/Sistema.Taxas.Stripe.js';
 import ServicoHTTPResposta from '../ServicosBackend/Servico.HTTP.Resposta.js';
 
-const logger = Log.createLogger('StripeProvider');
 let stripe = null;
 
 if (config.stripeSecretKey) {
     stripe = new Stripe(config.stripeSecretKey);
-    logger.info('STRIPE_INITIALIZED');
+    Log.controller.info('Stripe inicializado', { event: 'STRIPE_INITIALIZED' });
 } else {
-    logger.warn('STRIPE_NOT_INITIALIZED', { message: 'Stripe secret key not found' });
+    Log.controller.warn('Stripe não inicializado', { event: 'STRIPE_NOT_INITIALIZED', message: 'Stripe secret key not found' });
 }
 
 const getSellerStripeAccountId = async (sellerEmail) => {
-    logger.info('STRIPE_GET_SELLER_ACCOUNT_ID', { sellerEmail });
-    // TODO: Implement actual logic to fetch the seller's Stripe account ID
+    Log.controller.info('Obtendo ID da conta Stripe do vendedor', { event: 'STRIPE_GET_SELLER_ACCOUNT_ID', sellerEmail });
+    // TODO: Implementar lógica real para buscar o ID da conta Stripe do vendedor
     return 'acct_1PGGceR5gdo2V8nF';
 };
 
 const createPaymentIntent = async (req, res) => {
     if (!stripe) {
-        logger.error('STRIPE_PAYMENT_INTENT_ERROR', { errorMessage: 'Stripe not configured' });
+        Log.controller.error('Erro ao criar intenção de pagamento Stripe: Stripe não configurado', { event: 'STRIPE_PAYMENT_INTENT_ERROR', errorMessage: 'Stripe not configured' });
         return ServicoHTTPResposta.servicoIndisponivel(res, "O sistema de pagamentos não está configurado. Contate o suporte.");
     }
 
     const { amount, currency, creatorEmail } = req.body;
-    logger.info('STRIPE_CREATE_PAYMENT_INTENT_START', { amount, currency, creatorEmail });
+    Log.controller.info('Iniciando criação de intenção de pagamento Stripe', { event: 'STRIPE_CREATE_PAYMENT_INTENT_START', amount, currency, creatorEmail });
 
     if (!creatorEmail) {
-        logger.warn('STRIPE_CREATE_PAYMENT_INTENT_WARN', { message: 'Creator email is required' });
+        Log.controller.warn('O e-mail do criador é obrigatório', { event: 'STRIPE_CREATE_PAYMENT_INTENT_WARN', message: 'Creator email is required' });
         return ServicoHTTPResposta.requisicaoMalSucedida(res, "O e-mail do criador é obrigatório para processar o pagamento.");
     }
 
@@ -39,12 +39,12 @@ const createPaymentIntent = async (req, res) => {
         const destinationAccountId = await getSellerStripeAccountId(creatorEmail);
 
         if (!destinationAccountId) {
-            logger.warn('STRIPE_CREATE_PAYMENT_INTENT_WARN', { message: 'Destination account not found' });
+            Log.controller.warn('Conta de destino não encontrada', { event: 'STRIPE_CREATE_PAYMENT_INTENT_WARN', message: 'Destination account not found' });
             return ServicoHTTPResposta.naoEncontrado(res, "A conta de pagamento do vendedor não foi encontrada ou não está conectada.");
         }
 
         const applicationFee = SistemaTaxasStripe.calcularTaxaPlataforma(amount);
-        logger.info('STRIPE_APPLICATION_FEE_CALCULATED', { applicationFee });
+        Log.controller.info('Taxa da plataforma calculada', { event: 'STRIPE_APPLICATION_FEE_CALCULATED', applicationFee });
 
         const paymentIntent = await stripe.paymentIntents.create({
             amount: amount,
@@ -55,30 +55,30 @@ const createPaymentIntent = async (req, res) => {
             },
         });
 
-        logger.info('STRIPE_CREATE_PAYMENT_INTENT_SUCCESS', { paymentIntentId: paymentIntent.id });
+        Log.controller.info('Intenção de pagamento Stripe criada com sucesso', { event: 'STRIPE_CREATE_PAYMENT_INTENT_SUCCESS', paymentIntentId: paymentIntent.id });
         ServicoHTTPResposta.criado(res, { clientSecret: paymentIntent.client_secret });
 
     } catch (error) {
-        logger.error('STRIPE_CREATE_PAYMENT_INTENT_ERROR', { errorMessage: error.message, amount, currency, creatorEmail });
+        Log.controller.error('Erro ao criar intenção de pagamento Stripe', { event: 'STRIPE_CREATE_PAYMENT_INTENT_ERROR', errorMessage: error.message, amount, currency, creatorEmail });
         ServicoHTTPResposta.erro(res, error.message, 400, error.message);
     }
 };
 
 const checkSessionStatus = async (req, res) => {
     if (!stripe) {
-        logger.error('STRIPE_CHECK_SESSION_STATUS_ERROR', { errorMessage: 'Stripe not configured' });
+        Log.controller.error('Erro ao verificar status da sessão Stripe: Stripe não configurado', { event: 'STRIPE_CHECK_SESSION_STATUS_ERROR', errorMessage: 'Stripe not configured' });
         return ServicoHTTPResposta.servicoIndisponivel(res, "O sistema de pagamentos não está configurado. Contate o suporte.");
     }
 
     const { sessionId } = req.params;
-    logger.info('STRIPE_CHECK_SESSION_STATUS_START', { sessionId });
+    Log.controller.info('Iniciando verificação de status da sessão Stripe', { event: 'STRIPE_CHECK_SESSION_STATUS_START', sessionId });
 
     try {
         const session = await stripe.checkout.sessions.retrieve(sessionId);
-        logger.info('STRIPE_CHECK_SESSION_STATUS_SUCCESS', { sessionId, status: session.status });
+        Log.controller.info('Status da sessão Stripe verificado com sucesso', { event: 'STRIPE_CHECK_SESSION_STATUS_SUCCESS', sessionId, status: session.status });
         ServicoHTTPResposta.sucesso(res, { status: session.status, payment_status: session.payment_status });
     } catch (error) {
-        logger.error('STRIPE_CHECK_SESSION_STATUS_ERROR', { errorMessage: error.message, sessionId });
+        Log.controller.error('Erro ao verificar status da sessão Stripe', { event: 'STRIPE_CHECK_SESSION_STATUS_ERROR', errorMessage: error.message, sessionId });
         ServicoHTTPResposta.erro(res, error.message, 400, error.message);
     }
 };
