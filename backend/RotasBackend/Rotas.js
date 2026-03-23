@@ -7,6 +7,7 @@ import rotasUsuario from './Rotas.Usuario.js';
 
 // --- Rotas de Infraestrutura ---
 import rotasGestaoVariaveis from './Rotas.Gestao.Variaveis.js';
+import rotasLogFrontend from './Rotas.Log.Frontend.js';
 
 // --- Rotas de Canais de Conteúdo ---
 import rotasPublicacaoFeed from './Rotas.Publicacao.Feed.js';
@@ -40,6 +41,9 @@ router.use('/usuarios', rotasUsuario);
 
 // --- Configuração ---
 router.use('/v1/config', rotasGestaoVariaveis);
+
+// --- Rotas de Logging ---
+router.use('/log/frontend', rotasLogFrontend);
 
 // --- Canais Principais ---
 router.use('/feed', rotasPublicacaoFeed);

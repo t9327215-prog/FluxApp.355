@@ -83,7 +83,26 @@ class LogProvider {
     // Imprime o objeto JSON estruturado no console
     const logFunction = console[level.toLowerCase() as 'info'] || console.log;
     logFunction(JSON.stringify(logEntry, null, 2));
+    
+    // Envia o log para o backend
+    this.enviarLogParaBackend(logEntry);
+
   }
+
+  private static async enviarLogParaBackend(logEntry: LogEntry) {
+    try {
+      await fetch('/api/log/frontend', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(logEntry),
+      });
+    } catch (error) {
+      console.error('Falha ao enviar log para o backend:', error);
+    }
+  }
+
 
   // --- INTERFACE PÚBLICA (Mantida do original para compatibilidade) ---
 
