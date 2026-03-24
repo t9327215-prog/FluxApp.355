@@ -9,6 +9,8 @@ import { GlobalTracker } from '../Componentes/layout/GlobalTracker';
 import { DeepLinkHandler } from '../Componentes/layout/DeepLinkHandler';
 import { AuthProvider } from '../ServiçosFrontend/ServiçoDeAutenticação/Provedor.Autenticacao';
 import MonitorDeErrosDeInterface from '../Componentes/ComponentesDePrevençãoDeErros/MonitorDeErrosDeInterface';
+import GlobalLogger from './GlobalLogger';
+import RouteLogger from './RouteLogger';
 
 // Instância do QueryClient
 const queryClient = new QueryClient();
@@ -35,6 +37,8 @@ export const SistemaProvedores: React.FC<{ children: React.ReactNode }> = ({ chi
             <ProvedorModal>
               <HashRouter>
                 <GlobalTracker />
+                <GlobalLogger />
+                <RouteLogger />
                 <DeepLinkHandler />
                 <Suspense fallback={<LoadingFallback />}>
                   {children}
