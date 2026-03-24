@@ -1,3 +1,4 @@
+
 // backend/config/middleware.js
 
 import express from 'express';
@@ -9,6 +10,17 @@ import helmet from 'helmet';
 import * as Log from '../Logs/BK.Log.Supremo.js'; // Corrigido para importação nomeada
 
 export const setupMiddlewares = (app, io) => {
+
+    // --- [NOVO] Middleware de Debug para todas as requisições ---
+    app.use((req, res, next) => {
+        // Ignora o log para o próprio endpoint de logs do frontend para não poluir o console
+        if (req.path !== '/api/log/frontend') {
+            console.log(`[DEBUG] Requisição Recebida: ${req.method} ${req.path}`);
+        }
+        next();
+    });
+    // --- Fim do Middleware de Debug ---
+
     // Configurações de segurança e otimização
     app.use(helmet({
         contentSecurityPolicy: false,
