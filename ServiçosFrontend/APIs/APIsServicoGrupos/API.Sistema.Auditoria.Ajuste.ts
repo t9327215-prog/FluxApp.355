@@ -1,15 +1,20 @@
-
 import ClienteBackend from '../../Cliente.Backend';
+import {
+    IAuditoriaAjusteServico,
+    LogAjuste, LogAjusteSchema
+} from '../../Contratos/Contrato.Grupo.Auditoria.Ajuste';
+import { z } from 'zod';
 
-const API_Sistema_Auditoria_Ajuste = {
-    /**
-     * Busca os logs de auditoria relacionados a ajustes e configurações do grupo.
-     * @param {string} idGrupo - O ID do grupo.
-     * @returns {Promise<any>}
-     */
-    obterLogs(idGrupo: string): Promise<any> {
-        return ClienteBackend.get(`/groups/${idGrupo}/audit/settings`);
-    },
-};
+/**
+ * @file Implementação do serviço de auditoria para ajustes de configurações do grupo.
+ */
+class AuditoriaAjusteAPISupremo implements IAuditoriaAjusteServico {
 
-export default API_Sistema_Auditoria_Ajuste;
+    async obterLogs(idGrupo: string): Promise<LogAjuste[]> {
+        const resposta = await ClienteBackend.get(`/groups/${idGrupo}/audit/settings`);
+        // Valida se a resposta do backend corresponde a um array de logs de ajuste.
+        return z.array(LogAjusteSchema).parse(resposta.data);
+    }
+}
+
+export default new AuditoriaAjusteAPISupremo();

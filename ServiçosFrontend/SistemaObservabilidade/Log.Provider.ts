@@ -131,7 +131,7 @@ class LogProvider {
     this.log('WARN', module, message, data, traceId);
   }
 
-  static erro(module: string, message: string, error: any = null, traceId?: string) {
+  static error(module: string, message: string, error: any = null, traceId?: string) {
     this.log('ERROR', module, message, error, traceId);
   }
 

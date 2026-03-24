@@ -1,15 +1,20 @@
-
 import ClienteBackend from '../../Cliente.Backend';
+import {
+    IAuditoriaEntradaSaidaServico,
+    LogEntradaSaida, LogEntradaSaidaSchema
+} from '../../Contratos/Contrato.Grupo.Auditoria.Entrada.Saida';
+import { z } from 'zod';
 
-const API_Sistema_Auditoria_Entrada_Saida = {
-    /**
-     * Busca os logs de auditoria de entrada e saída de membros no grupo.
-     * @param {string} idGrupo - O ID do grupo.
-     * @returns {Promise<any>}
-     */
-    obterLogs(idGrupo: string): Promise<any> {
-        return ClienteBackend.get(`/groups/${idGrupo}/audit/entry-exit`);
-    },
-};
+/**
+ * @file Implementação do serviço de auditoria para entrada e saída de membros.
+ */
+class AuditoriaEntradaSaidaAPISupremo implements IAuditoriaEntradaSaidaServico {
 
-export default API_Sistema_Auditoria_Entrada_Saida;
+    async obterLogs(idGrupo: string): Promise<LogEntradaSaida[]> {
+        const resposta = await ClienteBackend.get(`/groups/${idGrupo}/audit/entry-exit`);
+        // Valida se a resposta do backend corresponde a um array de logs de entrada/saída.
+        return z.array(LogEntradaSaidaSchema).parse(resposta.data);
+    }
+}
+
+export default new AuditoriaEntradaSaidaAPISupremo();

@@ -1,37 +1,39 @@
-
-// Arquivo: ServiçosFrontend/APIs/API.Sistema.Grupo.Diretrizes.ts
-
 import ClienteBackend from '../../Cliente.Backend';
+import {
+    IGrupoDiretrizesServico,
+    Diretrizes, DiretrizesSchema,
+    RespostaAcaoDiretrizes, RespostaAcaoDiretrizesSchema
+} from '../../Contratos/Contrato.Grupo.Diretrizes';
 
-const API_Sistema_Grupo_Diretrizes = {
-    /**
-     * Atualiza as diretrizes de texto de um grupo.
-     * @param {string} idGrupo - O ID do grupo.
-     * @param {{ guidelines: string }} diretrizes - O objeto contendo as diretrizes.
-     * @returns {Promise<any>}
-     */
-    atualizarDiretrizes(idGrupo: string, diretrizes: { guidelines: string }): Promise<any> {
-        return ClienteBackend.put(`/groups/${idGrupo}/guidelines`, diretrizes);
-    },
+/**
+ * @file Implementação do serviço para gerenciamento das diretrizes de um grupo.
+ */
+class GrupoDiretrizesAPISupremo implements IGrupoDiretrizesServico {
 
-    /**
-     * Atualiza as configurações de moderação (slow mode) de um grupo.
-     * @param {string} idGrupo - O ID do grupo.
-     * @param {object} configuracoes - O objeto contendo as configs de slow mode.
-     * @returns {Promise<any>}
-     */
-    atualizarConfiguracoes(idGrupo: string, configuracoes: object): Promise<any> {
-        return ClienteBackend.put(`/groups/${idGrupo}/settings`, configuracoes);
-    },
-    
     /**
      * Obtém as diretrizes de um grupo.
      * @param {string} idGrupo - O ID do grupo.
-     * @returns {Promise<any>}
+     * @returns {Promise<Diretrizes>}
      */
-    obterDiretrizes(idGrupo: string): Promise<any> {
-        return ClienteBackend.get(`/groups/${idGrupo}/guidelines`);
-    },
-};
+    async obterDiretrizes(idGrupo: string): Promise<Diretrizes> {
+        const resposta = await ClienteBackend.get(`/groups/${idGrupo}/guidelines`);
+        // Valida se a resposta do backend corresponde ao schema de Diretrizes.
+        return DiretrizesSchema.parse(resposta.data);
+    }
 
-export default API_Sistema_Grupo_Diretrizes;
+    /**
+     * Atualiza as diretrizes de texto de um grupo.
+     * @param {string} idGrupo - O ID do grupo.
+     * @param {Diretrizes} diretrizes - O objeto contendo as novas diretrizes.
+     * @returns {Promise<RespostaAcaoDiretrizes>}
+     */
+    async atualizarDiretrizes(idGrupo: string, diretrizes: Diretrizes): Promise<RespostaAcaoDiretrizes> {
+        // Valida os dados de entrada antes de enviar ao backend.
+        const dadosValidados = DiretrizesSchema.parse(diretrizes);
+        const resposta = await ClienteBackend.put(`/groups/${idGrupo}/guidelines`, dadosValidados);
+        // Valida a resposta de sucesso da ação.
+        return RespostaAcaoDiretrizesSchema.parse(resposta.data);
+    }
+}
+
+export default new GrupoDiretrizesAPISupremo();

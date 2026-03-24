@@ -1,25 +1,27 @@
-
 import ClienteBackend from '../../Cliente.Backend';
+import {
+    IAuditoriaDenunciasServico,
+    Denuncia, DenunciaSchema,
+    RespostaAcaoDenuncia, RespostaAcaoDenunciaSchema
+} from '../../Contratos/Contrato.Grupo.Auditoria.Denuncias';
+import { z } from 'zod';
 
-const API_Sistema_Auditoria_Denuncias = {
-    /**
-     * Busca todas as denúncias de um grupo específico.
-     * @param {string} idGrupo - O ID do grupo.
-     * @returns {Promise<any>}
-     */
-    obterDenuncias(idGrupo: string): Promise<any> {
-        return ClienteBackend.get(`/groups/${idGrupo}/reports`);
-    },
+/**
+ * @file Implementação do serviço de auditoria de denúncias, seguindo o contrato.
+ */
+class AuditoriaDenunciasAPISupremo implements IAuditoriaDenunciasServico {
 
-    /**
-     * Rejeita (ignora) uma denúncia específica.
-     * @param {string} idGrupo - O ID do grupo.
-     * @param {string} idDenuncia - O ID da denúncia a ser rejeitada.
-     * @returns {Promise<any>}
-     */
-    rejeitarDenuncia(idGrupo: string, idDenuncia: string): Promise<any> {
-        return ClienteBackend.delete(`/groups/${idGrupo}/reports/${idDenuncia}`);
-    },
-};
+    async obterDenuncias(idGrupo: string): Promise<Denuncia[]> {
+        const resposta = await ClienteBackend.get(`/groups/${idGrupo}/reports`);
+        // Valida se a resposta do backend corresponde a um array de denúncias.
+        return z.array(DenunciaSchema).parse(resposta.data);
+    }
 
-export default API_Sistema_Auditoria_Denuncias;
+    async rejeitarDenuncia(idGrupo: string, idDenuncia: string): Promise<RespostaAcaoDenuncia> {
+        const resposta = await ClienteBackend.delete(`/groups/${idGrupo}/reports/${idDenuncia}`);
+        // Valida a resposta de sucesso da ação.
+        return RespostaAcaoDenunciaSchema.parse(resposta.data);
+    }
+}
+
+export default new AuditoriaDenunciasAPISupremo();

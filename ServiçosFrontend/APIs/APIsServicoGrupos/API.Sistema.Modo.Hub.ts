@@ -1,27 +1,42 @@
-
-// Arquivo: ServiçosFrontend/APIs/API.Sistema.Modo.Hub.ts
-
 import ClienteBackend from '../../Cliente.Backend';
+import {
+    IModoHubServico,
+    ModoHubStatus, ModoHubStatusSchema,
+    Resposta, RespostaSchema
+} from '../../Contratos/Contrato.Grupo.Modo.Hub';
 
-const API_Sistema_Modo_Hub = {
+/**
+ * @file Implementação do serviço de Modo Hub, com validação de contrato.
+ */
+class ModoHubAPISupremo implements IModoHubServico {
+
     /**
-     * Busca o estado atual do Modo Hub para um grupo.
+     * Busca e valida o estado do Modo Hub de um grupo.
      * @param {string} idGrupo - O ID do grupo.
-     * @returns {Promise<any>}
+     * @returns {Promise<ModoHubStatus>}
      */
-    obterStatusModoHub(idGrupo: string): Promise<any> {
-        return ClienteBackend.get(`/api/groups/${idGrupo}/settings/hub-mode`);
-    },
+    async obterStatus(idGrupo: string): Promise<ModoHubStatus> {
+        const resposta = await ClienteBackend.get(`/api/groups/${idGrupo}/settings/hub-mode`);
+        // Valida se a resposta do backend corresponde ao schema.
+        return ModoHubStatusSchema.parse(resposta.data);
+    }
 
     /**
-     * Define o estado do Modo Hub para um grupo.
+     * Valida e define o estado do Modo Hub de um grupo.
      * @param {string} idGrupo - O ID do grupo.
-     * @param {object} payload - O novo estado. Ex: { isEnabled: true }
-     * @returns {Promise<any>}
+     * @param {ModoHubStatus} status - O novo estado a ser definido.
+     * @returns {Promise<Resposta>}
      */
-    definirStatusModoHub(idGrupo: string, payload: { isEnabled: boolean }): Promise<any> {
-        return ClienteBackend.put(`/api/groups/${idGrupo}/settings/hub-mode`, payload);
-    },
-};
+    async definirStatus(idGrupo: string, status: ModoHubStatus): Promise<Resposta> {
+        // 1. Valida o payload antes de enviá-lo.
+        const dadosValidados = ModoHubStatusSchema.parse(status);
+        
+        // 2. Envia os dados validados para o backend.
+        const resposta = await ClienteBackend.put(`/api/groups/${idGrupo}/settings/hub-mode`, dadosValidados);
 
-export default API_Sistema_Modo_Hub;
+        // 3. Valida a resposta de sucesso do backend.
+        return RespostaSchema.parse(resposta.data);
+    }
+}
+
+export default new ModoHubAPISupremo();

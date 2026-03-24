@@ -1,27 +1,30 @@
-
 import ClienteBackend from '../../Cliente.Backend';
+import {
+    IAuditoriaMensagensServico,
+    FiltroAuditoria, FiltroAuditoriaSchema,
+    LogAuditoriaMensagem, LogAuditoriaMensagemSchema,
+    RespostaAcaoAuditoria, RespostaAcaoAuditoriaSchema
+} from '../../Contratos/Contrato.Grupo.Auditoria.Mensagens';
+import { z } from 'zod';
 
-const API_Sistema_Auditoria_Mensagens = {
-    /**
-     * Busca os logs de auditoria de mensagens, com um filtro opcional por usuário.
-     * @param {string} idGrupo - O ID do grupo.
-     * @param {object} [filtro] - Filtros para a busca. Ex: { userId: '...' }
-     * @returns {Promise<any>}
-     */
-    obterLogs(idGrupo: string, filtro?: { userId: string }): Promise<any> {
-        const params = filtro && filtro.userId ? { userId: filtro.userId } : {};
-        return ClienteBackend.get(`/groups/${idGrupo}/audit/messages`, { params });
-    },
+/**
+ * @file Implementação do serviço de auditoria de mensagens, seguindo o contrato.
+ */
+class AuditoriaMensagensAPISupremo implements IAuditoriaMensagensServico {
 
-    /**
-     * Apaga uma mensagem específica dentro de um grupo.
-     * @param {string} idGrupo - O ID do grupo.
-     * @param {string} idMensagem - O ID da mensagem a ser apagada.
-     * @returns {Promise<any>}
-     */
-    apagarMensagem(idGrupo: string, idMensagem: string): Promise<any> {
-        return ClienteBackend.delete(`/groups/${idGrupo}/messages/${idMensagem}`);
-    },
-};
+    async obterLogs(idGrupo: string, filtro?: FiltroAuditoria): Promise<LogAuditoriaMensagem[]> {
+        // Valida o filtro antes de usá-lo na requisição.
+        const params = FiltroAuditoriaSchema.parse(filtro);
+        const resposta = await ClienteBackend.get(`/groups/${idGrupo}/audit/messages`, { params });
+        // Valida se a resposta é um array de logs de auditoria válidos.
+        return z.array(LogAuditoriaMensagemSchema).parse(resposta.data);
+    }
 
-export default API_Sistema_Auditoria_Mensagens;
+    async apagarMensagem(idGrupo: string, idMensagem: string): Promise<RespostaAcaoAuditoria> {
+        const resposta = await ClienteBackend.delete(`/groups/${idGrupo}/messages/${idMensagem}`);
+        // Valida a resposta genérica de sucesso.
+        return RespostaAcaoAuditoriaSchema.parse(resposta.data);
+    }
+}
+
+export default new AuditoriaMensagensAPISupremo();

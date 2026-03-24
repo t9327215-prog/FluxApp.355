@@ -1,32 +1,40 @@
-
+import ClienteBackend from '../Cliente.Backend.js';
+import {
+    IAutenticacaoServico,
+    LoginRequest,
+    LoginResponse,
+    LoginRequestSchema 
+} from '../Contratos/Contrato.Autenticacao';
 import { AxiosResponse } from 'axios';
-import ClienteBackend from '../Cliente.Backend';
-import { CriarUsuarioDTO, AtualizarPerfilUsuarioDTO } from '../../types/Entrada/Dto.Estrutura.Usuario';
 
-const authApi = {
-    login(email: string, password: string): Promise<AxiosResponse<any>> {
-        return ClienteBackend.post('/auth/login', { email, password });
-    },
-
-    register(dadosConta: CriarUsuarioDTO): Promise<AxiosResponse<any>> {
-        return ClienteBackend.post('/auth/register', dadosConta);
-    },
-
-    validateToken(): Promise<AxiosResponse<any>> {
-        return ClienteBackend.post('/auth/validate-token');
-    },
-
-    updateProfile(dadosPerfil: Partial<AtualizarPerfilUsuarioDTO>): Promise<AxiosResponse<any>> {
-        return ClienteBackend.put('/user/profile', dadosPerfil);
-    },
-
+/**
+ * @file Implementação concreta do serviço de autenticação que interage com o backend real.
+ * Esta classe é responsável por fazer as chamadas HTTP, validando os dados de entrada
+ * contra o contrato antes de enviá-los.
+ */
+class AutenticacaoAPISupremo implements IAutenticacaoServico {
+    
     /**
-     * Envia o sessionId para o backend para obter o token de sessão e os dados do usuário.
-     * @param sessionId O ID de sessão recebido do provedor de autenticação.
+     * Realiza o login do usuário.
+     * 1. Valida os dados de entrada usando o schema Zod.
+     * 2. Envia a requisição para o backend se os dados forem válidos.
+     * 
+     * @param data - Os dados de login (email e senha).
+     * @returns Uma promessa que resolve para a resposta de login da API.
+     * @throws {ZodError} Se a validação dos dados de entrada falhar.
      */
-    resolverSessaoLogin(sessionId: string): Promise<AxiosResponse<any>> {
-        return ClienteBackend.post('/auth/resolve-session', { sessionId });
-    },
-};
+    async login(data: LoginRequest): Promise<LoginResponse> {
+        // 1. Validar os dados de entrada ANTES de fazer a chamada de rede.
+        // O .parse() joga um erro se os dados não corresponderem ao schema.
+        const dadosValidados = LoginRequestSchema.parse(data);
+        
+        // 2. Enviar a requisição para o backend com os dados já validados.
+        const resposta: AxiosResponse<LoginResponse> = await ClienteBackend.post('/auth/login', dadosValidados);
 
-export default authApi;
+        // Retorna apenas os dados da resposta, conforme o contrato.
+        return resposta.data;
+    }
+}
+
+// Exportamos uma instância única da classe para ser usada em toda a aplicação.
+export default new AutenticacaoAPISupremo();

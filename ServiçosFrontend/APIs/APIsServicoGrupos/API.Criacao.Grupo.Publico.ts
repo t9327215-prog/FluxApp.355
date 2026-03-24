@@ -1,15 +1,30 @@
-
 import ClienteBackend from '../../Cliente.Backend';
+import {
+    ICriacaoGrupoPublicoServico,
+    CriacaoGrupoPublico, CriacaoGrupoPublicoSchema,
+    RespostaCriacaoGrupo, RespostaCriacaoGrupoSchema
+} from '../../Contratos/Contrato.Grupo.Criacao.Publico';
 
-const API_Criacao_Grupo_Publico = {
+/**
+ * @file Implementação do serviço para criação de um grupo público, seguindo o contrato.
+ */
+class CriacaoGrupoPublicoAPISupremo implements ICriacaoGrupoPublicoServico {
+
     /**
      * Envia os dados para o backend para criar um novo grupo público.
-     * @param {object} dadosGrupo - O objeto contendo os dados do grupo (nome, descrição, etc.).
-     * @returns {Promise<any>} A promessa da resposta do Axios.
+     * @param {CriacaoGrupoPublico} dadosGrupo - O objeto contendo os dados do grupo.
+     * @returns {Promise<RespostaCriacaoGrupo>} A promessa da resposta do backend.
      */
-    criar(dadosGrupo: object): Promise<any> {
-        return ClienteBackend.post('/groups/public', dadosGrupo);
-    },
-};
+    async criar(dadosGrupo: CriacaoGrupoPublico): Promise<RespostaCriacaoGrupo> {
+        // 1. Valida os dados de entrada antes de fazer a requisição.
+        const dadosValidados = CriacaoGrupoPublicoSchema.parse(dadosGrupo);
 
-export default API_Criacao_Grupo_Publico;
+        // 2. Envia os dados validados para o backend.
+        const resposta = await ClienteBackend.post('/groups/public', dadosValidados);
+
+        // 3. Valida a resposta do backend.
+        return RespostaCriacaoGrupoSchema.parse(resposta.data);
+    }
+}
+
+export default new CriacaoGrupoPublicoAPISupremo();

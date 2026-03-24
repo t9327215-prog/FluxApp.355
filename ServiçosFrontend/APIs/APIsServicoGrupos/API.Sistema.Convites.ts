@@ -1,35 +1,36 @@
-
 import ClienteBackend from '../../Cliente.Backend';
+import {
+    IGrupoConvitesServico,
+    Convite, ConviteSchema,
+    CriarConvite, CriarConviteSchema,
+    RespostaAcaoConvite, RespostaAcaoConviteSchema
+} from '../../Contratos/Contrato.Grupo.Convites';
+import { z } from 'zod';
 
-const API_Sistema_Convites = {
-    /**
-     * Busca todos os links de convite de um grupo específico.
-     * @param {string} idGrupo - O ID do grupo.
-     * @returns {Promise<any>}
-     */
-    obter(idGrupo: string): Promise<any> {
-        return ClienteBackend.get(`/groups/${idGrupo}/invites`);
-    },
+/**
+ * @file Implementação do serviço para gerenciamento de convites, aderindo ao contrato.
+ */
+class GrupoConvitesAPISupremo implements IGrupoConvitesServico {
 
-    /**
-     * Cria um novo link de convite para um grupo.
-     * @param {string} idGrupo - O ID do grupo.
-     * @param {object} dadosLink - Os dados do novo link (nome, tipo, expiração, etc.).
-     * @returns {Promise<any>}
-     */
-    criar(idGrupo: string, dadosLink: any): Promise<any> {
-        return ClienteBackend.post(`/groups/${idGrupo}/invites`, dadosLink);
-    },
+    async obter(idGrupo: string): Promise<Convite[]> {
+        const resposta = await ClienteBackend.get(`/groups/${idGrupo}/invites`);
+        // Valida se a resposta é um array de convites válidos.
+        return z.array(ConviteSchema).parse(resposta.data);
+    }
 
-    /**
-     * Revoga (desativa) um link de convite existente.
-     * @param {string} idGrupo - O ID do grupo.
-     * @param {string} idLink - O ID do link a ser revogado.
-     * @returns {Promise<any>}
-     */
-    revogar(idGrupo: string, idLink: string): Promise<any> {
-        return ClienteBackend.delete(`/groups/${idGrupo}/invites/${idLink}`);
-    },
-};
+    async criar(idGrupo: string, dadosLink: CriarConvite): Promise<Convite> {
+        // Valida os dados de entrada para o novo convite.
+        const dadosValidados = CriarConviteSchema.parse(dadosLink);
+        const resposta = await ClienteBackend.post(`/groups/${idGrupo}/invites`, dadosValidados);
+        // Valida o convite retornado pela API após a criação.
+        return ConviteSchema.parse(resposta.data);
+    }
 
-export default API_Sistema_Convites;
+    async revogar(idGrupo: string, idLink: string): Promise<RespostaAcaoConvite> {
+        const resposta = await ClienteBackend.delete(`/groups/${idGrupo}/invites/${idLink}`);
+        // Valida a resposta genérica de sucesso.
+        return RespostaAcaoConviteSchema.parse(resposta.data);
+    }
+}
+
+export default new GrupoConvitesAPISupremo();

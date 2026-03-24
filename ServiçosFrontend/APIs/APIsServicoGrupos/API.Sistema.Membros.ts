@@ -1,47 +1,40 @@
-
 import ClienteBackend from '../../Cliente.Backend';
+import {
+    IGrupoMembrosServico,
+    Motivo, MotivoSchema,
+    Membro, ListaMembrosSchema,
+    RespostaAcaoMembro, RespostaAcaoMembroSchema
+} from '../../Contratos/Contrato.Grupo.Membros';
 
-const API_Sistema_Membros = {
-    /**
-     * Busca a lista de membros de um grupo específico.
-     * @param {string} idGrupo - O ID do grupo.
-     * @returns {Promise<any>}
-     */
-    obter(idGrupo: string): Promise<any> {
-        return ClienteBackend.get(`/groups/${idGrupo}/members`);
-    },
+/**
+ * @file Implementação do serviço para gerenciamento de membros do grupo, seguindo o contrato.
+ */
+class GrupoMembrosAPISupremo implements IGrupoMembrosServico {
 
-    /**
-     * Adverte um usuário em um grupo, incluindo um motivo.
-     * @param {string} idGrupo - O ID do grupo.
-     * @param {string} idUsuario - O ID do usuário a ser advertido.
-     * @param {object} payload - O corpo da requisição, contendo o motivo da advertência.
-     * @returns {Promise<any>}
-     */
-    advertir(idGrupo: string, idUsuario: string, payload: any): Promise<any> {
-        return ClienteBackend.post(`/groups/${idGrupo}/members/${idUsuario}/warn`, payload);
-    },
+    async obter(idGrupo: string): Promise<Membro[]> {
+        const resposta = await ClienteBackend.get(`/groups/${idGrupo}/members`);
+        // Valida se a resposta é um array de membros conforme o schema
+        return ListaMembrosSchema.parse(resposta.data);
+    }
 
-    /**
-     * Bane um membro de um grupo, incluindo um motivo.
-     * @param {string} idGrupo - O ID do grupo.
-     * @param {string} idUsuario - O ID do usuário a ser banido.
-     * @param {object} payload - O corpo da requisição, contendo o motivo do banimento.
-     * @returns {Promise<any>}
-     */
-    banir(idGrupo: string, idUsuario: string, payload: any): Promise<any> {
-        return ClienteBackend.post(`/groups/${idGrupo}/members/${idUsuario}/ban`, payload);
-    },
+    async advertir(idGrupo: string, idUsuario: string, payload: Motivo): Promise<RespostaAcaoMembro> {
+        // Valida o payload (motivo) antes de enviar
+        const dadosValidados = MotivoSchema.parse(payload);
+        const resposta = await ClienteBackend.post(`/groups/${idGrupo}/members/${idUsuario}/warn`, dadosValidados);
+        // Valida a resposta da ação
+        return RespostaAcaoMembroSchema.parse(resposta.data);
+    }
 
-    /**
-     * Remove (expulsa) um membro de um grupo.
-     * @param {string} idGrupo - O ID do grupo.
-     * @param {string} idMembro - O ID do membro a ser expulso.
-     * @returns {Promise<any>}
-     */
-    expulsar(idGrupo: string, idMembro: string): Promise<any> {
-        return ClienteBackend.delete(`/groups/${idGrupo}/members/${idMembro}`);
-    },
-};
+    async banir(idGrupo: string, idUsuario: string, payload: Motivo): Promise<RespostaAcaoMembro> {
+        const dadosValidados = MotivoSchema.parse(payload);
+        const resposta = await ClienteBackend.post(`/groups/${idGrupo}/members/${idUsuario}/ban`, dadosValidados);
+        return RespostaAcaoMembroSchema.parse(resposta.data);
+    }
 
-export default API_Sistema_Membros;
+    async expulsar(idGrupo: string, idMembro: string): Promise<RespostaAcaoMembro> {
+        const resposta = await ClienteBackend.delete(`/groups/${idGrupo}/members/${idMembro}`);
+        return RespostaAcaoMembroSchema.parse(resposta.data);
+    }
+}
+
+export default new GrupoMembrosAPISupremo();

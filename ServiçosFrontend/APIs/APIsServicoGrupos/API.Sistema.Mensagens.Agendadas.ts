@@ -1,48 +1,40 @@
-
-// Arquivo: ServiçosFrontend/APIs/API.Sistema.Mensagens.Agendadas.ts
-
 import ClienteBackend from '../../Cliente.Backend';
+import {
+    IMensagensAgendadasServico,
+    MensagemAgendada, MensagemAgendadaSchema,
+    CriarMensagemAgendada, CriarMensagemAgendadaSchema,
+    AtualizarMensagemAgendada, AtualizarMensagemAgendadaSchema,
+    RespostaSucesso, RespostaSucessoSchema,
+    RespostaCriacao, RespostaCriacaoSchema
+} from '../../Contratos/Contrato.Grupo.Mensagens.Agendadas';
+import { z } from 'zod';
 
-const API_Sistema_Mensagens_Agendadas = {
-    /**
-     * Busca as mensagens agendadas de um grupo.
-     * @param {string} idGrupo - O ID do grupo.
-     * @returns {Promise<any>}
-     */
-    obterMensagensAgendadas(idGrupo: string): Promise<any> {
-        return ClienteBackend.get(`/groups/${idGrupo}/scheduled-messages`);
-    },
+/**
+ * @file Implementação do serviço de mensagens agendadas, com validação de contrato.
+ */
+class MensagensAgendadasAPISupremo implements IMensagensAgendadasServico {
 
-    /**
-     * Cria uma nova mensagem agendada.
-     * @param {string} idGrupo - O ID do grupo.
-     * @param {Object} dadosMensagem - Os dados da mensagem a ser agendada.
-     * @returns {Promise<any>}
-     */
-    criarMensagemAgendada(idGrupo: string, dadosMensagem: any): Promise<any> {
-        return ClienteBackend.post(`/groups/${idGrupo}/scheduled-messages`, dadosMensagem);
-    },
+    async obterMensagensAgendadas(idGrupo: string): Promise<MensagemAgendada[]> {
+        const resposta = await ClienteBackend.get(`/groups/${idGrupo}/scheduled-messages`);
+        return z.array(MensagemAgendadaSchema).parse(resposta.data);
+    }
 
-    /**
-     * Atualiza uma mensagem agendada.
-     * @param {string} idGrupo - O ID do grupo.
-     * @param {string} idMensagem - O ID da mensagem agendada.
-     * @param {Object} dadosMensagem - Os dados atualizados da mensagem.
-     * @returns {Promise<any>}
-     */
-    atualizarMensagemAgendada(idGrupo: string, idMensagem: string, dadosMensagem: any): Promise<any> {
-        return ClienteBackend.put(`/groups/${idGrupo}/scheduled-messages/${idMensagem}`, dadosMensagem);
-    },
+    async criarMensagemAgendada(idGrupo: string, dadosMensagem: CriarMensagemAgendada): Promise<RespostaCriacao> {
+        const dadosValidados = CriarMensagemAgendadaSchema.parse(dadosMensagem);
+        const resposta = await ClienteBackend.post(`/groups/${idGrupo}/scheduled-messages`, dadosValidados);
+        return RespostaCriacaoSchema.parse(resposta.data);
+    }
 
-    /**
-     * Deleta uma mensagem agendada.
-     * @param {string} idGrupo - O ID do grupo.
-     * @param {string} idMensagem - O ID da mensagem agendada.
-     * @returns {Promise<any>}
-     */
-    deletarMensagemAgendada(idGrupo: string, idMensagem: string): Promise<any> {
-        return ClienteBackend.delete(`/groups/${idGrupo}/scheduled-messages/${idMensagem}`);
-    },
-};
+    async atualizarMensagemAgendada(idGrupo: string, idMensagem: string, dadosMensagem: AtualizarMensagemAgendada): Promise<RespostaSucesso> {
+        const dadosValidados = AtualizarMensagemAgendadaSchema.parse(dadosMensagem);
+        const resposta = await ClienteBackend.put(`/groups/${idGrupo}/scheduled-messages/${idMensagem}`, dadosValidados);
+        return RespostaSucessoSchema.parse(resposta.data);
+    }
 
-export default API_Sistema_Mensagens_Agendadas;
+    async deletarMensagemAgendada(idGrupo: string, idMensagem: string): Promise<RespostaSucesso> {
+        const resposta = await ClienteBackend.delete(`/groups/${idGrupo}/scheduled-messages/${idMensagem}`);
+        return RespostaSucessoSchema.parse(resposta.data);
+    }
+}
+
+export default new MensagensAgendadasAPISupremo();
