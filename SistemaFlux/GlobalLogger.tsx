@@ -1,12 +1,15 @@
 
 import { useEffect } from "react";
+import { createLogger } from "../ServiçosFrontend/SistemaObservabilidade/Sistema.Mensageiro.Cliente.Backend";
+
+const logger = createLogger("GlobalLogger");
 
 const GlobalLogger = () => {
   useEffect(() => {
-    console.log("App iniciado");
+    logger.info("App iniciado");
 
-    const onOnline = () => console.log("Internet voltou");
-    const onOffline = () => console.log("Sem internet");
+    const onOnline = () => logger.info("Internet voltou");
+    const onOffline = () => logger.warn("Sem internet");
 
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
