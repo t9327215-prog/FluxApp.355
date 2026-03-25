@@ -3,7 +3,6 @@ import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Lista de níveis de log permitidos para segurança
 const allowedLevels = ['error', 'warn', 'info', 'http', 'debug'];
 
 const frontendLogger = logger.child({
@@ -12,22 +11,38 @@ const frontendLogger = logger.child({
 });
 
 router.post('/', (req, res) => {
-    const logData = req.body;
+    try {
+        const logData = req.body;
 
-    // Garante que o nível é válido, usando 'info' como padrão caso contrário.
-    const level = 
-        logData.level && allowedLevels.includes(logData.level.toLowerCase())
-            ? logData.level.toLowerCase()
-            : 'info';
+        if (!logData || typeof logData !== 'object') {
+            return res.status(400).send({ status: 'Payload inválido' });
+        }
 
-    // O objeto original do frontend é aninhado em 'dados' para evitar conflitos.
-    frontendLogger.log({
-        level: level,
-        message: logData.mensagem || 'Log do frontend recebido',
-        dados: logData 
-    });
+        const level =
+            logData.level && allowedLevels.includes(logData.level.toLowerCase())
+                ? logData.level.toLowerCase()
+                : 'info';
 
-    res.status(202).send({ status: 'Log recebido' });
+        frontendLogger.log({
+            level: level,
+            message: logData.mensagem || 'Log do frontend recebido',
+            dados: {
+                ...logData,
+                ip: req.ip,
+                userAgent: req.headers['user-agent'],
+                endpoint: req.originalUrl
+            }
+        });
+
+        res.status(202).send({ status: 'Log recebido' });
+
+    } catch (error) {
+        logger.error('Erro ao processar log do frontend', {
+            dados: { error: error.message }
+        });
+
+        res.status(500).send({ status: 'Erro ao registrar log' });
+    }
 });
 
 export default router;
