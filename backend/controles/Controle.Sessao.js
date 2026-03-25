@@ -84,23 +84,17 @@ const googleAuth = async (req, res, next) => {
         });
 
         const payload = loginTicket.getPayload();
-        
-        // Log detalhado do payload recebido do Google
-        console.log('Payload recebido do Google:', payload);
 
         if (!payload) {
             throw new Error('Não foi possível obter os dados do usuário do Google.');
         }
 
         const dadosGoogle = {
-            googleId: payload.sub,
+            google_id: payload.sub, // Corrigido para snake_case
             email: payload.email,
             nome: payload.name,
             foto: payload.picture,
         };
-
-        // Log dos dados que serão enviados para validação
-        console.log('Dados mapeados para validação:', dadosGoogle);
 
         const dadosGoogleValidados = validadorUsuario.validarGoogleAuth(dadosGoogle);
 
