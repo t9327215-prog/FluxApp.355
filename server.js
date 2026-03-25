@@ -12,7 +12,6 @@ import { run as runMigrations } from './scripts/executar-migracoes.js';
 import { setupMiddlewares } from './backend/config/Sistema.Middleware.js';
 import { db, auditorDoPostgreSQL } from './backend/database/Sistema.Banco.Dados.js';
 import apiRoutes from './backend/RotasBackend/Rotas.js';
-import { backendLogger, databaseLogger } from './backend/config/Sistema.Escritor.Logs.js';
 
 // --- CONFIGURAÇÃO INICIAL ---
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
@@ -23,7 +22,7 @@ const PORT = process.env.PORT || 3000;
 
 // --- MANIPULADORES DE ERRO GLOBAIS ---
 process.on('uncaughtException', (err, origin) => {
-    backendLogger.error({
+    console.error({
         camada: 'Backend',
         componente: 'Core',
         arquivo: 'server.js',
@@ -37,7 +36,7 @@ process.on('uncaughtException', (err, origin) => {
 
 process.on('unhandledRejection', (reason, promise) => {
     const error = reason instanceof Error ? reason : undefined;
-    backendLogger.error({
+    console.error({
         camada: 'Backend',
         componente: 'Core',
         arquivo: 'server.js',
@@ -48,7 +47,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // --- INICIALIZAÇÃO DA APLICAÇÃO CORE ---
-backendLogger.info({
+console.info({
     camada: 'Backend',
     componente: 'Core',
     arquivo: 'server.js',
@@ -56,7 +55,7 @@ backendLogger.info({
 });
 
 if (!process.env.JWT_SECRET) {
-    backendLogger.error({
+    console.error({
         camada: 'Backend',
         componente: 'Configuração',
         arquivo: 'server.js',
@@ -87,7 +86,7 @@ app.use(express.static(distPath));
 
 // Middleware para rotas de API não encontradas
 app.use('/api', (req, res) => {
-    backendLogger.warn({
+    console.warn({
         camada: 'Backend',
         componente: 'API',
         arquivo: 'server.js',
@@ -103,7 +102,7 @@ app.get('*', (req, res) => {
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
-        backendLogger.warn({
+        console.warn({
             camada: 'Backend',
             componente: 'Servidor Web',
             arquivo: 'server.js',
@@ -119,7 +118,7 @@ app.use((err, req, res, next) => {
     const traceId = req.traceId || 'untraced-error';
     const errorMessage = (err instanceof Error) ? err.message : 'Ocorreu um erro inesperado.';
 
-    backendLogger.error({
+    console.error({
         camada: 'Backend',
         componente: 'API',
         arquivo: 'server.js',
@@ -141,7 +140,7 @@ app.use((err, req, res, next) => {
 
 // --- INICIALIZAÇÃO DO SERVIDOR ---
 const startApp = async () => {
-    backendLogger.info({ 
+    console.info({ 
         camada: 'Backend', 
         componente: 'Core', 
         arquivo: 'server.js', 
@@ -149,7 +148,7 @@ const startApp = async () => {
     });
     try {
         await runMigrations();
-        databaseLogger.info({
+        console.info({
             camada: 'Backend',
             componente: 'Banco de Dados',
             arquivo: 'server.js',
@@ -157,7 +156,7 @@ const startApp = async () => {
         });
 
         await db.init();
-        databaseLogger.info({
+        console.info({
             camada: 'Backend',
             componente: 'Banco de Dados',
             arquivo: 'server.js',
@@ -165,11 +164,11 @@ const startApp = async () => {
         });
 
         setTimeout(() => {
-            auditorDoPostgreSQL.inspectDatabases(databaseLogger); // Este precisa ser adaptado no futuro
+            auditorDoPostgreSQL.inspectDatabases(console); // Este precisa ser adaptado no futuro
         }, 5000);
 
         httpServer.listen(PORT, '0.0.0.0', () => {
-            backendLogger.success({
+            console.log({
                 camada: 'Backend',
                 componente: 'Core',
                 arquivo: 'server.js',
@@ -179,7 +178,7 @@ const startApp = async () => {
         });
 
     } catch (error) {
-        backendLogger.error({
+        console.error({
             camada: 'Backend',
             componente: 'Core',
             arquivo: 'server.js',

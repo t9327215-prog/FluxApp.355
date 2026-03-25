@@ -1,6 +1,4 @@
 
-import { backendLogger } from './Sistema.Escritor.Logs.js';
-
 export const configurarLog = (app) => {
     app.use((req, res, next) => {
         const start = Date.now();
@@ -37,11 +35,11 @@ export const configurarLog = (app) => {
             };
 
             if (statusCode >= 500) {
-                backendLogger.error(logData);
+                console.error(logData);
             } else if (statusCode >= 400) {
-                backendLogger.warn(logData);
+                console.warn(logData);
             } else {
-                backendLogger.info(logData);
+                console.info(logData);
             }
         });
 

@@ -1,6 +1,5 @@
 
 import express from 'express';
-import { frontendLogger } from '../config/Sistema.Escritor.Logs.js';
 
 const router = express.Router();
 
@@ -26,21 +25,29 @@ router.post('/', (req, res) => {
   const { level: _, ...logPayload } = logData;
 
   // Verifica se o método de log correspondente ao nível existe.
-  if (typeof frontendLogger[level] === 'function') {
-    // Passa o objeto de log diretamente para a função do logger.
-    // O trace de execução não é gerado aqui, pois o contexto é do frontend.
-    // O ideal é que o frontend gere e inclua o trace, se necessário.
-    frontendLogger[level](logPayload);
-  } else {
-    // Se o nível for inválido, registra como 'info' e inclui o nível original nos dados.
-    frontendLogger.info({
-      ...logPayload,
-      dados: {
-        ...(logPayload.dados || {}),
-        originalLevel: level,
-        warning: 'Nível de log inválido recebido do frontend.'
-      }
-    });
+  switch (level) {
+    case 'error':
+      console.error(logPayload);
+      break;
+    case 'warn':
+      console.warn(logPayload);
+      break;
+    case 'info':
+      console.info(logPayload);
+      break;
+    case 'debug':
+        console.debug(logPayload);
+        break;
+    default:
+        console.log({
+            ...logPayload,
+            dados: {
+            ...(logPayload.dados || {}),
+            originalLevel: level,
+            warning: 'Nível de log inválido recebido do frontend.'
+            }
+        });
+      break;
   }
 
   // Responde imediatamente para não bloquear o cliente.
