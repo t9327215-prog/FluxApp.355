@@ -71,22 +71,17 @@ const googleAuth = async (req, res, next) => {
     const dadosRequisicao = { userAgent: req.headers['user-agent'], ipAddress: req.ip };
     
     try {
-        const { code } = req.body;
-        if (!code) {
-            return ServicoResposta.requisicaoInvalida(res, "O código de autorização do Google é obrigatório.");
+        // O frontend envia o ID Token do Google diretamente.
+        const { token: idToken } = req.body;
+        if (!idToken) {
+            return ServicoResposta.requisicaoInvalida(res, "O token de ID do Google é obrigatório.");
         }
 
-        console.log('Iniciando autenticação com Google', { event: 'INICIANDO_GOOGLE_AUTH' });
+        console.log('Iniciando autenticação com Google via ID Token', { event: 'INICIANDO_GOOGLE_AUTH_ID_TOKEN' });
         
-        const { tokens } = await oAuth2Client.getToken(code);
-        
-        if (!tokens.id_token) {
-            console.error('ID token do Google não obtido', { event: 'GOOGLE_AUTH_NO_ID_TOKEN' });
-            return ServicoResposta.erro(res, "Falha ao obter o ID token do Google.");
-        }
-
+        // Verifica o ID Token recebido do frontend.
         const loginTicket = await oAuth2Client.verifyIdToken({
-            idToken: tokens.id_token,
+            idToken: idToken,
             audience: variaveis.google.clientId,
         });
 
@@ -104,16 +99,20 @@ const googleAuth = async (req, res, next) => {
 
         const dadosGoogleValidados = validadorUsuario.validarGoogleAuth(dadosGoogle);
 
+        // Cria ou autentica o usuário com base nos dados do Google.
         const { usuario, isNewUser } = await servicoUsuario.autenticarOuCriarPorGoogle(dadosGoogleValidados);
 
-        const { token, dadosSessao } = await servicoSessao.prepararNovaSessao({ usuario, dadosRequisicao });
+        // Prepara uma nova sessão para o usuário.
+        const { token: sessionToken, dadosSessao } = await servicoSessao.prepararNovaSessao({ usuario, dadosRequisicao });
 
         const dadosSessaoValidados = validadorSessao.validarNovaSessao(dadosSessao);
         await servicoSessao.salvarSessao(dadosSessaoValidados);
 
         console.log('Autenticação com Google bem-sucedida', { event: 'GOOGLE_AUTH_SUCESSO', userId: usuario.id });
+        
+        // Retorna o token da nossa sessão, os dados do usuário e se é um novo usuário.
         return ServicoResposta.sucesso(res, { 
-            token, 
+            token: sessionToken, 
             user: usuario.paraRespostaHttp(),
             isNewUser
         });
@@ -123,9 +122,13 @@ const googleAuth = async (req, res, next) => {
         if (error.message.includes('Faça login com sua senha')) {
             return ServicoResposta.requisicaoInvalida(res, error.message);
         }
+        if (error.message.includes('Invalid token') || error.message.includes('Token used too late')) {
+             return ServicoResposta.naoAutorizado(res, 'Token do Google inválido ou expirado.');
+        }
         next(error);
     }
 };
+
 
 const logout = async (req, res, next) => {
     try {
