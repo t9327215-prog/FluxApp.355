@@ -23,24 +23,45 @@ const PORT = process.env.PORT || 3000;
 
 // --- MANIPULADORES DE ERRO GLOBAIS ---
 process.on('uncaughtException', (err, origin) => {
-    backendLogger.error('Exceção Não Capturada:', { 
-        message: err.message, 
-        stack: err.stack, 
-        origin 
+    backendLogger.error({
+        camada: 'Backend',
+        componente: 'Core',
+        arquivo: 'server.js',
+        mensagem: `Exceção Não Capturada: ${err.message}`,
+        dados: { origin },
+        error: err
     });
     // Garante que o log seja escrito antes de sair
     setTimeout(() => process.exit(1), 1000); 
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-    backendLogger.error('Rejeição de Promise Não Tratada:', reason);
+    const error = reason instanceof Error ? reason : undefined;
+    backendLogger.error({
+        camada: 'Backend',
+        componente: 'Core',
+        arquivo: 'server.js',
+        mensagem: 'Rejeição de Promise Não Tratada',
+        dados: { reason: reason instanceof Error ? reason.message : String(reason) },
+        error
+    });
 });
 
 // --- INICIALIZAÇÃO DA APLICAÇÃO CORE ---
-backendLogger.info('--- Inicializando o Servidor ---');
+backendLogger.info({
+    camada: 'Backend',
+    componente: 'Core',
+    arquivo: 'server.js',
+    mensagem: '--- Inicializando o Servidor ---'
+});
 
 if (!process.env.JWT_SECRET) {
-    backendLogger.error('ERRO FATAL: A variável de ambiente JWT_SECRET não está definida. O servidor não pode iniciar.');
+    backendLogger.error({
+        camada: 'Backend',
+        componente: 'Configuração',
+        arquivo: 'server.js',
+        mensagem: 'ERRO FATAL: A variável de ambiente JWT_SECRET não está definida. O servidor não pode iniciar.'
+    });
     process.exit(1);
 }
 
@@ -66,7 +87,13 @@ app.use(express.static(distPath));
 
 // Middleware para rotas de API não encontradas
 app.use('/api', (req, res) => {
-    backendLogger.warn('Endpoint da API não encontrado (404)', { path: req.path, method: req.method });
+    backendLogger.warn({
+        camada: 'Backend',
+        componente: 'API',
+        arquivo: 'server.js',
+        mensagem: 'Endpoint da API não encontrado (404)',
+        dados: { path: req.path, method: req.method, traceId: req.traceId }
+    });
     res.status(404).json({ error: 'Endpoint da API não encontrado.', traceId: req.traceId });
 });
 
@@ -76,7 +103,13 @@ app.get('*', (req, res) => {
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
-        backendLogger.warn('Arquivo index.html não encontrado na pasta dist', { path: req.path });
+        backendLogger.warn({
+            camada: 'Backend',
+            componente: 'Servidor Web',
+            arquivo: 'server.js',
+            mensagem: 'Arquivo index.html não encontrado na pasta dist',
+            dados: { path: req.path }
+        });
         res.status(404).send('Build do frontend não encontrado. Verifique se o arquivo index.html existe na pasta /dist.');
     }
 });
@@ -84,15 +117,15 @@ app.get('*', (req, res) => {
 // --- MANIPULADOR DE ERRO GLOBAL DO EXPRESS ---
 app.use((err, req, res, next) => {
     const traceId = req.traceId || 'untraced-error';
-    const errorInfo = (err instanceof Error) 
-        ? { message: err.message, stack: err.stack } 
-        : { message: 'Ocorreu um erro inesperado.', details: err };
+    const errorMessage = (err instanceof Error) ? err.message : 'Ocorreu um erro inesperado.';
 
-    backendLogger.error('Erro não tratado em uma rota do Express', { 
-        error: errorInfo, 
-        path: req.path, 
-        method: req.method, 
-        traceId 
+    backendLogger.error({
+        camada: 'Backend',
+        componente: 'API',
+        arquivo: 'server.js',
+        mensagem: `Erro não tratado em uma rota do Express: ${errorMessage}`,
+        dados: { path: req.path, method: req.method, traceId },
+        error: err
     });
 
     if (res.headersSent) {
@@ -101,31 +134,58 @@ app.use((err, req, res, next) => {
 
     res.status(500).json({
         error: 'Ocorreu um erro inesperado no servidor.',
-        message: errorInfo.message,
+        message: errorMessage,
         traceId
     });
 });
 
 // --- INICIALIZAÇÃO DO SERVIDOR ---
 const startApp = async () => {
-    backendLogger.info("Iniciando a aplicação...");
+    backendLogger.info({ 
+        camada: 'Backend', 
+        componente: 'Core', 
+        arquivo: 'server.js', 
+        mensagem: "Iniciando a aplicação..."
+    });
     try {
         await runMigrations();
-        databaseLogger.info('Migrações do banco de dados aplicadas com sucesso.');
+        databaseLogger.info({
+            camada: 'Backend',
+            componente: 'Banco de Dados',
+            arquivo: 'server.js',
+            mensagem: 'Migrações do banco de dados aplicadas com sucesso.'
+        });
 
         await db.init();
-        databaseLogger.info('Sistema de banco de dados inicializado com sucesso.');
+        databaseLogger.info({
+            camada: 'Backend',
+            componente: 'Banco de Dados',
+            arquivo: 'server.js',
+            mensagem: 'Sistema de banco de dados inicializado com sucesso.'
+        });
 
         setTimeout(() => {
-            auditorDoPostgreSQL.inspectDatabases(databaseLogger); // Usando o logger de DB
+            auditorDoPostgreSQL.inspectDatabases(databaseLogger); // Este precisa ser adaptado no futuro
         }, 5000);
 
         httpServer.listen(PORT, '0.0.0.0', () => {
-            backendLogger.info(`Servidor iniciado com sucesso na porta ${PORT} no ambiente ${process.env.NODE_ENV || 'development'}.`);
+            backendLogger.success({
+                camada: 'Backend',
+                componente: 'Core',
+                arquivo: 'server.js',
+                mensagem: `Servidor iniciado com sucesso na porta ${PORT}`,
+                dados: { ambiente: process.env.NODE_ENV || 'development' }
+            });
         });
 
     } catch (error) {
-        backendLogger.error('Falha crítica durante a inicialização da aplicação.', error);
+        backendLogger.error({
+            camada: 'Backend',
+            componente: 'Core',
+            arquivo: 'server.js',
+            mensagem: `Falha crítica durante a inicialização da aplicação: ${error.message}`,
+            error
+        });
         process.exit(1);
     }
 };

@@ -10,37 +10,101 @@ if (!fs.existsSync(logDirectory)) {
 }
 
 /**
- * Cria uma instância de logger que escreve em um arquivo específico.
- * @param {string} fileName - O nome do arquivo de log (ex: 'backend.log').
- * @returns Um objeto logger com os métodos info, warn, error, log.
+ * Gera uma representação formatada do stack trace a partir de um objeto de Erro.
+ * @param {Error} [error] - Um erro opcional para extrair o stack trace. Se não for fornecido,
+ * um novo erro será criado para capturar a pilha de chamadas atual.
+ * @returns {string} - Uma string contendo o stack trace formatado.
+ */
+function gerarTraceDePilha(error) {
+  const err = error || new Error();
+
+  if (!err.stack) {
+    return '🔍 Trace:\n  → Stack trace não disponível.';
+  }
+
+  const stackLines = err.stack.split('\n').slice(1);
+
+  const formattedTrace = stackLines
+    .map(line => {
+      const trimmedLine = line.trim();
+      // Tenta extrair o nome da função e o nome do arquivo da linha do stack.
+      const match = trimmedLine.match(/^at (?:(.*?) \()?.*[\\/]([^\\/:]+):\d+:\d+\)?$/);
+      if (match) {
+        const functionName = match[1] || 'anônima';
+        const fileName = match[2];
+        return `  → ${fileName}:${functionName}()`;
+      }
+      return `  → ${trimmedLine}`; // Fallback para linhas não reconhecidas
+    })
+    .join('\n');
+
+  return `🔍 Trace:\n${formattedTrace}`;
+}
+
+/**
+ * Cria uma instância de logger que escreve logs estruturados em um arquivo.
+ * @param {string} fileName - O nome do arquivo de log.
+ * @returns Um objeto logger com métodos para diferentes níveis de log.
  */
 const createLogger = (fileName) => {
     const logFile = path.join(logDirectory, fileName);
 
-    const writeLog = (level, ...args) => {
-        const timestamp = new Date().toISOString();
-        const message = args.map(arg => {
-            if (arg instanceof Error) return arg.stack;
-            if (typeof arg === 'object' && arg !== null) return JSON.stringify(arg, null, 2);
-            return String(arg);
-        }).join(' ');
+    /**
+     * Escreve uma entrada de log formatada no arquivo.
+     * @param {string} level - O nível do log (info, warn, error, etc.).
+     * @param {object} logData - O objeto com os dados estruturados do log.
+     */
+    const writeLog = (level, logData) => {
+        const { camada, componente, arquivo, mensagem, dados, error } = logData;
+        const timestamp = new Date().toLocaleString('pt-BR', { timeZone: 'UTC' });
 
-        const logMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}\n`;
+        // Constrói a mensagem de log hierárquica
+        let logMessage = '\n';
+        if (camada) logMessage += `🏠 ${camada}\n`;
+        if (componente) logMessage += `  📂 ${componente}\n`;
+        if (arquivo) logMessage += `    📄 ${arquivo}\n`;
+        
+        const indent = '      '; // Indentação base para as informações
+        logMessage += `${indent}🕒 ${timestamp} - ${level.toUpperCase()}\n`;
+        logMessage += `${indent}  ✉️ Mensagem: ${mensagem}\n`;
+
+        // Adiciona dados estruturados (IDs, Metadata, etc.)
+        if (dados) {
+            for (const [key, value] of Object.entries(dados)) {
+                if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                    logMessage += `${indent}  📝 ${key}:\n`;
+                    for (const [subKey, subValue] of Object.entries(value)) {
+                        logMessage += `${indent}    • ${subKey}: ${JSON.stringify(subValue)}\n`;
+                    }
+                } else {
+                    // Usa 🆔 para identificadores ou valores simples
+                    logMessage += `${indent}  🆔 ${key}: ${JSON.stringify(value)}\n`;
+                }
+            }
+        }
+        
+        // Gera e anexa o trace da pilha
+        const trace = gerarTraceDePilha(error);
+        const indentedTrace = trace.split('\n').map(line => `${indent}  ${line}`).join('\n');
+        logMessage += `${indentedTrace}\n`;
+
         fs.appendFileSync(logFile, logMessage);
     };
 
     return {
-        info: (...args) => writeLog('info', ...args),
-        warn: (...args) => writeLog('warn', ...args),
-        error: (...args) => writeLog('error', ...args),
-        log: (...args) => writeLog('log', ...args),
+        info: (logData) => writeLog('info', logData),
+        warn: (logData) => writeLog('warn', logData),
+        error: (logData) => writeLog('error', logData),
+        debug: (logData) => writeLog('debug', logData),
+        success: (logData) => writeLog('success', logData),
     };
 };
 
-// Cria e exporta loggers específicos
+// Cria e exporta loggers específicos para cada contexto
 export const backendLogger = createLogger('backend.log');
 export const frontendLogger = createLogger('frontend.log');
 export const databaseLogger = createLogger('database.log');
+export const securityLogger = createLogger('security.log');
 
-// Logger de fallback ou para depuração geral
+// Logger padrão para uso geral
 export default createLogger('application.log');
