@@ -10,8 +10,12 @@ const { ambiente: ambienteAtual } = backendConfig;
 
 const MIGRATIONS_DIR = path.join(process.cwd(), 'backend', 'database', 'migrations');
 const MIGRATIONS_TABLE = 'schema_migrations';
+const ADVISORY_LOCK_KEY = 999; // Chave arbitrária para o bloqueio
 
 const ensureMigrationsTable = async (client) => {
+    // Adquire um bloqueio no nível da transação para evitar condições de corrida
+    await client.query(`SELECT pg_advisory_xact_lock(${ADVISORY_LOCK_KEY})`);
+
     await client.query(`
         CREATE TABLE IF NOT EXISTS ${MIGRATIONS_TABLE} (
             id SERIAL PRIMARY KEY,
