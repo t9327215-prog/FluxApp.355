@@ -61,14 +61,12 @@ class ServicoMetodoGoogle implements IServicoMetodoGoogle {
         const traceId = obterTraceIdAuth();
         apiLogger.logRequest('handleAuthCallback', { token, referredBy, traceId });
 
-        // 1. Validar os dados de entrada com o schema
         const dadosParaBackend: HandleAuthCallbackRequest = HandleAuthCallbackRequestSchema.parse({ token, referredBy });
 
         try {
             const respostaBackend = await ClienteBackend.post(ENDPOINTS_AUTH.GOOGLE_CALLBACK, dadosParaBackend);
             
-            // 2. Validar a resposta do backend com o schema
-            const dadosValidados = HandleAuthCallbackResponseSchema.parse(respostaBackend.data);
+            const dadosValidados = HandleAuthCallbackResponseSchema.parse(respostaBackend.data.dados);
 
             apiLogger.logSuccess('handleAuthCallback', { response: dadosValidados, traceId });
 
