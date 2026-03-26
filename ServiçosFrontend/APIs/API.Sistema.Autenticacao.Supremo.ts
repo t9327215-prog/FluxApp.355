@@ -12,58 +12,53 @@ import {
 import { AxiosResponse } from 'axios';
 import { createApiLogger } from '../SistemaObservabilidade/Log.API';
 
-// Cria um logger específico para este serviço de API.
 const apiLogger = createApiLogger('AutenticacaoSupremo');
 
-/**
- * @file Implementação concreta do serviço de autenticação que interage com o backend real.
- * Esta classe é responsável por fazer as chamadas HTTP, validando os dados de entrada
- * contra o contrato antes de enviá-los.
- */
 class AutenticacaoAPISupremo implements IAutenticacaoServico {
     
-    /**
-     * Realiza o login do usuário.
-     * @param data - Os dados de login (email e senha).
-     * @returns Uma promessa que resolve para a resposta de login da API.
-     * @throws {ZodError} Se a validação dos dados de entrada falhar.
-     */
     async login(data: LoginRequest): Promise<LoginResponse> {
-        apiLogger.logRequest('login', { email: data.email }); // Log do início da requisição
+        apiLogger.logRequest('login', { email: data.email });
         try {
             const dadosValidados = LoginRequestSchema.parse(data);
+            const response: AxiosResponse<any> = await ClienteBackend.post('/auth/login', dadosValidados);
             
-            const resposta: AxiosResponse<LoginResponse> = await ClienteBackend.post('/auth/login', dadosValidados);
+            const responseData = response.data.dados; // Extrai a propriedade 'dados'
+            const transformedData = {
+                ...responseData,
+                usuario: responseData.user, // Renomeia 'user' para 'usuario'
+            };
 
-            apiLogger.logSuccess('login', resposta.data); // Log de sucesso
-
-            return resposta.data;
+            apiLogger.logSuccess('login', transformedData);
+            return transformedData;
         } catch (error) {
-            apiLogger.logFailure('login', error, { email: data.email }); // Log de falha
+            apiLogger.logFailure('login', error, { email: data.email });
             throw error;
         }
     }
 
-    /**
-     * Realiza o login ou criação de conta via Google.
-     * @param data - O token de credencial do Google.
-     * @returns Uma promessa que resolve para a resposta da API, contendo dados do usuário e token.
-     */
     async resolverSessaoLogin(data: GoogleLoginRequest): Promise<GoogleLoginResponse> {
-        apiLogger.logRequest('resolverSessaoLogin', { token: '[TOKEN OMITIDO]' }); // Log do início
+        apiLogger.logRequest('resolverSessaoLogin', { token: '[TOKEN OMITIDO]' });
         try {
-            const resposta: AxiosResponse<GoogleLoginResponse> = await ClienteBackend.post('/auth/google/callback', data);
-            const dadosValidados = GoogleLoginResponseSchema.parse(resposta.data);
+            const response: AxiosResponse<any> = await ClienteBackend.post('/auth/google/callback', data);
             
-            apiLogger.logSuccess('resolverSessaoLogin', dadosValidados); // Log de sucesso
+            // Extrai e transforma os dados da resposta para corresponder ao esquema esperado.
+            const responseData = response.data.dados; // Extrai a propriedade 'dados'
+            const transformedData = {
+                token: responseData.token,
+                usuario: responseData.user,       // Renomeia 'user' para 'usuario'
+                isNewUser: responseData.isNewUser
+            };
+
+            const dadosValidados = GoogleLoginResponseSchema.parse(transformedData);
+            
+            apiLogger.logSuccess('resolverSessaoLogin', dadosValidados);
             
             return dadosValidados;
         } catch (error) {
-            apiLogger.logFailure('resolverSessaoLogin', error); // Log de falha
+            apiLogger.logFailure('resolverSessaoLogin', error);
             throw error;
         }
     }
 }
 
-// Exportamos uma instância única da classe para ser usada em toda a aplicação.
 export default new AutenticacaoAPISupremo();
