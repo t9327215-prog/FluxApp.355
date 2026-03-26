@@ -89,9 +89,13 @@ class Usuario {
 
     paraRespostaHttp() {
         logger.info('Convertendo modelo de usuário para formato de resposta HTTP.', { userId: this.id });
+        
+        // Garante que o nome nunca seja nulo ou indefinido na resposta.
+        const nomeGarantido = this.nome || (this.email ? this.email.split('@')[0] : 'Usuário Anônimo');
+
         return {
             id: this.id,
-            nome: this.nome,
+            nome: nomeGarantido, // Usa o nome garantido.
             email: this.email,
             apelido: this.apelido,
             bio: this.bio,
