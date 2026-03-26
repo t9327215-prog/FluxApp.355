@@ -84,10 +84,7 @@ const autenticarOuCriarPorGoogle = async (dadosGoogle) => {
     }
 
     const usuario = Usuario.deBancoDeDados(usuarioDb);
-    return {
-        usuario: { ...usuario, id: usuarioDb.id },
-        isNewUser: isNewUser
-    };
+    return { usuario, isNewUser };
 };
 
 const atualizarPerfilUsuario = async (idUsuario, dadosPerfil) => {

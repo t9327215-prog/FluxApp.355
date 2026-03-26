@@ -17,11 +17,6 @@ const calcularDataExpiracao = () => {
 };
 
 const prepararNovaSessao = async ({ usuario, dadosRequisicao }) => {
-    logger.info("Tipo do usuario recebido no Servico.Sessao", {
-        tipo: usuario?.constructor?.name,
-        temMetodo: typeof usuario?.paraRespostaHttp
-    });
-
     if (!usuario || !usuario.id) {
         throw new Error('Dados de usuário inválidos para criar a sessão.');
     }
@@ -29,7 +24,7 @@ const prepararNovaSessao = async ({ usuario, dadosRequisicao }) => {
     logger.info(`Preparando nova sessão para o usuário ${usuario.id}.`);
 
     const payload = { user: usuario.paraRespostaHttp() };
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIPIRES_IN });
 
     const dadosSessao = {
         user_id: usuario.id,
