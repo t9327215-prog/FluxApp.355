@@ -1,8 +1,14 @@
 
+// backend/models/Models.Estrutura.Usuario.js
+
 import bcrypt from 'bcryptjs';
+import createModelLogger from '../config/Log.Models.js';
+
+const logger = createModelLogger('Models.Estrutura.Usuario.js');
 
 class Usuario {
     constructor(data) {
+        logger.info('Criando nova instância de Usuário.', { userId: data.id });
         this.id = data.id;
         this.nome = data.nome;
         this.email = data.email;
@@ -17,7 +23,6 @@ class Usuario {
         this.privado = data.privado || false;
         this.perfilCompleto = data.perfilCompleto || false;
         
-        // Novas propriedades para seguidores e seguindo
         this.seguidores = data.seguidores || [];
         this.seguindo = data.seguindo || [];
 
@@ -27,12 +32,15 @@ class Usuario {
 
     async criptografarSenha() {
         if (this.senha) {
+            logger.info('Iniciando criptografia de senha.', { userId: this.id });
             const salt = await bcrypt.genSalt(10);
             this.senha_hash = await bcrypt.hash(this.senha, salt);
+            logger.info('Criptografia de senha concluída.', { userId: this.id });
         }
     }
 
     paraBancoDeDados() {
+        logger.info('Convertendo modelo de usuário para formato de banco de dados.', { userId: this.id });
         const data = {
             id: this.id,
             name: this.nome,
@@ -54,7 +62,11 @@ class Usuario {
     }
 
     static deBancoDeDados(dbData) {
-        if (!dbData) return null;
+        if (!dbData) {
+            logger.warn('Tentativa de criar modelo de usuário a partir de dados nulos do banco de dados.');
+            return null;
+        }
+        logger.info('Convertendo dados do banco de dados para modelo de usuário.', { userId: dbData.id });
 
         return new Usuario({
             id: dbData.id,
@@ -70,13 +82,13 @@ class Usuario {
             perfilCompleto: dbData.profile_completed,
             dataCriacao: dbData.created_at,
             dataAtualizacao: dbData.updated_at,
-            // Assumindo que a camada de serviço/repositório irá popular isso
             seguidores: dbData.seguidores || [],
             seguindo: dbData.seguindo || [],
         });
     }
 
     paraRespostaHttp() {
+        logger.info('Convertendo modelo de usuário para formato de resposta HTTP.', { userId: this.id });
         return {
             id: this.id,
             nome: this.nome,
@@ -87,7 +99,6 @@ class Usuario {
             urlFoto: this.urlFoto,
             privado: this.privado,
             perfilCompleto: this.perfilCompleto,
-            // Adicionando contagens e listas à resposta
             contagemSeguidores: this.seguidores.length,
             contagemSeguindo: this.seguindo.length,
             seguidores: this.seguidores,

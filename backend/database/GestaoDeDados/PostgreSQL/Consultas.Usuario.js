@@ -6,9 +6,9 @@ const logger = createQueryLogger('Consultas.Usuario.js');
 
 const criar = async (dadosUsuario) => {
     const cliente = await pool.connect();
-    const { 
-        id, name, email, password_hash, google_id, 
-        nickname, bio, website, photo_url, is_private, profile_completed 
+    const {
+        id, name, email, password_hash, google_id,
+        nickname, bio, website, photo_url, is_private, profile_completed
     } = dadosUsuario;
 
     const query = `
@@ -17,29 +17,21 @@ const criar = async (dadosUsuario) => {
             nickname, bio, website, photo_url, is_private, profile_completed
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        RETURNING id;
+        RETURNING *;
     `;
     const values = [
-        id, name, email, password_hash, google_id, 
+        id, name, email, password_hash, google_id,
         nickname, bio, website, photo_url, is_private, profile_completed
     ];
 
     try {
-        await cliente.query('BEGIN');
-        logger.info(`Iniciando transação para criar novo usuário com e-mail ${email}.`);
-
-        await cliente.query(query, values);
-        logger.info(`Inserido na tabela users para o usuário ${id}.`);
-
-        await cliente.query('COMMIT');
-        logger.info(`Transação concluída. Usuário ${id} criado com sucesso.`);
-
-        return await encontrarPorId(id, cliente); 
-
+        logger.info(`Executando INSERT para novo usuário com e-mail ${email}.`);
+        const { rows } = await cliente.query(query, values);
+        logger.info(`Usuário ${rows[0].id} criado com sucesso e retornado do banco de dados.`);
+        return rows[0];
     } catch (error) {
-        await cliente.query('ROLLBACK');
-        logger.error(`Erro na transação de criação de usuário. Rollback executado para o e-mail ${email}.`, { error });
-        if (error.code === '23505') {
+        logger.error(`Erro ao registrar usuário com e-mail ${email} no banco de dados.`, { error });
+        if (error.code === '23505') { // unique_violation
             throw new Error('Email, nickname ou ID do Google já está em uso.');
         }
         throw new Error('Erro ao registrar usuário no banco de dados');

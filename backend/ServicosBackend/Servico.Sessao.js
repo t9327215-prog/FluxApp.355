@@ -7,17 +7,14 @@ import repositorioSessao from '../Repositorios/Repositorio.Sessao.js';
 import Sessao from '../models/Models.Estrutura.Sessao.js';
 import createServicoLogger from '../config/Log.Servicos.Backend.js';
 
-const logger = createServicoLogger('Servico.Sessao.js');
+const logger = createServicoLogger(import.meta.url);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seu_segredo_jwt_super_secreto';
-const JWT_EXPIRES_IN = '24h';
-
-const calcularDataExpiracao = () => {
-    return new Date(Date.now() + 24 * 60 * 60 * 1000);
-};
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 const prepararNovaSessao = async ({ usuario, dadosRequisicao }) => {
     if (!usuario || !usuario.id) {
+        logger.error('Tentativa de criar sessão com dados de usuário inválidos.', { usuario });
         throw new Error('Dados de usuário inválidos para criar a sessão.');
     }
 
@@ -25,11 +22,15 @@ const prepararNovaSessao = async ({ usuario, dadosRequisicao }) => {
 
     const payload = { user: usuario.paraRespostaHttp() };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    
+    // Decodifica o token para obter a data de expiração (iat e exp são em segundos)
+    const decodedToken = jwt.decode(token);
+    const expires_at = new Date(decodedToken.exp * 1000);
 
     const dadosSessao = {
         user_id: usuario.id,
         token,
-        expires_at: calcularDataExpiracao(),
+        expires_at,
         ipAddress: dadosRequisicao.ipAddress,
         userAgent: dadosRequisicao.userAgent,
     };

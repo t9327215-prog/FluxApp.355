@@ -1,11 +1,16 @@
 
-// backend/validators/Comentario.validator.js
+// backend/validators/Validator.Estrutura.Comentario.js
+
+import createValidatorLogger from '../config/Log.Validator.js';
+
+const logger = createValidatorLogger('Validator.Estrutura.Comentario.js');
 
 /**
  * Valida os dados para a criação de um novo comentário.
  * É genérico e pode ser usado para comentários em qualquer tipo de publicação.
  */
 export function validarCriacaoComentario(data) {
+  logger.info('Iniciando validação para criação de comentário.', { parentId: data.parenteId, autorId: data.autorId });
   const erros = [];
 
   if (!data.autorId) {
@@ -26,9 +31,12 @@ export function validarCriacaoComentario(data) {
   }
 
   if (erros.length > 0) {
-    throw new Error(erros.join(", "));
+    const errorMsg = `Erros de validação de comentário: ${erros.join(', ')}`;
+    logger.error(errorMsg, { data, erros });
+    throw new Error(errorMsg);
   }
-
+  
+  logger.info('Validação de criação de comentário bem-sucedida.');
   // Retorna um objeto limpo e seguro
   return {
     autorId: data.autorId,

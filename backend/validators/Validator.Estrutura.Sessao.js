@@ -1,7 +1,11 @@
 
 import validator from 'validator';
+import createValidatorLogger from '../config/Log.Validator.js';
+
+const logger = createValidatorLogger('Validator.Estrutura.Sessao.js');
 
 const validarNovaSessao = (data) => {
+    logger.info('Iniciando validação para nova sessão.', { userId: data.user_id });
     const erros = [];
 
     // Validação do ID do usuário (deve ser UUID)
@@ -30,10 +34,12 @@ const validarNovaSessao = (data) => {
     }
 
     if (erros.length > 0) {
-        // Lança um erro único com todas as mensagens de validação
-        throw new Error(`Dados de sessão inválidos: ${erros.join(' ')}`.trim());
+        const errorMsg = `Dados de sessão inválidos: ${erros.join(' ')}`.trim();
+        logger.error(errorMsg, { data, erros });
+        throw new Error(errorMsg);
     }
-
+    
+    logger.info('Validação de nova sessão bem-sucedida.', { userId: data.user_id });
     // Retorna os dados limpos e padronizados, prontos para a próxima camada
     return {
         user_id: data.user_id,

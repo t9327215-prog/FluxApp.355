@@ -1,8 +1,13 @@
 
 // backend/models/Models.Estrutura.Sessao.js
 
+import createModelLogger from '../config/Log.Models.js';
+
+const logger = createModelLogger('Models.Estrutura.Sessao.js');
+
 class Sessao {
     constructor(data) {
+        logger.info('Criando nova instância de Sessão.', { sessionId: data.id, userId: data.idUsuario });
         this.id = data.id;
         this.idUsuario = data.idUsuario;
         this.token = data.token;
@@ -13,6 +18,7 @@ class Sessao {
     }
 
     paraBancoDeDados() {
+        logger.info('Convertendo modelo de sessão para formato de banco de dados.', { sessionId: this.id });
         return {
             id: this.id,
             user_id: this.idUsuario,
@@ -25,7 +31,11 @@ class Sessao {
     }
 
     static deBancoDeDados(dbData) {
-        if (!dbData) return null;
+        if (!dbData) {
+            logger.warn('Tentativa de criar modelo de sessão a partir de dados nulos do banco de dados.');
+            return null;
+        }
+        logger.info('Convertendo dados do banco de dados para modelo de sessão.', { sessionId: dbData.id });
 
         return new Sessao({
             id: dbData.id,
@@ -39,6 +49,7 @@ class Sessao {
     }
 
     paraRespostaHttp() {
+        logger.info('Convertendo modelo de sessão para formato de resposta HTTP.', { sessionId: this.id });
         return {
             id: this.id,
             idUsuario: this.idUsuario,

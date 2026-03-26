@@ -2,6 +2,9 @@
 // backend/validators/Validator.Estrutura.Usuario.js
 
 import validator from 'validator';
+import createValidatorLogger from '../config/Log.Validator.js';
+
+const logger = createValidatorLogger('Validator.Estrutura.Usuario.js');
 
 /**
  * Valida os dados para o registro de um novo usuário.
@@ -9,6 +12,7 @@ import validator from 'validator';
  * @returns {object} Objeto com os dados validados e limpos.
  */
 const validarRegistro = (data = {}) => {
+    logger.info('Iniciando validação para registro de novo usuário.', { data });
     const erros = [];
 
     if (!data.nome || validator.isEmpty(data.nome, { ignore_whitespace: true })) {
@@ -24,9 +28,12 @@ const validarRegistro = (data = {}) => {
     }
 
     if (erros.length > 0) {
-        throw new Error(erros.join(", "));
+        const errorMsg = `Erros de validação de registro: ${erros.join(', ')}`;
+        logger.error(errorMsg, { data, erros });
+        throw new Error(errorMsg);
     }
-
+    
+    logger.info('Validação de registro bem-sucedida.');
     return {
         nome: data.nome.trim(),
         email: data.email.toLowerCase().trim(),
@@ -40,6 +47,7 @@ const validarRegistro = (data = {}) => {
  * @returns {object} Objeto com os dados validados e limpos.
  */
 const validarLogin = (data = {}) => {
+    logger.info('Iniciando validação para login.', { email: data.email });
     const erros = [];
 
     if (!data.email || !validator.isEmail(data.email)) {
@@ -51,9 +59,12 @@ const validarLogin = (data = {}) => {
     }
 
     if (erros.length > 0) {
-        throw new Error(erros.join(", "));
+        const errorMsg = `Erros de validação de login: ${erros.join(', ')}`;
+        logger.error(errorMsg, { email: data.email, erros });
+        throw new Error(errorMsg);
     }
 
+    logger.info('Validação de login bem-sucedida.');
     return {
         email: data.email.toLowerCase().trim(),
         senha: data.senha,
@@ -66,6 +77,7 @@ const validarLogin = (data = {}) => {
  * @returns {object} Objeto com os dados validados e limpos.
  */
 const validarGoogleAuth = (data = {}) => {
+    logger.info('Iniciando validação para autenticação Google.', { email: data.email });
     const erros = [];
 
     if (!data.nome || validator.isEmpty(data.nome, { ignore_whitespace: true })) {
@@ -81,9 +93,12 @@ const validarGoogleAuth = (data = {}) => {
     }
 
     if (erros.length > 0) {
-        throw new Error(erros.join(", "));
+        const errorMsg = `Erros de validação Google Auth: ${erros.join(', ')}`;
+        logger.error(errorMsg, { data, erros });
+        throw new Error(errorMsg);
     }
 
+    logger.info('Validação Google Auth bem-sucedida.');
     return {
         nome: data.nome.trim(),
         email: data.email.toLowerCase().trim(),
@@ -97,6 +112,7 @@ const validarGoogleAuth = (data = {}) => {
  * @returns {object} Objeto limpo contendo apenas os campos validados.
  */
 const validarAtualizacaoPerfil = (data = {}) => {
+    logger.info('Iniciando validação para atualização de perfil.', { data });
     const erros = [];
     const dadosValidados = {};
 
@@ -113,13 +129,11 @@ const validarAtualizacaoPerfil = (data = {}) => {
         if (siteTrimmed !== '' && !validator.isURL(siteTrimmed)) {
             erros.push("O site, se fornecido, deve ser uma URL válida.");
         } else {
-            // Permite que o site seja definido como uma string vazia para removê-lo
             dadosValidados.site = siteTrimmed;
         }
     }
     
     if (data.bio !== undefined) {
-        // A bio pode ser uma string vazia, mas não pode exceder o limite.
         if (!validator.isLength(data.bio, { max: 150 })) {
             erros.push("A bio não pode exceder 150 caracteres.");
         } else {
@@ -136,9 +150,12 @@ const validarAtualizacaoPerfil = (data = {}) => {
     }
 
     if (erros.length > 0) {
-        throw new Error(erros.join(", "));
+        const errorMsg = `Erros de validação de perfil: ${erros.join(', ')}`;
+        logger.error(errorMsg, { data, erros });
+        throw new Error(errorMsg);
     }
     
+    logger.info('Validação de atualização de perfil bem-sucedida.');
     return dadosValidados;
 };
 
