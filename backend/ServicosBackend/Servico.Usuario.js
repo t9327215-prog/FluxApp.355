@@ -11,7 +11,7 @@ const registrarNovoUsuario = async (dadosUsuario) => {
     
     console.log('Iniciando registro de novo usuário', { event: 'REGISTRATION_START', email });
 
-    const usuarioExistente = await repositorioUsuario.encontrarPorEmail(email);
+    const usuarioExistente = await repositorioUsuario.findByEmail(email);
     if (usuarioExistente) {
         throw new Error('Este e-mail já está em uso.');
     }
@@ -26,7 +26,7 @@ const registrarNovoUsuario = async (dadosUsuario) => {
 
     await novoUsuario.criptografarSenha();
 
-    const usuarioDb = await repositorioUsuario.criar(novoUsuario.paraBancoDeDados());
+    const usuarioDb = await repositorioUsuario.createUser(novoUsuario.paraBancoDeDados());
     console.log('Usuário registrado com sucesso', { event: 'REGISTRATION_SUCCESS', userId: usuarioDb.id, email });
 
     return Usuario.deBancoDeDados(usuarioDb);
@@ -37,7 +37,7 @@ const autenticarUsuarioPorCredenciais = async (credenciais) => {
     
     console.log('Iniciando autenticação por credenciais', { event: 'AUTH_CREDENTIALS_START', email });
 
-    const usuarioDb = await repositorioUsuario.encontrarPorEmail(email);
+    const usuarioDb = await repositorioUsuario.findByEmail(email);
     if (!usuarioDb || !usuarioDb.password_hash) {
         throw new Error('Credenciais inválidas.');
     }
@@ -56,11 +56,11 @@ const autenticarOuCriarPorGoogle = async (dadosGoogle) => {
     
     console.log('Iniciando autenticação ou criação por Google', { event: 'AUTH_GOOGLE_START', email });
 
-    let usuarioDb = await repositorioUsuario.encontrarPorGoogleId(google_id);
+    let usuarioDb = await repositorioUsuario.findByGoogleId(google_id);
     let isNewUser = false;
 
     if (!usuarioDb) {
-        const usuarioExistente = await repositorioUsuario.encontrarPorEmail(email);
+        const usuarioExistente = await repositorioUsuario.findByEmail(email);
         if (usuarioExistente) {
             throw new Error("Este e-mail já está cadastrado. Faça login com sua senha.");
         }
@@ -75,7 +75,7 @@ const autenticarOuCriarPorGoogle = async (dadosGoogle) => {
             perfilCompleto: false,
         });
         
-        usuarioDb = await repositorioUsuario.criar(novoUsuario.paraBancoDeDados());
+        usuarioDb = await repositorioUsuario.createUser(novoUsuario.paraBancoDeDados());
         console.log('Novo usuário criado via Google', { event: 'AUTH_GOOGLE_NEW_USER', userId: usuarioDb.id, email });
     }
 
@@ -101,7 +101,7 @@ const atualizarPerfilUsuario = async (idUsuario, dadosPerfil) => {
     }, {});
 
 
-    const usuarioAtualizadoDb = await repositorioUsuario.atualizar(idUsuario, dadosParaAtualizar);
+    const usuarioAtualizadoDb = await repositorioUsuario.updateUser(idUsuario, dadosParaAtualizar);
     
     console.log('Perfil de usuário atualizado com sucesso', { event: 'PROFILE_UPDATE_SUCCESS', userId: idUsuario });
 
