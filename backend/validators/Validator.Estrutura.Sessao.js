@@ -4,37 +4,43 @@ import validator from 'validator';
 const validarNovaSessao = (data) => {
     const erros = [];
 
-    if (!data.user_id || !validator.isUUID(data.user_id)) {
-        erros.push("ID de usuário é obrigatório e deve ser um UUID válido.");
+    // Validação do ID do usuário (deve ser UUID)
+    if (!data.user_id || !validator.isUUID(data.user_id, 4)) {
+        erros.push('O campo user_id é obrigatório e deve ser um UUID v4.');
     }
 
-    if (!data.token || validator.isEmpty(data.token.trim())) {
-        erros.push("Token é obrigatório.");
+    // Validação do token (não pode ser vazio)
+    if (!data.token || validator.isEmpty(data.token, { ignore_whitespace: true })) {
+        erros.push('O campo token é obrigatório.');
     }
 
-    if (!data.expires_at || !validator.isISO8601(data.expires_at.toISOString())) {
-        erros.push("A data de expiração é obrigatória e deve ser uma data válida.");
+    // Validação da data de expiração (deve ser uma data válida)
+    if (!data.expires_at || !validator.isISO8601(new Date(data.expires_at).toISOString())) {
+        erros.push('O campo expires_at é obrigatório e deve estar em formato de data válido.');
     }
 
-    if (!data.ip_address || !validator.isIP(data.ip_address)) {
-        erros.push("Endereço de IP é obrigatório e deve ser um IP válido.");
+    // Validação do endereço IP (deve ser um IP válido)
+    if (!data.ipAddress || !validator.isIP(data.ipAddress)) {
+        erros.push('O campo ipAddress é obrigatório e deve ser um endereço de IP válido.');
     }
 
-    if (data.user_agent && typeof data.user_agent !== 'string') {
-        erros.push("User-Agent, se fornecido, deve ser uma string.");
+    // Validação do user-agent (deve ser uma string, se existir)
+    if (data.userAgent && typeof data.userAgent !== 'string') {
+        erros.push('O campo userAgent, se fornecido, deve ser uma string.');
     }
 
     if (erros.length > 0) {
-        throw new Error(`Erros de validação da sessão: ${erros.join(", ")}`);
+        // Lança um erro único com todas as mensagens de validação
+        throw new Error(`Dados de sessão inválidos: ${erros.join(' ')}`.trim());
     }
 
-    // Retorna um objeto limpo e validado
+    // Retorna os dados limpos e padronizados, prontos para a próxima camada
     return {
         user_id: data.user_id,
         token: data.token.trim(),
-        expires_at: data.expires_at,
-        ip_address: data.ip_address,
-        user_agent: data.user_agent ? data.user_agent.trim() : null,
+        expires_at: new Date(data.expires_at),
+        ip_address: data.ipAddress, // Padronizado para snake_case
+        user_agent: data.userAgent ? data.userAgent.trim() : null, // Padronizado para snake_case
     };
 };
 

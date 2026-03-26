@@ -24,6 +24,7 @@ const registrar = async (req, res, next) => {
 
         const { token, dadosSessao } = await servicoSessao.prepararNovaSessao({ usuario, dadosRequisicao });
 
+        // Validação acontece no controlador, como deveria ser
         const dadosSessaoValidados = validadorSessao.validarNovaSessao(dadosSessao);
 
         await servicoSessao.salvarSessao(dadosSessaoValidados);
@@ -84,34 +85,24 @@ const googleAuth = async (req, res, next) => {
         });
 
         const payload = loginTicket.getPayload();
-
         if (!payload) {
             throw new Error('Não foi possível obter os dados do usuário do Google.');
         }
 
-        const dadosGoogle = {
-            google_id: payload.sub, // Corrigido para snake_case
-            email: payload.email,
-            nome: payload.name,
-            foto: payload.picture,
-        };
-
+        const dadosGoogle = { google_id: payload.sub, email: payload.email, nome: payload.name, foto: payload.picture };
         const dadosGoogleValidados = validadorUsuario.validarGoogleAuth(dadosGoogle);
 
         const { usuario, isNewUser } = await servicoUsuario.autenticarOuCriarPorGoogle(dadosGoogleValidados);
 
         const { token: sessionToken, dadosSessao } = await servicoSessao.prepararNovaSessao({ usuario, dadosRequisicao });
 
+        // A validação é feita aqui no controlador, antes de salvar.
         const dadosSessaoValidados = validadorSessao.validarNovaSessao(dadosSessao);
         await servicoSessao.salvarSessao(dadosSessaoValidados);
 
         console.log('Autenticação com Google bem-sucedida', { event: 'GOOGLE_AUTH_SUCESSO', userId: usuario.id });
         
-        return ServicoResposta.sucesso(res, { 
-            token: sessionToken, 
-            user: usuario.paraRespostaHttp(),
-            isNewUser
-        });
+        return ServicoResposta.sucesso(res, { token: sessionToken, user: usuario.paraRespostaHttp(), isNewUser });
 
     } catch (error) {
         console.error('Falha na autenticação com Google', { event: 'FALHA_GOOGLE_AUTH', errorMessage: error.message, error });
@@ -124,7 +115,6 @@ const googleAuth = async (req, res, next) => {
         next(error);
     }
 };
-
 
 const logout = async (req, res, next) => {
     try {

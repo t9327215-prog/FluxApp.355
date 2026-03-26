@@ -42,22 +42,29 @@ export function configureExpress(app, io) {
 
     app.use((err, req, res, next) => {
         const traceId = req.traceId || 'untraced-error';
-        let errorMessage = (err instanceof Error) ? err.message : 'Ocorreu um erro inesperado.';
+        let publicMessage = 'Ocorreu um erro inesperado no servidor.';
+        let logMessage = (err instanceof Error) ? err.message : 'Ocorreu um erro inesperado.';
         let statusCode = 500;
 
-        // Tratamento específico para violação de NOT NULL
-        if (err.message && err.message.includes('violates not-null constraint')) {
-            errorMessage = 'Falha ao criar registro: um campo obrigatório não foi preenchido.';
+        // Tratamento específico para violação de NOT NULL (PostgreSQL error code 23502)
+        if (err.code === '23502' || (err.message && err.message.includes('violates not-null constraint'))) {
             statusCode = 400; // Bad Request
+            publicMessage = 'Falha ao processar a requisição: um campo obrigatório não foi preenchido.';
+            logMessage = `Violação de NOT NULL na coluna '${err.column}' da tabela '${err.table}'.`;
         }
 
         console.error({
             camada: 'Backend',
             componente: 'API',
             arquivo: 'express.js',
-            mensagem: `Erro não tratado em uma rota do Express: ${errorMessage}`,
+            mensagem: `Erro não tratado em uma rota do Express: ${logMessage}`,
             dados: { path: req.path, method: req.method, traceId },
-            error: err
+            error: {
+                message: err.message,
+                stack: err.stack,
+                code: err.code,
+                detail: err.detail,
+            }
         });
 
         if (res.headersSent) {
@@ -65,8 +72,7 @@ export function configureExpress(app, io) {
         }
 
         res.status(statusCode).json({
-            error: 'Ocorreu um erro inesperado no servidor.',
-            message: errorMessage,
+            error: publicMessage,
             traceId
         });
     });
