@@ -1,6 +1,6 @@
 
 import { config } from '../ValidaçãoDeAmbiente/config';
-import { apiPerfilUsuario } from '../APIs/APIsServicoPerfil/API.Servico.Perfil.Usuario';
+import apiPerfilUsuario from '../APIs/APIsServicoPerfil/API.Servico.Perfil.Usuario';
 import { mockServicoPerfilUsuario } from '../ServiçoDeSimulação/simulacoes/Simulacao.Perfil.Usuario';
 import { Usuario } from '../../types/Saida/Types.Estrutura.Usuario';
 
@@ -17,7 +17,7 @@ export interface IServicoPerfilUsuario {
 class ServicoPerfilUsuarioReal implements IServicoPerfilUsuario {
     async getOwnProfile(): Promise<Usuario | null> {
         try {
-            return await apiPerfilUsuario.getOwnProfile();
+            return await apiPerfilUsuario.getMeuPerfil();
         } catch (error) {
             console.error("Erro no serviço real ao buscar o perfil próprio:", error);
             return null;
@@ -26,7 +26,7 @@ class ServicoPerfilUsuarioReal implements IServicoPerfilUsuario {
 
     async getPublicProfileByUsername(username: string): Promise<Usuario | null> {
         try {
-            return await apiPerfilUsuario.getPublicProfileByUsername(username);
+            return await apiPerfilUsuario.getPerfilUsuarioPorNome(username);
         } catch (error) {
             console.error(`Erro no serviço real ao buscar o perfil de ${username}:`, error);
             return null;
@@ -35,7 +35,8 @@ class ServicoPerfilUsuarioReal implements IServicoPerfilUsuario {
 
     async updateProfile(userId: string, profileData: Partial<Usuario>): Promise<Usuario | null> {
         try {
-            return await apiPerfilUsuario.updateProfile(userId, profileData);
+            console.warn("O método updateProfile não está implementado no serviço real.");
+            return null;
         } catch (error) {
             console.error(`Erro no serviço real ao atualizar o perfil de ${userId}:`, error);
             return null;

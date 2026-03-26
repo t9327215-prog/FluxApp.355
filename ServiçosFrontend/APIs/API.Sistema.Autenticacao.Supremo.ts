@@ -11,6 +11,7 @@ import {
 } from '../Contratos/Contrato.Autenticacao';
 import { AxiosResponse } from 'axios';
 import { createApiLogger } from '../SistemaObservabilidade/Log.API';
+import { ENDPOINTS_AUTH } from '../EndPoints/EndPoints.Auth';
 
 const apiLogger = createApiLogger('AutenticacaoSupremo');
 
@@ -20,7 +21,7 @@ class AutenticacaoAPISupremo implements IAutenticacaoServico {
         apiLogger.logRequest('login', { email: data.email });
         try {
             const dadosValidados = LoginRequestSchema.parse(data);
-            const response: AxiosResponse<any> = await ClienteBackend.post('/auth/login', dadosValidados);
+            const response: AxiosResponse<any> = await ClienteBackend.post(ENDPOINTS_AUTH.LOGIN, dadosValidados);
             
             const responseData = response.data.dados; // Extrai a propriedade 'dados'
             const transformedData = {
@@ -39,7 +40,7 @@ class AutenticacaoAPISupremo implements IAutenticacaoServico {
     async resolverSessaoLogin(data: GoogleLoginRequest): Promise<GoogleLoginResponse> {
         apiLogger.logRequest('resolverSessaoLogin', { token: '[TOKEN OMITIDO]' });
         try {
-            const response: AxiosResponse<any> = await ClienteBackend.post('/auth/google/callback', data);
+            const response: AxiosResponse<any> = await ClienteBackend.post(ENDPOINTS_AUTH.GOOGLE_CALLBACK, data);
             
             // Extrai e transforma os dados da resposta para corresponder ao esquema esperado.
             const responseData = response.data.dados; // Extrai a propriedade 'dados'

@@ -1,3 +1,4 @@
+
 import VariaveisFrontend from '../../Config/Variaveis.Frontend';
 import ClienteBackend from '../../Cliente.Backend';
 import {
@@ -6,6 +7,7 @@ import {
     IServicoMetodoGoogle
 } from '../../Contratos/Contrato.Servico.Metodo.Google';
 import { createApiLogger } from '../../SistemaObservabilidade/Log.API';
+import { ENDPOINTS_AUTH } from '../../EndPoints/EndPoints.Auth';
 
 /**
  * @file Implementação da API para autenticação com Google, utilizando contratos e observabilidade.
@@ -63,7 +65,7 @@ class ServicoMetodoGoogle implements IServicoMetodoGoogle {
         const dadosParaBackend: HandleAuthCallbackRequest = HandleAuthCallbackRequestSchema.parse({ code, referredBy });
 
         try {
-            const respostaBackend = await ClienteBackend.post('/auth/google', dadosParaBackend);
+            const respostaBackend = await ClienteBackend.post(ENDPOINTS_AUTH.GOOGLE, dadosParaBackend);
             
             // 2. Validar a resposta do backend com o schema
             const dadosValidados = HandleAuthCallbackResponseSchema.parse(respostaBackend.data);

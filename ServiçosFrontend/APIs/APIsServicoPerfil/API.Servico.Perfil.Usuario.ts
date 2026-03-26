@@ -1,31 +1,25 @@
 
-import backend from '../../Cliente.Backend.js';
-import { Usuario } from '../../../types/Saida/Types.Estrutura.Usuario';
+import { IPerfilUsuarioServico } from "../../Contratos/Contrato.Perfil.Usuario";
+import { PerfilUsuario } from "../../Contratos/Contrato.Perfil.Usuario";
+import ClienteBackend from "../../Cliente.Backend";
+import { ENDPOINTS_PERFIL } from "../../EndPoints/EndPoints.Perfil";
 
-const API_URL = '/api/users';
 
-/**
- * API para o serviço de perfil de usuário.
- * Abstrai as chamadas de rede para operações de perfil.
- */
+class PerfilUsuarioAPISupabase implements IPerfilUsuarioServico {
+    async getPerfilUsuario(userId: string): Promise<PerfilUsuario> {
+        const response = await ClienteBackend.get(ENDPOINTS_PERFIL.USUARIO_POR_ID(userId));
+        return response.data;
+    }
 
-const getOwnProfile = async (): Promise<Usuario> => {
-    const response = await backend.get(`${API_URL}/me`);
-    return response.data;
-};
+    async getPerfilUsuarioPorNome(username: string): Promise<PerfilUsuario> {
+        const response = await ClienteBackend.get(ENDPOINTS_PERFIL.USUARIO_POR_NOME(username));
+        return response.data;
+    }
 
-const getPublicProfileByUsername = async (username: string): Promise<Usuario> => {
-    const response = await backend.get(`${API_URL}/name/${username}`);
-    return response.data;
-};
+    async getMeuPerfil(): Promise<PerfilUsuario> {
+        const response = await ClienteBackend.get(ENDPOINTS_PERFIL.ME);
+        return response.data;
+    }
+}
 
-const updateProfile = async (userId: string, profileData: Partial<Usuario>): Promise<Usuario> => {
-    const response = await backend.put(`${API_URL}/${userId}`, profileData);
-    return response.data;
-};
-
-export const apiPerfilUsuario = {
-    getOwnProfile,
-    getPublicProfileByUsername,
-    updateProfile,
-};
+export default new PerfilUsuarioAPISupabase();
