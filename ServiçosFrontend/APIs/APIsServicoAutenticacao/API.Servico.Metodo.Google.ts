@@ -9,10 +9,6 @@ import {
 import { createApiLogger } from '../../SistemaObservabilidade/Log.API';
 import { ENDPOINTS_AUTH } from '../../EndPoints/EndPoints.Auth';
 
-/**
- * @file Implementação da API para autenticação com Google, utilizando contratos e observabilidade.
- */
-
 const apiLogger = createApiLogger('ServicoMetodoGoogle');
 
 const criarTraceIdAuth = (): string => {
@@ -46,7 +42,7 @@ class ServicoMetodoGoogle implements IServicoMetodoGoogle {
             client_id: googleClientId,
             redirect_uri: redirectUri,
             scope: 'openid email profile',
-            response_type: 'id_token',
+            response_type: 'code', // CORREÇÃO: Alterado de 'id_token' para 'code'
             access_type: 'offline',
             prompt: 'consent',
         });
@@ -57,11 +53,12 @@ class ServicoMetodoGoogle implements IServicoMetodoGoogle {
         window.location.href = authUrl;
     }
 
-    async handleAuthCallback(token: string, referredBy?: string): Promise<HandleAuthCallbackResponse> {
+    async handleAuthCallback(code: string, referredBy?: string): Promise<HandleAuthCallbackResponse> {
         const traceId = obterTraceIdAuth();
-        apiLogger.logRequest('handleAuthCallback', { token, referredBy, traceId });
+        // O parâmetro 'token' foi renomeado para 'code' para refletir a mudança.
+        apiLogger.logRequest('handleAuthCallback', { code, referredBy, traceId });
 
-        const dadosParaBackend: HandleAuthCallbackRequest = HandleAuthCallbackRequestSchema.parse({ token, referredBy });
+        const dadosParaBackend: HandleAuthCallbackRequest = HandleAuthCallbackRequestSchema.parse({ token: code, referredBy });
 
         try {
             const respostaBackend = await ClienteBackend.post(ENDPOINTS_AUTH.GOOGLE_CALLBACK, dadosParaBackend);
@@ -72,7 +69,7 @@ class ServicoMetodoGoogle implements IServicoMetodoGoogle {
 
             return dadosValidados;
         } catch (error) {
-            apiLogger.logFailure('handleAuthCallback', error, { token, referredBy, traceId });
+            apiLogger.logFailure('handleAuthCallback', error, { code, referredBy, traceId });
             
             throw error;
         }

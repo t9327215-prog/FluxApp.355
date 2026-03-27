@@ -1,11 +1,10 @@
 
-import { servicoAutenticacao, AuthState } from '../ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+import { AuthProvider, AuthState, ILoginEmailParams } from '../Infra/Providers/Auth.provider';
 import { createApplicationServiceLogger } from '../SistemaObservabilidade/Log.Aplication';
-import { ILoginEmailParams } from '../Contratos/Contrato.Autenticacao';
 
-const appServiceLogger = createApplicationServiceLogger('Autenticacao.ServicoDeAplicacao');
+const appServiceLogger = createApplicationServiceLogger('AuthApplicationService');
 
-// Define o tipo de estado que a camada de aplicação vai expor
+// O estado da aplicação agora estende o AuthState, que é importado do provider.
 export interface AuthApplicationState extends AuthState {
   postLoginAction?: 'navigateToFeed' | 'navigateToCompleteProfile';
 }
@@ -15,23 +14,24 @@ class AuthApplicationService {
   private listeners: ((state: AuthApplicationState) => void)[] = [];
 
   constructor() {
-    // Inicializa o estado e se inscreve nas mudanças do serviço de autenticação
-    this.state = servicoAutenticacao.getState();
-    servicoAutenticacao.subscribe(this.handleAuthChange.bind(this));
+    // Inicializa o estado usando o provider e se inscreve para futuras atualizações
+    this.state = AuthProvider.getState();
+    AuthProvider.subscribe(this.handleAuthChange.bind(this));
+
+    appServiceLogger.logOperationStart('constructor', { initialState: this.state });
   }
 
   private handleAuthChange(newAuthState: AuthState) {
     const wasJustAuthenticated = !this.state.isAuthenticated && newAuthState.isAuthenticated;
     let postLoginAction: AuthApplicationState['postLoginAction'] | undefined = undefined;
 
-    // LÓGICA CENTRAL: Decide a ação de pós-login
+    appServiceLogger.logOperationSuccess('handleAuthChange', { wasJustAuthenticated, newUserId: newAuthState.user?.id });
+
+    // LÓGICA DE NEGÓCIO: A principal responsabilidade da camada de aplicação.
     if (wasJustAuthenticated) {
-      appServiceLogger.logOperationSuccess('login', { userId: newAuthState.user?.id, isNew: newAuthState.isNewUser });
-      if (newAuthState.isNewUser) {
-        postLoginAction = 'navigateToCompleteProfile';
-      } else {
-        postLoginAction = 'navigateToFeed';
-      }
+      // Decide a rota de pós-login com base no perfil do usuário.
+      postLoginAction = newAuthState.isNewUser ? 'navigateToCompleteProfile' : 'navigateToFeed';
+      appServiceLogger.logOperationSuccess('postLoginDecision', { userId: newAuthState.user?.id, action: postLoginAction });
     }
     
     this.updateState({ ...newAuthState, postLoginAction });
@@ -40,30 +40,34 @@ class AuthApplicationService {
   private updateState(newState: AuthApplicationState) {
     this.state = newState;
     this.listeners.forEach(listener => listener(this.state));
-    // Limpa a ação de pós-login depois de notificar os listeners para que não seja executada novamente
+    
+    // Ação pós-notificação: Limpa a ação para evitar execuções repetidas.
     if (this.state.postLoginAction) {
       this.state.postLoginAction = undefined;
     }
   }
 
-  // Métodos de ação que delegam para o serviço de autenticação
+  // --- MÉTODOS PÚBLICOS (A API da camada de aplicação) ---
+
   async loginComEmail(params: ILoginEmailParams) {
     const { email } = params;
     appServiceLogger.logOperationStart('loginComEmail', { email });
     try {
-      await servicoAutenticacao.login(params);
-      // A lógica de sucesso é tratada no handleAuthChange
+      // Delega a chamada para o provider, abstraindo a implementação.
+      await AuthProvider.loginComEmail(params);
+      // A lógica de sucesso e roteamento é tratada de forma reativa no `handleAuthChange`.
     } catch (err: any) {
       appServiceLogger.logOperationError('loginComEmail', err, { email });
-      throw err; // Re-throw para a UI, se necessário
+      throw err; // Re-lança para que a UI possa reagir ao erro (ex: mostrar uma mensagem).
     }
   }
 
   iniciarLoginComGoogle() {
     appServiceLogger.logOperationStart('iniciarLoginComGoogle');
     try {
-        servicoAutenticacao.iniciarLoginComGoogle();
-        appServiceLogger.logOperationSuccess('iniciarLoginComGoogle', { message: 'Redirecionamento para o Google iniciado.' });
+        // Delega para o provider.
+        AuthProvider.iniciarLoginComGoogle();
+        appServiceLogger.logOperationSuccess('iniciarLoginComGoogle', { message: 'Redirecionamento iniciado via provider.' });
     } catch (err: any) {
         appServiceLogger.logOperationError('iniciarLoginComGoogle', err);
         throw err;
@@ -73,19 +77,20 @@ class AuthApplicationService {
   async logout() {
     appServiceLogger.logOperationStart('logout');
     try {
-      await servicoAutenticacao.logout();
-      appServiceLogger.logOperationSuccess('logout', { message: 'Logout bem-sucedido.' });
+      // Delega para o provider.
+      await AuthProvider.logout();
+      appServiceLogger.logOperationSuccess('logout', { message: 'Logout bem-sucedido via provider.' });
     } catch (err: any) {
       appServiceLogger.logOperationError('logout', err);
       throw err;
     }
   }
 
-  // Métodos de observabilidade para a UI (hooks)
+  // --- MÉTODOS DE OBSERVAÇÃO (Para Hooks da UI) ---
+
   subscribe(listener: (state: AuthApplicationState) => void): () => void {
     this.listeners.push(listener);
-    // Notifica o novo listener com o estado atual
-    listener(this.state);
+    listener(this.state); // Notifica imediatamente com o estado atual.
     return () => {
       this.listeners = this.listeners.filter(l => l !== listener);
     };
@@ -96,4 +101,5 @@ class AuthApplicationService {
   }
 }
 
+// Exporta uma instância única do serviço de aplicação.
 export const servicoDeAplicacaoDeAutenticacao = new AuthApplicationService();
