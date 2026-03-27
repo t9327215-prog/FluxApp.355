@@ -3,10 +3,10 @@ import ClienteBackend from '../Cliente.Backend.js';
 import {
     LoginRequest,
     LoginResponse,
-    LoginRequestSchema, 
     GoogleLoginRequest,
     GoogleLoginResponse,
-    GoogleLoginResponseSchema,
+    validateLoginRequest,
+    validateGoogleLoginResponse
 } from '../Contratos/Contrato.Autenticacao';
 import { AxiosResponse } from 'axios';
 import { createApiLogger } from '../SistemaObservabilidade/Log.API';
@@ -19,7 +19,9 @@ class SessaoAPI {
     async login(data: LoginRequest): Promise<LoginResponse> {
         apiLogger.logRequest('login', { email: data.email });
         try {
-            const dadosValidados = LoginRequestSchema.parse(data);
+            // Agora usa a função de validação do contrato, que já loga o erro se falhar.
+            const dadosValidados = validateLoginRequest(data);
+            
             const response: AxiosResponse<any> = await ClienteBackend.post(ENDPOINTS_AUTH.LOGIN, dadosValidados);
             
             const responseData = response.data.dados;
@@ -31,6 +33,7 @@ class SessaoAPI {
             apiLogger.logSuccess('login', transformedData);
             return transformedData;
         } catch (error) {
+            // A falha (seja da validação ou da API) é capturada e logada aqui.
             apiLogger.logFailure('login', error, { email: data.email });
             throw error;
         }
@@ -48,12 +51,14 @@ class SessaoAPI {
                 isNewUser: responseData.isNewUser
             };
 
-            const dadosValidados = GoogleLoginResponseSchema.parse(transformedData);
+            // Valida a resposta do backend usando a função do contrato.
+            const dadosValidados = validateGoogleLoginResponse(transformedData);
             
             apiLogger.logSuccess('resolverSessaoLogin', dadosValidados);
             
             return dadosValidados;
         } catch (error) {
+            // Captura e loga a falha (seja da validação da resposta ou da API).
             apiLogger.logFailure('resolverSessaoLogin', error);
             throw error;
         }
