@@ -1,65 +1,63 @@
 
-import { servicoAutenticacao, AuthState } from '../../ServiçoDeAutenticação/Auth.Application';
-import { getInstancia as getGoogleLoginInstancia } from '../../ServiçoDeAutenticação/Login.Google';
+import {
+  servicoAutenticacao,
+  AuthState,
+  IPerfilParaCompletar,
+  IResultadoCompletarPerfil,
+  IRegistroParams,
+  IResultadoRegistro
+} from '../../ServiçoDeAutenticação/Auth.Application';
 import { ILoginEmailParams } from '../../Contratos/Contrato.Autenticacao';
 
-// Re-exporta os tipos para que a camada de aplicação não precise conhecer os serviços subjacentes.
-export type { AuthState, ILoginEmailParams };
-
-const ServicoMetodoGoogle = getGoogleLoginInstancia();
+// Re-exportamos os tipos necessários para desacoplar as camadas.
+export type { 
+  AuthState, 
+  ILoginEmailParams, 
+  IPerfilParaCompletar, 
+  IResultadoCompletarPerfil,
+  IRegistroParams,
+  IResultadoRegistro
+};
 
 /**
- * AuthProvider fornece uma interface completa e reativa para as operações de autenticação.
- * Ele abstrai a origem dos dados e os métodos de autenticação, expondo um contrato claro para a camada de aplicação.
- * Fluxo: Hook -> Application Layer -> Provider -> Serviço API
+ * Auth.provider.ts
+ * Ponto de acesso único e simplificado para a UI (Hooks, etc.).
+ * Delega todas as chamadas para a camada de aplicação (Auth.Application.ts).
  */
 export const AuthProvider = {
+  
   /**
-   * Tenta autenticar um usuário com email e senha.
+   * Delega o processo de registro para o serviço de aplicação.
    */
+  registrar: (dadosRegistro: IRegistroParams): Promise<IResultadoRegistro> => {
+    console.log("PROVIDER: Delegando chamada para registrar.");
+    return servicoAutenticacao.registrar(dadosRegistro);
+  },
+
   loginComEmail: (params: ILoginEmailParams) => {
     return servicoAutenticacao.login(params);
   },
 
-  /**
-   * Finaliza o processo de login usando um token de sessão (vindo do callback do Google).
-   */
-  finalizarLoginComToken: (token: string) => {
-    return servicoAutenticacao.finalizarLoginComToken(token);
-  },
-
-  /**
-   * Inicia o fluxo de autenticação com o Google (redirecionamento).
-   */
   iniciarLoginComGoogle: () => {
-    console.log("PROVIDER: iniciarLoginComGoogle");
-    ServicoMetodoGoogle.redirectToGoogleAuth();
+    servicoAutenticacao.iniciarLoginComGoogle();
   },
 
-  /**
-   * Processa o código de callback do Google para obter a sessão.
-   */
   processarCallbackGoogle: (code: string) => {
-    return ServicoMetodoGoogle.handleAuthCallback(code);
+    return servicoAutenticacao.finalizarLoginComGoogle(code);
   },
 
-  /**
-   * Realiza o logout do usuário.
-   */
+  completarPerfil: (dadosPerfil: IPerfilParaCompletar): Promise<IResultadoCompletarPerfil> => {
+    return servicoAutenticacao.completarPerfil(dadosPerfil);
+  },
+
   logout: () => {
     return servicoAutenticacao.logout();
   },
 
-  /**
-   * Permite que a camada de aplicação se inscreva a mudanças no estado de autenticação.
-   */
   subscribe: (listener: (state: AuthState) => void) => {
     return servicoAutenticacao.subscribe(listener);
   },
 
-  /**
-   * Obtém o estado de autenticação atual.
-   */
   getState: (): AuthState => {
     return servicoAutenticacao.getState();
   }

@@ -1,46 +1,76 @@
 
-import { LoginUsuarioDTO as LoginDto } from '../../../types/Entrada/Dto.Estrutura.Usuario';
-import { Usuario } from '../../../types/Saida/Types.Estrutura.Usuario';
-import { getInstancia as getInstanciaGoogle } from './Login.Google';
-import { servicoMetodoEmailSenha } from './Login.Email.Senha';
-import { createServiceLogger } from '../SistemaObservabilidade/Log.Servicos.Frontend';
+import { loginGoogle, IUsuarioSocial } from './Login.Google';
 
-const log = createServiceLogger('Servico.Gestao.Login');
-const servicoMetodoGoogle = getInstanciaGoogle();
+// A interface para o objeto de usuário que será mantido no estado.
+export interface IUsuario {
+  id: string;
+  nome: string;
+  email: string;
+}
 
+// A interface para a forma completa do estado de autenticação.
+export interface IEstadoAutenticacao {
+  autenticado: boolean;
+  usuario: IUsuario | null;
+  token: string | null;
+}
 
-// --- Implementação do Serviço de Gestão de Login ---
-const servicoGestaoLogin = {
-    /**
-     * Autentica um usuário usando email e senha.
-     */
-    login: async (dadosLogin: LoginDto) => {
-        const authResult = await servicoMetodoEmailSenha.autenticar(dadosLogin);
-        return authResult;
-    },
+/**
+ * Processo.Login.ts (Refatorado para Gerenciador de Estado)
+ * 
+ * Responsabilidade: Manter o estado de autenticação e fornecer métodos para 
+ * atualizá-lo e lê-lo. Não possui mais lógica de negócio ou chamadas de API.
+ */
+class ProcessoLoginGerenciadorEstado {
+  private estado: IEstadoAutenticacao;
 
-    /**
-     * Inicia o fluxo de autenticação com o Google, redirecionando o usuário.
-     */
-    redirectToGoogle: () => {
-        servicoMetodoGoogle.redirectToGoogleAuth();
-    },
+  constructor() {
+    this.estado = {
+      autenticado: false,
+      usuario: null,
+      token: null,
+    };
+    console.log("Gerenciador de Estado de Login instanciado.");
+  }
 
-    /**
-     * Lida com o callback do Google, trocando o código de autorização por um token de sessão.
-     */
-    handleGoogleCallback: async (code: string, referredBy?: string) => {
-        const operation = 'handleGoogleCallback';
-        log.logOperationStart(operation, { code, referredBy });
-        try {
-            const authResult = await servicoMetodoGoogle.handleAuthCallback(code, referredBy);
-            log.logInfo('Resultado recebido de handleAuthCallback:', authResult);
-            return authResult;
-        } catch (error) {
-            log.logOperationError(operation, error);
-            throw error;
-        }
-    },
-};
+  /**
+   * Retorna o estado de autenticação atual.
+   */
+  public obterEstadoAtual(): IEstadoAutenticacao {
+    return this.estado;
+  }
 
-export { servicoGestaoLogin };
+  /**
+   * Atualiza o estado para um estado autenticado.
+   * Este método é chamado pela camada de Aplicação após uma chamada de API bem-sucedida.
+   */
+  public definirEstadoAutenticado(usuario: IUsuario, token: string): void {
+    console.log(`Gerenciador de Estado: Definindo estado para o usuário ${usuario.email}.`);
+    this.estado = {
+      autenticado: true,
+      usuario: usuario,
+      token: token,
+    };
+  }
+
+  /**
+   * Limpa o estado de autenticação, revertendo-o para o estado inicial.
+   */
+  public limparEstado(): void {
+    console.log("Gerenciador de Estado: Limpando estado de autenticação.");
+    this.estado = {
+      autenticado: false,
+      usuario: null,
+      token: null,
+    };
+  }
+  
+  // A inicialização e o fluxo do Google podem ser refatorados da mesma forma posteriormente.
+  public async inicializar(): Promise<void> {}
+  public iniciarLoginComGoogle(): void {
+    loginGoogle.iniciarLogin();
+  }
+  public async finalizarLoginComGoogle(codigo: string): Promise<void> {}
+}
+
+export const processoLogin = new ProcessoLoginGerenciadorEstado();
