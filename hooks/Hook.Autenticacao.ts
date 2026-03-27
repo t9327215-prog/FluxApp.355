@@ -1,34 +1,44 @@
 
-import { useSessao } from './useSessao';
-import { useLoginEmail } from './useLoginEmail';
-import { useLoginGoogle } from './useLoginGoogle';
-import { useLogout } from './useLogout';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+import { LoginRequest } from '../ServiçosFrontend/Contratos/Contrato.Autenticacao';
 
 export const useAutenticacao = () => {
-  const sessao = useSessao();
-  const loginEmail = useLoginEmail();
-  const loginGoogle = useLoginGoogle();
-  const logout = useLogout();
+  const [authState, setAuthState] = useState(servicoAutenticacao.getState());
+  const navigate = useNavigate();
 
-  // Agrega os estados de "processando" e "erro" de forma mais genérica
-  const processando = loginEmail.processandoLoginEmail || loginGoogle.processandoLoginGoogle || logout.processando;
-  const erro = loginEmail.erroLoginEmail || loginGoogle.erroLoginGoogle || logout.erro;
+  useEffect(() => {
+    const unsubscribe = servicoAutenticacao.subscribe(setAuthState);
+    return () => unsubscribe();
+  }, []);
+
+  const loginComEmail = useCallback(async (credentials: LoginRequest) => {
+    try {
+      await servicoAutenticacao.login(credentials);
+      navigate('/feed');
+    } catch (error) {
+      console.error("Falha no login com email:", error);
+      // O estado de erro já é atualizado dentro do serviço
+    }
+  }, [navigate]);
+
+  const iniciarLoginComGoogle = useCallback(() => {
+    servicoAutenticacao.iniciarLoginComGoogle();
+  }, []);
+
+  const logout = useCallback(async () => {
+    await servicoAutenticacao.logout();
+    navigate('/login');
+  }, [navigate]);
 
   return {
-    // Sessão
-    ...sessao,
-
-    // Estado Geral (agregado)
-    processando,
-    erro,
-
-    // Ações e estados de Login com Email
-    ...loginEmail,
-
-    // Ações e estados de Login com Google
-    ...loginGoogle,
-
-    // Ações e estados de Logout
-    ...logout,
+    usuario: authState.user,
+    autenticado: authState.isAuthenticated,
+    processando: authState.loading,
+    erro: authState.error,
+    loginComEmail,
+    iniciarLoginComGoogle,
+    logout,
   };
 };
