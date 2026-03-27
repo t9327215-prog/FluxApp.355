@@ -24,7 +24,7 @@ export const HandleAuthCallbackRequestSchema = z.object({
 export const HandleAuthCallbackResponseSchema = z.object({
   token: z.string().min(1, "O token de autenticação é inválido."),
   user: UsuarioSchema.nullable(), // O usuário pode ser nulo.
-  isNewUser: z.boolean().optional(), // Opcional, para compatibilidade.
+  isNewUser: z.boolean(), // Opcional, para compatibilidade.
 });
 
 // --- Tipos Derivados ---
