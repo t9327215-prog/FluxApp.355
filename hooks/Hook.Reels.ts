@@ -2,8 +2,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Reel, Comment, User } from '../types';
-import { getInstanciaSuprema } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-const authService = getInstanciaSuprema();
+import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+const authService = servicoAutenticacao;
 
 const IS_SIMULATING = localStorage.getItem('isSimulating') === 'true';
 

@@ -1,8 +1,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Comentario } from '../tipos';
-import { getInstanciaSuprema } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-const authService = getInstanciaSuprema();
+import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+const authService = servicoAutenticacao;
 // Corrigido: Usa importação nomeada para o objeto de serviço
 import { ServiçoPublicacaoComentariosMarketplace } from '../ServiçosFrontend/ServiçosDePublicações/ServiçoPublicaçãoComentáriosMarketplace.js';
 

@@ -2,8 +2,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { marketplaceService } from '../ServiçosFrontend/ServiçoDeMarketplace/marketplaceService.js';
-import { getInstanciaSuprema } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-const authService = getInstanciaSuprema();
+import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+const authService = servicoAutenticacao;
 import { chatService } from '../ServiçosFrontend/ServiçoDeChat/chatService';
 import { MarketplaceItem, Comment as CommentType } from '../types';
 import { useMarketplaceItemActions } from './useMarketplaceItemActions';

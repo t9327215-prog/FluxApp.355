@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getInstanciaSuprema } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-const authService = getInstanciaSuprema();
+import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+const authService = servicoAutenticacao;
 
 export const HookHistoricoVendasVip = () => {
   const navigate = useNavigate();

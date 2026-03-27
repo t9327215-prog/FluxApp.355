@@ -5,7 +5,7 @@ import { ModalOpcoesPagamentosSyncPay } from './CardsOpcoesDePagamentos/ModalOpc
 import { ModalOpcoesPagamentosPayPal } from './CardsOpcoesDePagamentos/ModalOpcoesPagamentosPayPal';
 import { ModalOpcoesPagamentosStripe } from './CardsOpcoesDePagamentos/ModalOpcoesPagamentosStripe';
 import { getInstanciaSuprema } from '../../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-const authService = getInstanciaSuprema();
+const authService = servicoAutenticacao;
 import { GeoData } from '../../ServiçosFrontend/geoService';
 import { ConversionResult } from '../../ServiçosFrontend/currencyService';
 import { Group } from '../../types';

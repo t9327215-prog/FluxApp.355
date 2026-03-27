@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ServicoGestaoCredencialSyncPay as syncPayService } from '../../ServiçosFrontend/ServiçoDeProvedoresDePagamentos/ServiçoGestãoCredencialSyncPay.js';
 import { getInstanciaSuprema } from '../../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-const authService = getInstanciaSuprema();
+const authService = servicoAutenticacao;
 import { Group, User } from '../../types';
 
 export type SyncPayView = 'selection' | 'pix' | 'boleto';

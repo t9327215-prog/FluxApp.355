@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getInstanciaSuprema } from '../../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-const authService = getInstanciaSuprema();
+const authService = servicoAutenticacao;
 
 import { ModalPreviaSyncPay } from './Modal.Previa.SyncPay';
 import { ModalPreviaStripe } from './Modal.Previa.Stripe';

@@ -10,7 +10,7 @@ import { PerfilUsuario } from '../Contratos/Contrato.Perfil.Usuario';
 // Módulos de processo desacoplados
 import { servicoGestaoLogin } from './Processo.Login';
 import { processoGestaoSessao } from './Processo.Gestao.Sessao';
-import { processoGestaoConta } from './Processo.Gestao.Conta';
+import { processoGestaoConta, Usuario } from './Processo.Gestao.Conta';
 import { processoCriacaoUsuario } from './Processo.Criacao.Usuario';
 
 const log = createServiceLogger('Sistema.Autenticacao.Supremo');
@@ -105,22 +105,19 @@ class SistemaAutenticacaoSupremo implements IAutenticacaoServico {
     this.gestaoSessao.encerrarSessao();
   }
 
-  async verificarSessao(signal: AbortSignal) {
+  async obterSessao(): Promise<Usuario | null> {
     // @ts-ignore // TODO: Revisar implementação após refatoração
-    return this.gestaoSessao.validateSession(signal);
+    return this.gestaoSessao.validateSession();
   }
 
   getCurrentUser() {
     return this.gestaoSessao.getCurrentUser();
   }
+
+  getToken(): string | null {
+    // @ts-ignore
+    return this.gestaoSessao.getToken();
+  }
 }
 
-let instanciaSuprema = null;
-
-export const getInstanciaSuprema = () => {
-  if (!instanciaSuprema) {
-    // @ts-ignore
-    instanciaSuprema = new SistemaAutenticacaoSupremo();
-  }
-  return instanciaSuprema;
-};
+export const servicoAutenticacao = new SistemaAutenticacaoSupremo();

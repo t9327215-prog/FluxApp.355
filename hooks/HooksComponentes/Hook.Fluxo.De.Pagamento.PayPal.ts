@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ServicoGestaoCredencialPayPal as paypalService } from '../../ServiçosFrontend/ServiçoDeProvedoresDePagamentos/ServiçoGestãoCredencialPayPal.js';
 import { getInstanciaSuprema } from '../../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-const authService = getInstanciaSuprema();
+const authService = servicoAutenticacao;
 // import { metaPixelService } from '../../ServiçosFrontend/ServiçoDeMetaPixel/MetaPixelService.js';
 import { Group } from '../../types';
 

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { getInstanciaSuprema } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
 import { createHookLogger } from '../ServiçosFrontend/SistemaObservabilidade/Log.Hook';
 
 const log = createHookLogger('useLoginGoogle');
@@ -12,7 +12,6 @@ const log = createHookLogger('useLoginGoogle');
 export const useLoginGoogle = () => {
     const [carregando, setCarregando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
-    const SistemaAutenticacao = getInstanciaSuprema();
 
     /**
      * Inicia o fluxo de login com Google, redirecionando o usuário para a página de autenticação do Google.
@@ -24,7 +23,7 @@ export const useLoginGoogle = () => {
 
         try {
             // Chama o método que redireciona para o Google
-            SistemaAutenticacao.iniciarLoginComGoogle();
+            servicoAutenticacao.iniciarLoginComGoogle();
             // Como a página será redirecionada, o carregando não precisa ser finalizado aqui.
             log.logSuccess('iniciarLoginComGoogle', { message: 'Redirecionamento para o Google iniciado.' });
         } catch (err: any) {

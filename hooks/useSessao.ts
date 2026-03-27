@@ -1,33 +1,40 @@
 
-import { useEffect } from 'react';
-import { useAuth } from '../ServiçosFrontend/ServiçoDeAutenticação/Provedor.Autenticacao';
+import { useEffect, useState } from 'react';
 import { createHookLogger } from '../ServiçosFrontend/SistemaObservabilidade/Log.Hook';
+import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+import { Usuario } from '../ServiçosFrontend/ServiçoDeAutenticação/Processo.Gestao.Conta';
 
 const hookLogger = createHookLogger('useSessao');
 
 export const useSessao = () => {
-  const { user, loading: carregandoSessao, error: erroSessao } = useAuth();
+  const [user, setUser] = useState<Usuario | null>(null);
+  const [carregandoSessao, setCarregandoSessao] = useState(true);
+  const [erroSessao, setErroSessao] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (carregandoSessao) {
+    const verificarSessao = async () => {
       hookLogger.logStart('verificacaoSessao');
-    } else {
-      if (user) {
-        hookLogger.logSuccess('verificacaoSessao', { 
-          status: 'estabelecida', 
-          user: { id: user.id, nome_usuario: user.nome_usuario, email: user.email }
-        });
-      } else {
-        hookLogger.logSuccess('verificacaoSessao', { status: 'anonima' });
+      try {
+        const usuario = await servicoAutenticacao.obterSessao();
+        setUser(usuario);
+        if (usuario) {
+            hookLogger.logSuccess('verificacaoSessao', { 
+              status: 'estabelecida', 
+              user: { id: usuario.id, nome_usuario: usuario.nome_usuario, email: usuario.email }
+            });
+        } else {
+            hookLogger.logSuccess('verificacaoSessao', { status: 'anonima' });
+        }
+      } catch (error) {
+        setErroSessao(error as Error);
+        hookLogger.logError('verificacaoSessao', error);
+      } finally {
+        setCarregandoSessao(false);
       }
-    }
-  }, [user, carregandoSessao]);
+    };
 
-  useEffect(() => {
-    if (erroSessao) {
-      hookLogger.logError('verificacaoSessao', erroSessao);
-    }
-  }, [erroSessao]);
+    verificarSessao();
+  }, []);
 
   return {
     usuario: user,

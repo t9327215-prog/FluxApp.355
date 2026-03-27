@@ -1,7 +1,7 @@
 
-import { getInstanciaSuprema } from '../ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+import { servicoAutenticacao } from '../ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
 
-const authService = getInstanciaSuprema();
+const authService = servicoAutenticacao;
 
 const BASE_URL = 'http://localhost:3000/api/grupos';
 

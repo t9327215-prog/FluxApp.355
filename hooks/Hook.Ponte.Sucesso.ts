@@ -1,13 +1,12 @@
 
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../ServiçosFrontend/ServiçoDeAutenticação/Provedor.Autenticacao';
 import { createHookLogger } from '../ServiçosFrontend/SistemaObservabilidade/Log.Hook';
+import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
 
 const log = createHookLogger('HookPonteSucesso');
 
 export const HookPonteSucesso = () => {
-    const auth = useAuth(); // Corrigido: Acessa o serviço de autenticação pelo provedor
     const navigate = useNavigate();
     const location = useLocation();
     const [status, setStatus] = useState('validating'); // validating, ready, error
@@ -22,7 +21,7 @@ export const HookPonteSucesso = () => {
             if (sessionId) {
                 try {
                     // Acessa o método unificado do serviço de autenticação
-                    const redirect = await auth.resolverRedirecionamentoLogin(sessionId);
+                    const redirect = await servicoAutenticacao.resolverRedirecionamentoLogin(sessionId);
                     log.logSuccess('handleSuccess', { redirect });
 
                     // Lógica de redirecionamento
@@ -49,7 +48,7 @@ export const HookPonteSucesso = () => {
         };
 
         handleSuccess();
-    }, [location, navigate, auth]); // Adicionado `auth` ao array de dependências
+    }, [location, navigate]); // Adicionado `auth` ao array de dependências
 
     return { status, message }; 
 };

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { SistemaGrupoSupremo } from '../../ServiçosFrontend/ServiçoDeGrupos/Sistema.Grupo.Supremo';
 import { chatService } from '../../ServiçosFrontend/ServiçoDeChat/chatService';
 import { getInstanciaSuprema } from '../../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-const authService = getInstanciaSuprema();
+const authService = servicoAutenticacao;
 
 
 interface Conversation {

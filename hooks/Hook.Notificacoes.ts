@@ -1,8 +1,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getInstanciaSuprema } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-const authService = getInstanciaSuprema();
+import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+const authService = servicoAutenticacao;
 import servicoNotificacao from '../ServiçosFrontend/ServicoNotificacao/Servico.Notificacao';
 import { Notificacao, Grupo, InfoPreco } from '../types/Saida/Types.Estrutura.Notificacao';
 

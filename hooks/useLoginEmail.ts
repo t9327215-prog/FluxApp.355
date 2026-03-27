@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
-import { getInstanciaSuprema } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-const authService = getInstanciaSuprema();
+import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+const authService = servicoAutenticacao;
 import { createHookLogger } from '../ServiçosFrontend/SistemaObservabilidade/Log.Hook';
 
 const hookLogger = createHookLogger('useLoginEmail');

@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { getInstanciaSuprema } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-const authService = getInstanciaSuprema();
+import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+const authService = servicoAutenticacao;
 
 export const HookConfiguracoes = () => {
     const [isPrivate, setIsPrivate] = useState(false);

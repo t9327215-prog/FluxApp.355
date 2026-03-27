@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { getInstanciaSuprema } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
 import { ModalTelaCarregamento } from '../Componentes/ComponenteDeInterfaceDeUsuario/Modal.Tela.Carregamento';
-import { Usuario } from '../types/Saida/Types.Estrutura.Usuario';
+import { Usuario } from '../ServiçosFrontend/ServiçoDeAutenticação/Processo.Gestao.Conta';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-const authService = getInstanciaSuprema();
+const authService = servicoAutenticacao;
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const location = useLocation();
@@ -17,9 +17,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
-
     const handleAuthChange = () => {
       setUser(authService.getCurrentUser());
     };
@@ -28,16 +25,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
     // Se não houver usuário no estado inicial, tenta validar a sessão.
     if (!user) {
-      authService.verificarSessao(signal)
+      authService.obterSessao()
         .then(validatedUser => {
           if (validatedUser) {
             setUser(validatedUser);
           }
         })
         .catch(error => {
-          if (error.name !== 'AbortError') {
-            console.error("Falha ao validar a sessão:", error);
-          }
+          console.error("Falha ao validar a sessão:", error);
         })
         .finally(() => {
           setLoading(false);
@@ -47,7 +42,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
 
     return () => {
-      controller.abort();
       window.removeEventListener('authChange', handleAuthChange);
     };
   }, []);

@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { ProvedorAutenticacao } from './Provedores/Provedor.Autenticacao';
 import { ProvedorInterface } from './Provedores/Provedor.Interface';
 import { ProvedorNavegacao } from './Provedores/Provedor.Navegacao';
 import { ProvedorSincronizacao } from './Provedores/Provedor.Sincronizacao';
@@ -45,7 +44,7 @@ const SistemaNucleoApp: React.FC = () => {
   const { isLoading, isMaintenance } = useMaintenanceStatus();
 
   if (isLoading) {
-    return <LoadingFallback />;
+    return <LoadingFallback />;;
   }
 
   if (isMaintenance) {
@@ -59,11 +58,9 @@ const SistemaNucleoApp: React.FC = () => {
   return (
     <ProvedorInterface>
       <ProvedorSincronizacao>
-        <ProvedorAutenticacao>
-          <ProvedorNavegacao>
-            <AppRoutes />
-          </ProvedorNavegacao>
-        </ProvedorAutenticacao>
+        <ProvedorNavegacao>
+          <AppRoutes />
+        </ProvedorNavegacao>
       </ProvedorSincronizacao>
     </ProvedorInterface>
   );

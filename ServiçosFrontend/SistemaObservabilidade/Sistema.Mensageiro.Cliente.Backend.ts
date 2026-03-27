@@ -1,5 +1,4 @@
 import VariaveisFrontend from '../Config/Variaveis.Frontend';
-import { rastreadorDeEventos } from './Rastreador.Eventos.js';
 
 // --- ESTRUTURA E TIPOS ---
 
@@ -56,6 +55,7 @@ const safeJsonStringify = (obj: any): string => {
 
 const performLog = (level: LogLevel, module: string, message: any, data: any = null, traceId?: string) => {
   const levelNumber = NIVEIS_DE_LOG[level];
+  // Respeita o nível de log configurado (ex: não logar DEBUG em produção)
   if (levelNumber < (NIVEIS_DE_LOG.INFO)) return;
 
   const messageAsString = typeof message === 'object' && message !== null ? safeJsonStringify(message) : String(message);
@@ -70,13 +70,11 @@ const performLog = (level: LogLevel, module: string, message: any, data: any = n
     data: mascararDados(data),
   };
 
-  if (level === 'ERROR' || level === 'FATAL') {
-    const error = data instanceof Error ? data : new Error(messageAsString);
-    rastreadorDeEventos.trackCriticalError(error, { module, traceId, extraData: data });
-  }
-
+  // Loga no console do navegador para depuração imediata
   const logFunction = console[level.toLowerCase() as 'info'] || console.log;
   logFunction(safeJsonStringify(logEntry));
+  
+  // Envia o log para o backend de forma assíncrona
   enviarLogParaBackend(logEntry);
 };
 
