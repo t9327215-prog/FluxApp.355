@@ -54,25 +54,21 @@ const logout = async () => {
     }
 };
 
-const obterSessao = async () => {
-    appServiceLogger.logOperationStart('obterSessao');
-    try {
-        const usuario = await servicoAutenticacao.obterSessao();
-        if (usuario) {
-            appServiceLogger.logOperationSuccess('obterSessao', { status: 'estabelecida', userId: usuario.id });
-        } else {
-            appServiceLogger.logOperationSuccess('obterSessao', { status: 'anonima' });
-        }
-        return usuario;
-    } catch (err: any) {
-        appServiceLogger.logOperationError('obterSessao', err);
-        throw err;
-    }
+// Repassando os métodos de observabilidade do serviço principal
+const subscribe = (listener: (state: any) => void) => {
+    return servicoAutenticacao.subscribe(listener);
 };
+
+const getState = () => {
+    return servicoAutenticacao.getState();
+};
+
+
 
 export const servicoDeAplicacaoDeAutenticacao = {
     loginComEmail,
     iniciarLoginComGoogle,
     logout,
-    obterSessao,
+    subscribe,
+    getState,
 };

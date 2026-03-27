@@ -1,11 +1,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+import { servicoDeAplicacaoDeAutenticacao } from '../ServiçosFrontend/ServicosDeAplicacao/Autenticacao.ServicoDeAplicacao';
 import { LoginRequest } from '../ServiçosFrontend/Contratos/Contrato.Autenticacao';
 
 export const useAutenticacao = () => {
-  const [authState, setAuthState] = useState(servicoAutenticacao.getState());
+  const [authState, setAuthState] = useState(servicoDeAplicacaoDeAutenticacao.getState());
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,24 +20,24 @@ export const useAutenticacao = () => {
       }
     };
 
-    const unsubscribe = servicoAutenticacao.subscribe(handleAuthStateChange);
+    const unsubscribe = servicoDeAplicacaoDeAutenticacao.subscribe(handleAuthStateChange);
     return () => unsubscribe();
   }, [navigate]);
 
   const loginComEmail = useCallback(async (credentials: LoginRequest) => {
     try {
-      await servicoAutenticacao.login(credentials);
+      await servicoDeAplicacaoDeAutenticacao.loginComEmail(credentials);
     } catch (error) {
       console.error("Falha no login com email:", error);
     }
   }, []);
 
   const iniciarLoginComGoogle = useCallback(() => {
-    servicoAutenticacao.iniciarLoginComGoogle();
+    servicoDeAplicacaoDeAutenticacao.iniciarLoginComGoogle();
   }, []);
 
   const logout = useCallback(async () => {
-    await servicoAutenticacao.logout();
+    await servicoDeAplicacaoDeAutenticacao.logout();
     navigate('/login');
   }, [navigate]);
 
