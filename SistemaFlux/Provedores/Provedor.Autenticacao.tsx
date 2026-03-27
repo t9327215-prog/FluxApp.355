@@ -2,6 +2,7 @@
 import React from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from '../../ServiçosFrontend/ServiçoDeAutenticação/Provedor.Autenticacao';
+import { provedorLogger } from '../../ServiçosFrontend/SistemaObservabilidade/Log.Provedores';
 
 interface ProvedorAutenticacaoProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ interface ProvedorAutenticacaoProps {
  * Ele configura o provedor do Google OAuth e o provedor de autenticação interno.
  */
 export const ProvedorAutenticacao: React.FC<ProvedorAutenticacaoProps> = ({ children }) => {
+  provedorLogger.info('Provedor de Autenticação inicializado.');
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
   return (

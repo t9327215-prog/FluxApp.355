@@ -1,6 +1,9 @@
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { SistemaProvedores } from './Provedores'; // Caminho e nome do componente atualizados
+import { ProvedorAutenticacao } from './Provedores/Provedor.Autenticacao';
+import { ProvedorInterface } from './Provedores/Provedor.Interface';
+import { ProvedorNavegacao } from './Provedores/Provedor.Navegacao';
+import { ProvedorSincronizacao } from './Provedores/Provedor.Sincronizacao';
 import AppRoutes from '../routes/AppRoutes';
 
 const Maintenance = lazy(() => import('../pages/Maintenance'));
@@ -54,9 +57,15 @@ const SistemaNucleoApp: React.FC = () => {
   }
 
   return (
-    <SistemaProvedores>
-      <AppRoutes />
-    </SistemaProvedores>
+    <ProvedorInterface>
+      <ProvedorSincronizacao>
+        <ProvedorAutenticacao>
+          <ProvedorNavegacao>
+            <AppRoutes />
+          </ProvedorNavegacao>
+        </ProvedorAutenticacao>
+      </ProvedorSincronizacao>
+    </ProvedorInterface>
   );
 };
 
