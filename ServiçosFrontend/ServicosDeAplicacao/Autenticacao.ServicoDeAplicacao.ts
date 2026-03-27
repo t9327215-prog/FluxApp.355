@@ -25,7 +25,12 @@ class AuthApplicationService {
     const wasJustAuthenticated = !this.state.isAuthenticated && newAuthState.isAuthenticated;
     let postLoginAction: AuthApplicationState['postLoginAction'] | undefined = undefined;
 
-    appServiceLogger.logOperationSuccess('handleAuthChange', { wasJustAuthenticated, newUserId: newAuthState.user?.id });
+    appServiceLogger.logOperationSuccess('handleAuthChange', {
+      wasJustAuthenticated,
+      previous: this.state.isAuthenticated,
+      current: newAuthState.isAuthenticated,
+      newUserId: newAuthState.user?.id
+    });
 
     // LÓGICA DE NEGÓCIO: A principal responsabilidade da camada de aplicação.
     if (wasJustAuthenticated) {
