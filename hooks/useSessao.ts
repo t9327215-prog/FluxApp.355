@@ -26,8 +26,9 @@ export const useSessao = () => {
             hookLogger.logSuccess('verificacaoSessao', { status: 'anonima' });
         }
       } catch (error) {
-        setErroSessao(error as Error);
-        hookLogger.logError('verificacaoSessao', error);
+        const erroApanhado = error instanceof Error ? error : new Error(`Erro inesperado durante a verificação da sessão: ${JSON.stringify(error)}`);
+        setErroSessao(erroApanhado);
+        hookLogger.logError('verificacaoSessao', erroApanhado);
       } finally {
         setCarregandoSessao(false);
       }
