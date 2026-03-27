@@ -1,3 +1,4 @@
+
 import React, { lazy } from 'react';
 import { PublicRoute } from './Rotas.Protegidas'; // Importa o PublicRoute
 
@@ -7,11 +8,16 @@ const VerifyEmail = lazy(() => import('../pages/VerifyEmail').then(module => ({ 
 const ForgotPassword = lazy(() => import('../pages/ForgotPassword').then(module => ({ default: module.ForgotPassword })));
 const ResetPassword = lazy(() => import('../pages/ResetPassword').then(module => ({ default: module.ResetPassword })));
 const Banned = lazy(() => import('../pages/Banned').then(module => ({ default: module.Banned })));
+const GoogleAuthCallback = lazy(() => import('../pages/GoogleAuthCallback').then(module => ({ default: module.GoogleAuthCallback })));
 
 export const authRoutes = [
   { 
-    path: '/', 
+    path: '/login', 
     element: <PublicRoute><Login /></PublicRoute> 
+  },
+  {
+    path: '/',
+    element: <PublicRoute><Login /></PublicRoute>
   },
   { 
     path: '/register', 
@@ -30,8 +36,11 @@ export const authRoutes = [
     element: <PublicRoute><ResetPassword /></PublicRoute> 
   },
   {
-    // A página de banido pode ser acessada mesmo logado, então não usamos PublicRoute
     path: '/banned', 
     element: <Banned />
+  },
+  {
+    path: '/auth/google/callback',
+    element: <GoogleAuthCallback />
   }
 ];
