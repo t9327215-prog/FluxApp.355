@@ -68,16 +68,24 @@ const login = async (req, res, next) => {
 
 const googleAuth = async (req, res, next) => {
     const dadosRequisicao = { userAgent: req.headers['user-agent'], ipAddress: req.ip };
-    const { token: idToken } = req.body;
-    logger.info('Iniciando autenticação com Google.', { ...dadosRequisicao });
+    const code = req.query.code;
+    logger.info('Callback do Google recebido.', { code, ...dadosRequisicao });
 
     try {
-        if (!idToken) {
-            return ServicoResposta.requisicaoInvalida(res, "O token de ID do Google é obrigatório.");
+        if (!code) {
+            return ServicoResposta.requisicaoInvalida(res, "O código de autorização do Google é obrigatório.");
+        }
+
+        // Troca o código de autorização por tokens
+        const { tokens } = await oAuth2Client.getToken(code);
+        oAuth2Client.setCredentials(tokens);
+
+        if (!tokens.id_token) {
+            throw new Error('ID token não encontrado na resposta do Google.');
         }
 
         const loginTicket = await oAuth2Client.verifyIdToken({
-            idToken: idToken,
+            idToken: tokens.id_token,
             audience: variaveis.google.clientId,
         });
 
@@ -91,7 +99,6 @@ const googleAuth = async (req, res, next) => {
 
         const { usuario, isNewUser } = await servicoUsuario.autenticarOuCriarPorGoogle(dadosGoogleValidados);
         
-        // Garante que o usuário existe e tem um ID antes de prosseguir
         if (!usuario || !usuario.id) {
             throw new Error('Falha ao autenticar ou criar usuário.');
         }
@@ -101,17 +108,18 @@ const googleAuth = async (req, res, next) => {
         await servicoSessao.salvarSessao(dadosSessaoValidados);
 
         logger.info(`Usuário ${usuario.id} autenticado com Google com sucesso.`, { userId: usuario.id, isNewUser });
-        return ServicoResposta.sucesso(res, { token: sessionToken, user: usuario.paraRespostaHttp(), isNewUser });
+        
+        // Redireciona o usuário para o frontend com o token
+        const redirectUrl = new URL(variaveis.frontendUrl + '/auth/google/success');
+        redirectUrl.searchParams.append('token', sessionToken);
+        res.redirect(redirectUrl.toString());
 
     } catch (error) {
         logger.error('Erro na autenticação com Google:', { error: { message: error.message, stack: error.stack } });
-        if (error.message.includes('Faça login com sua senha')) {
-            return ServicoResposta.requisicaoInvalida(res, error.message);
-        }
-        if (error.message.includes('Invalid token') || error.message.includes('Token used too late')) {
-             return ServicoResposta.naoAutorizado(res, 'Token do Google inválido ou expirado.');
-        }
-        next(error);
+        // Redireciona para uma página de erro no frontend
+        const errorRedirectUrl = new URL(variaveis.frontendUrl + '/auth/google/failure');
+        errorRedirectUrl.searchParams.append('error', error.message || 'Erro desconhecido');
+        res.redirect(errorRedirectUrl.toString());
     }
 };
 

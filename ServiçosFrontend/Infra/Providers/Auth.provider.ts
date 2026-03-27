@@ -20,6 +20,13 @@ export const AuthProvider = {
   },
 
   /**
+   * Finaliza o processo de login usando um token de sessão (vindo do callback do Google).
+   */
+  finalizarLoginComToken: (token: string) => {
+    return servicoAutenticacao.finalizarLoginComToken(token);
+  },
+
+  /**
    * Inicia o fluxo de autenticação com o Google (redirecionamento).
    */
   iniciarLoginComGoogle: () => {

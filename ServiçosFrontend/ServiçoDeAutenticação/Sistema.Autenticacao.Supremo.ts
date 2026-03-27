@@ -7,6 +7,7 @@ import { servicoGestaoLogin } from './Processo.Login';
 import { processoGestaoSessao } from './Processo.Gestao.Sessao';
 import { processoGestaoConta, Usuario } from './Processo.Gestao.Conta';
 import { processoCriacaoUsuario } from './Processo.Criacao.Usuario';
+import { jwtDecode } from 'jwt-decode';
 
 const log = createServiceLogger('Sistema.Autenticacao.Supremo');
 
@@ -49,12 +50,11 @@ class SistemaAutenticacaoSupremo implements IAutenticacaoServico {
     try {
       const user = await this.gestaoSessao.getCurrentUser();
       
-      // SOLUÇÃO: Verificar se a flag de novo usuário foi persistida
       const isNewUserStored = sessionStorage.getItem(IS_NEW_USER_SESSION_KEY);
       let isNewUser = false;
       if (isNewUserStored === 'true') {
         isNewUser = true;
-        sessionStorage.removeItem(IS_NEW_USER_SESSION_KEY); // Limpa a flag para não ser usada de novo
+        sessionStorage.removeItem(IS_NEW_USER_SESSION_KEY);
       }
 
       this.updateState({ user, isAuthenticated: !!user, loading: false, isNewUser });
@@ -66,7 +66,7 @@ class SistemaAutenticacaoSupremo implements IAutenticacaoServico {
 
   public subscribe(listener: (state: AuthState) => void): () => void {
     this.listeners.push(listener);
-    listener(this.state); // Envia o estado atual imediatamente
+    listener(this.state);
     return () => {
       this.listeners = this.listeners.filter(l => l !== listener);
     };
@@ -79,6 +79,32 @@ class SistemaAutenticacaoSupremo implements IAutenticacaoServico {
   private updateState(newState: Partial<AuthState>) {
     this.state = { ...this.state, ...newState };
     this.listeners.forEach(listener => listener(this.state));
+  }
+
+  async finalizarLoginComToken(token: string) {
+    log.logInfo('Finalizando login com token.');
+    try {
+        const decodedToken: any = jwtDecode(token);
+        const user = decodedToken.user;
+        const isNewUser = decodedToken.isNewUser || false;
+
+        if (!user) {
+            throw new Error("Token inválido: informações do usuário não encontradas.");
+        }
+
+        this.gestaoSessao.iniciarSessao(token, user);
+
+        if (isNewUser) {
+            sessionStorage.setItem(IS_NEW_USER_SESSION_KEY, 'true');
+        }
+
+        this.updateState({ user, isAuthenticated: true, error: null, isNewUser });
+        log.logInfo('Login com token finalizado com sucesso.', { userId: user.id });
+    } catch (error) {
+        log.logError('Falha ao finalizar login com token', error);
+        this.updateState({ error: (error as Error).message });
+        throw error;
+    }
   }
 
   async login(data: LoginRequest): Promise<LoginResponse> {
@@ -103,7 +129,6 @@ class SistemaAutenticacaoSupremo implements IAutenticacaoServico {
       const { token, user, isNewUser } = await this.gestaoLogin.handleGoogleCallback(data.code, data.referredBy);
       this.gestaoSessao.iniciarSessao(token, user);
       
-      // SOLUÇÃO: Persiste a flag `isNewUser` antes do redirecionamento
       if (isNewUser) {
         sessionStorage.setItem(IS_NEW_USER_SESSION_KEY, 'true');
       }
@@ -135,7 +160,6 @@ class SistemaAutenticacaoSupremo implements IAutenticacaoServico {
   async completeProfile(data: any): Promise<void> {
     const user = await this.gestaoConta.completeProfile(data, this.getCurrentUser());
     this.gestaoSessao.atualizarUsuarioSessao(user);
-    // SOLUÇÃO: Garante que o estado `isNewUser` seja atualizado após completar o perfil
     this.updateState({ user, isNewUser: false });
   }
 
@@ -159,7 +183,6 @@ class SistemaAutenticacaoSupremo implements IAutenticacaoServico {
     return this.gestaoSessao.getToken();
   }
   
-  // MÉTODOS restam inalterados mas podem precisar de revisão futura
   async getPublicProfileByUsername(username: string): Promise<PerfilUsuario | null> {
     return this.gestaoConta.getPublicProfileByUsername(username);
   }

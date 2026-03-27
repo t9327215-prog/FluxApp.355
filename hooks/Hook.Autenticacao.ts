@@ -32,6 +32,14 @@ export const useAutenticacao = () => {
     }
   }, []);
 
+  const finalizarLoginComToken = useCallback(async (token: string) => {
+    try {
+        await servicoDeAplicacaoDeAutenticacao.finalizarLoginComToken(token);
+    } catch (error) {
+        console.error("Falha ao finalizar login com token:", error);
+    }
+  }, []);
+
   const iniciarLoginComGoogle = useCallback(() => {
     console.log("HOOK: iniciarLoginComGoogle");
     servicoDeAplicacaoDeAutenticacao.iniciarLoginComGoogle();
@@ -49,6 +57,7 @@ export const useAutenticacao = () => {
     erro: authState.error,
     loginComEmail,
     iniciarLoginComGoogle,
+    finalizarLoginComToken, // Expondo a nova função
     logout,
   };
 };

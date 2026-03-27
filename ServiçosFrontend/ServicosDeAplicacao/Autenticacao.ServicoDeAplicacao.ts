@@ -67,6 +67,16 @@ class AuthApplicationService {
     }
   }
 
+  async finalizarLoginComToken(token: string) {
+    appServiceLogger.logOperationStart('finalizarLoginComToken');
+    try {
+        await AuthProvider.finalizarLoginComToken(token);
+    } catch (err: any) {
+        appServiceLogger.logOperationError('finalizarLoginComToken', err, { token });
+        throw err;
+    }
+  }
+
   iniciarLoginComGoogle() {
     console.log("APPLICATION: iniciarLoginComGoogle");
     appServiceLogger.logOperationStart('iniciarLoginComGoogle');
