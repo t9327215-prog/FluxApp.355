@@ -1,24 +1,18 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
 import { useAutenticacao } from '../hooks/Hook.Autenticacao';
 import { CardOpcoesLogin } from '../Componentes/ComponentesDeAuth/Componentes/Card.Opcoes.Login';
 import { CardLoginEmailSenha } from '../Componentes/ComponentesDeAuth/Componentes/Card.Login.Email.Senha';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
 export const Login: React.FC = () => {
     const navigate = useNavigate();
     const {
-        usuario: user,
-        carregandoSessao: authLoading,
-        processandoLoginEmail,
-        erroLoginEmail,
+        autenticado,
+        processando,
+        erro,
         loginComEmail,
-        processandoLoginGoogle,
-        erroLoginGoogle,
-        loginComGoogle,
+        iniciarLoginComGoogle, // Corrigido para usar a nova função
     } = useAutenticacao();
 
     const [mostrarFormEmail, setMostrarFormEmail] = useState(false);
@@ -26,18 +20,19 @@ export const Login: React.FC = () => {
     const [senha, definirSenha] = useState('');
 
     useEffect(() => {
-        if (!authLoading && user) {
-            const targetUrl = user.profile_completed ? '/feed' : '/complete-profile';
-            navigate(targetUrl, { replace: true });
+        if (autenticado) {
+            // A navegação agora é controlada pelo hook/serviço de aplicação
+            // Esta lógica pode ser removida ou simplificada se o hook já faz o redirecionamento
+            console.log("Usuário autenticado, aguardando redirecionamento...");
         }
-    }, [user, authLoading, navigate]);
+    }, [autenticado, navigate]);
 
     const submeterLoginEmail = (e: React.FormEvent) => {
         e.preventDefault();
         loginComEmail({ email, senha });
     };
 
-    if (authLoading) {
+    if (processando && !mostrarFormEmail) { // Mostra o loading global apenas na tela inicial
         return (
             <div className="h-screen w-full bg-[#0c0f14] flex flex-col items-center justify-center gap-4">
                 <i className="fa-solid fa-circle-notch fa-spin text-[#00c2ff] text-2xl"></i>
@@ -48,9 +43,6 @@ export const Login: React.FC = () => {
         );
     }
 
-    const isLoading = processandoLoginEmail || processandoLoginGoogle;
-    const erro = erroLoginEmail || erroLoginGoogle;
-
     const CamadaDeProcessamento = () => (
         <div className="absolute inset-0 bg-black/20 backdrop-blur-sm rounded-[32px] flex items-center justify-center z-50">
             <i className="fa-solid fa-circle-notch fa-spin text-[#00c2ff] text-2xl"></i>
@@ -58,23 +50,17 @@ export const Login: React.FC = () => {
     );
 
     const BotaoGoogle = () => {
-        if (!GOOGLE_CLIENT_ID) {
-            return (
-                <div className="w-full text-center p-4 bg-red-900/50 border border-red-500/50 rounded-lg">
-                    <p className="text-white text-xs">VITE_GOOGLE_CLIENT_ID não configurada.</p>
-                </div>
-            );
-        }
         return (
-            <div className="w-full flex justify-center">
-                <GoogleLogin
-                    onSuccess={loginComGoogle}
-                    onError={() => console.error(erroLoginGoogle || 'Login com Google falhou')}
-                    shape="rectangular"
-                    size="large"
-                    theme="filled_black"
-                />
-            </div>
+            <button
+                onClick={() => {
+                    console.log("BOTAO LOGIN CLICADO");
+                    iniciarLoginComGoogle();
+                }}
+                className="w-full bg-[#1a73e8] hover:bg-[#1a73e8]/90 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-3 transition-all"
+            >
+                <i className="fa-brands fa-google text-xl"></i>
+                Entrar com Google
+            </button>
         );
     };
 
@@ -93,8 +79,8 @@ export const Login: React.FC = () => {
                         definirSenha={definirSenha}
                         aoSubmeter={submeterLoginEmail}
                         aoVoltar={() => setMostrarFormEmail(false)}
-                        carregando={processandoLoginEmail}
-                        erro={erroLoginEmail}
+                        carregando={processando}
+                        erro={erro}
                     />
                 ) : (
                     <CardOpcoesLogin 
@@ -103,7 +89,7 @@ export const Login: React.FC = () => {
                     />
                 )}
                 
-                {isLoading && <CamadaDeProcessamento />}
+                {processando && <CamadaDeProcessamento />}
             </div>
         </div>
     );
