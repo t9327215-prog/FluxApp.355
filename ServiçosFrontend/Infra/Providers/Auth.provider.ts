@@ -23,6 +23,7 @@ export const AuthProvider = {
    * Inicia o fluxo de autenticação com o Google (redirecionamento).
    */
   iniciarLoginComGoogle: () => {
+    console.log("PROVIDER: iniciarLoginComGoogle");
     ServicoMetodoGoogle.redirectToGoogleAuth();
   },
 

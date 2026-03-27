@@ -68,6 +68,7 @@ class AuthApplicationService {
   }
 
   iniciarLoginComGoogle() {
+    console.log("APPLICATION: iniciarLoginComGoogle");
     appServiceLogger.logOperationStart('iniciarLoginComGoogle');
     try {
         // Delega para o provider.

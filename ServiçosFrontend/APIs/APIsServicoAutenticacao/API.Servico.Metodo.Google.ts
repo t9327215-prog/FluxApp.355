@@ -26,6 +26,7 @@ const obterTraceIdAuth = (): string | undefined => {
 class ServicoMetodoGoogle implements IServicoMetodoGoogle {
 
     redirectToGoogleAuth(): void {
+        console.log("SERVICE: iniciarLoginComGoogle");
         const traceId = criarTraceIdAuth();
         apiLogger.logRequest('redirectToGoogleAuth', { traceId });
 

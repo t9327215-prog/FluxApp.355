@@ -33,6 +33,7 @@ export const useAutenticacao = () => {
   }, []);
 
   const iniciarLoginComGoogle = useCallback(() => {
+    console.log("HOOK: iniciarLoginComGoogle");
     servicoDeAplicacaoDeAutenticacao.iniciarLoginComGoogle();
   }, []);
 
