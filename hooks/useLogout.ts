@@ -1,39 +1,43 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-import { createHookLogger } from '../ServiçosFrontend/SistemaObservabilidade/Log.Hook';
-import { useSessao } from './useSessao';
+import { servicoDeAplicacaoDeAutenticacao } from '../ServiçosFrontend/ServicosDeAplicacao/Autenticacao.ServicoDeAplicacao';
 
-const hookLogger = createHookLogger('useLogout');
-
+/**
+ * Hook para gerenciar o estado da UI durante o processo de logout.
+ */
 export const useLogout = () => {
-    const { usuario } = useSessao();
     const navigate = useNavigate();
     const [processando, setProcessando] = useState(false);
     const [erro, setErro] = useState('');
 
+    /**
+     * Executa o logout, delegando a lógica para o serviço de aplicação e cuidando
+     * do estado da UI e do redirecionamento após a conclusão.
+     */
     const submeterLogout = async () => {
-        hookLogger.logStart('submeterLogout', { userId: usuario?.id });
         setProcessando(true);
         setErro('');
         
         try {
-            await servicoAutenticacao.logout();
-            hookLogger.logSuccess('submeterLogout', { userId: usuario?.id });
+            // 1. Delega a lógica de negócio
+            await servicoDeAplicacaoDeAutenticacao.logout();
+            
+            // 2. Lida com os efeitos colaterais da UI (redirecionamento)
             navigate('/login');
+
         } catch (err: any) {
-            hookLogger.logError('submeterLogout', err, { userId: usuario?.id });
+            // 3. Gerencia o estado de erro da UI
             setErro(err.message || 'Falha ao fazer logout.');
         } finally {
+            // 4. Garante que o estado de processamento seja limpo
             setProcessando(false);
         }
     };
 
     return {
-        processando,
-        erro,
-        setErro,
+        processandoLogout: processando,
+        erroLogout: erro,
         submeterLogout,
     };
 };

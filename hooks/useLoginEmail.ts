@@ -1,35 +1,28 @@
 
 import { useState } from 'react';
-import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-const authService = servicoAutenticacao;
-import { createHookLogger } from '../ServiçosFrontend/SistemaObservabilidade/Log.Hook';
-
-const hookLogger = createHookLogger('useLoginEmail');
+import { servicoDeAplicacaoDeAutenticacao } from '../ServiçosFrontend/ServicosDeAplicacao/Autenticacao.ServicoDeAplicacao';
+import { ILoginEmailParams } from '../ServiçosFrontend/Contratos/Contrato.Autenticacao';
 
 export const useLoginEmail = () => {
     const [processando, setProcessando] = useState(false);
     const [erro, setErro] = useState('');
 
-    const loginComEmail = async ({ email, senha }: { email: string; senha: string }) => {
-        hookLogger.logStart('loginComEmail', { email });
-
-        if (!email || !senha) {
-            const errorMessage = 'Email e senha são obrigatórios.';
-            hookLogger.logError('loginComEmail', new Error(errorMessage), { email, reason: 'credenciais_ausentes' });
-            setErro(errorMessage);
-            return;
-        }
+    const loginComEmail = async (params: ILoginEmailParams) => {
+        const { email } = params;
         
         setProcessando(true);
         setErro('');
 
         try {
-            const result = await authService.login({ email, senha });
-            if (result && result.user) {
-                hookLogger.logSuccess('loginComEmail', { userId: result.user.id, email });
-            }
+            // A única responsabilidade do Hook agora é chamar o serviço de aplicação
+            // e gerenciar o estado da UI (processando, erro).
+            await servicoDeAplicacaoDeAutenticacao.loginComEmail(params);
+            
+            // O sucesso é implícito; o estado é limpo e o processamento para.
+            // A atualização do estado global da sessão é feita por outro mecanismo (useSessao)
+
         } catch (err: any) {
-            hookLogger.logError('loginComEmail', err, { email });
+            // O serviço de aplicação lança um erro que é capturado aqui.
             setErro(err.message || 'Credenciais inválidas.');
         } finally {
             setProcessando(false);

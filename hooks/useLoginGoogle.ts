@@ -1,37 +1,38 @@
 
 import { useState } from 'react';
-import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
-import { createHookLogger } from '../ServiçosFrontend/SistemaObservabilidade/Log.Hook';
-
-const log = createHookLogger('useLoginGoogle');
+import { servicoDeAplicacaoDeAutenticacao } from '../ServiçosFrontend/ServicosDeAplicacao/Autenticacao.ServicoDeAplicacao';
 
 /**
- * Hook para gerenciar o processo de login com Google.
- * Encapsula a lógica de autenticação, feedback de UI (loading/error) e redirecionamento.
+ * Hook para gerenciar o estado da UI durante o processo de login com Google.
  */
 export const useLoginGoogle = () => {
-    const [carregando, setCarregando] = useState(false);
+    const [processando, setProcessando] = useState(false);
     const [erro, setErro] = useState<string | null>(null);
 
     /**
-     * Inicia o fluxo de login com Google, redirecionando o usuário para a página de autenticação do Google.
+     * Inicia o fluxo de login com Google, delegando a lógica para o serviço de aplicação
+     * e gerenciando o estado de carregamento e erro da UI.
      */
     const iniciarLoginComGoogle = () => {
-        setCarregando(true);
+        setProcessando(true);
         setErro(null);
-        log.logStart('iniciarLoginComGoogle');
 
         try {
-            // Chama o método que redireciona para o Google
-            servicoAutenticacao.iniciarLoginComGoogle();
-            // Como a página será redirecionada, o carregando não precisa ser finalizado aqui.
-            log.logSuccess('iniciarLoginComGoogle', { message: 'Redirecionamento para o Google iniciado.' });
+            // Delega a lógica de negócio para a camada de aplicação
+            servicoDeAplicacaoDeAutenticacao.iniciarLoginComGoogle();
+            // Como a página é redirecionada, o estado de `processando` não será alterado para `false` aqui.
+            // A navegação interrompe a execução deste código.
+
         } catch (err: any) {
-            log.logError('iniciarLoginComGoogle', err, { message: err.message });
-            setErro(err.message || 'Ocorreu um erro ao tentar redirecionar para o login do Google.');
-            setCarregando(false);
+            // Captura erros lançados pelo serviço de aplicação (ex: falha na configuração)
+            setErro(err.message || 'Ocorreu um erro ao iniciar o login com Google.');
+            setProcessando(false);
         }
     };
 
-    return { iniciarLoginComGoogle, carregando, erro };
+    return { 
+        iniciarLoginComGoogle, 
+        processandoLoginGoogle: processando, 
+        erroLoginGoogle: erro 
+    };
 };

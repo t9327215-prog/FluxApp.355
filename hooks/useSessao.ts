@@ -1,44 +1,39 @@
 
 import { useEffect, useState } from 'react';
-import { createHookLogger } from '../ServiçosFrontend/SistemaObservabilidade/Log.Hook';
-import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Sistema.Autenticacao.Supremo';
+import { servicoDeAplicacaoDeAutenticacao } from '../ServiçosFrontend/ServicosDeAplicacao/Autenticacao.ServicoDeAplicacao';
 import { Usuario } from '../ServiçosFrontend/ServiçoDeAutenticação/Processo.Gestao.Conta';
 
-const hookLogger = createHookLogger('useSessao');
-
+/**
+ * Hook para obter e monitorar o estado da sessão do usuário em toda a aplicação.
+ */
 export const useSessao = () => {
-  const [user, setUser] = useState<Usuario | null>(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [carregandoSessao, setCarregandoSessao] = useState(true);
   const [erroSessao, setErroSessao] = useState<Error | null>(null);
 
   useEffect(() => {
     const verificarSessao = async () => {
-      hookLogger.logStart('verificacaoSessao');
+      setCarregandoSessao(true);
       try {
-        const usuario = await servicoAutenticacao.obterSessao();
-        setUser(usuario);
-        if (usuario) {
-            hookLogger.logSuccess('verificacaoSessao', { 
-              status: 'estabelecida', 
-              user: { id: usuario.id, nome_usuario: usuario.nome_usuario, email: usuario.email }
-            });
-        } else {
-            hookLogger.logSuccess('verificacaoSessao', { status: 'anonima' });
-        }
+        // 1. Delega a lógica para o serviço de aplicação
+        const usuarioRetornado = await servicoDeAplicacaoDeAutenticacao.obterSessao();
+        // 2. Atualiza o estado da UI com o resultado
+        setUsuario(usuarioRetornado);
       } catch (error) {
-        const erroApanhado = error instanceof Error ? error : new Error(`Erro inesperado durante a verificação da sessão: ${JSON.stringify(error)}`);
+        // 3. Gerencia o estado de erro da UI
+        const erroApanhado = error instanceof Error ? error : new Error(`Erro inesperado na sessão: ${JSON.stringify(error)}`);
         setErroSessao(erroApanhado);
-        hookLogger.logError('verificacaoSessao', erroApanhado);
       } finally {
+        // 4. Garante que o estado de carregamento seja limpo
         setCarregandoSessao(false);
       }
     };
 
     verificarSessao();
-  }, []);
+  }, []); // Executa apenas uma vez na montagem do componente
 
   return {
-    usuario: user,
+    usuario,
     carregandoSessao,
     erroSessao,
   };
