@@ -2,9 +2,6 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import VariaveisFrontend from './Config/Variaveis.Frontend.js';
 import LogClienteBackend from './SistemaObservabilidade/Log.ClienteBackend.ts';
-import { ENDPOINTS_AUTH } from './EndPoints/EndPoints.Auth.ts';
-import { ENDPOINTS_CONVERSAS } from './EndPoints/EndPoints.Conversas.ts';
-import { ENDPOINTS_GRUPOS } from './EndPoints/EndPoints.Grupos.ts';
 
 function getDurationInMilliseconds(start) {
   if (!start) return 0;
@@ -98,11 +95,5 @@ ClienteBackend.interceptors.response.use(
         return Promise.reject(error);
     }
 );
-
-ClienteBackend.Endpoints = {
-    Auth: ENDPOINTS_AUTH,
-    Conversas: ENDPOINTS_CONVERSAS,
-    Grupos: ENDPOINTS_GRUPOS
-};
 
 export default ClienteBackend;

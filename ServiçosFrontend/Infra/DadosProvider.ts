@@ -1,83 +1,100 @@
 
 import { infraProvider } from './Infra.Provider.Usuario';
-import { ENDPOINTS_AUTH } from '../EndPoints/EndPoints.Auth';
 import LoggerParaInfra from '../SistemaObservabilidade/Log.Infra';
+import { z } from 'zod';
+
+// --- Schemas de Validação Internos ---
+// Definindo os schemas diretamente aqui para remover a dependência dos arquivos de Contrato.
+
+const UsuarioRequestSchema = z.object({
+  nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres."),
+  email: z.string().email("Formato de e-mail inválido."),
+  senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres."),
+});
+
+const PerfilUpdateRequestSchema = UsuarioRequestSchema.partial();
+
+const LoginSchema = z.object({
+  email: z.string().email('Email inválido.'),
+  senha: z.string().min(1, 'A senha é obrigatória.'),
+});
+
+const LoginSocialSchema = z.object({
+    nome: z.string(),
+    email: z.string().email(),
+    googleId: z.string(),
+    avatarUrl: z.string().url().optional(),
+    tokenProvider: z.string(),
+});
 
 const logger = new LoggerParaInfra('DadosProvider.Autenticacao');
 
-interface ILoginSocialData {
-  nome: string;
-  email: string;
-  googleId: string;
-  avatarUrl?: string;
-  tokenProvider: string;
-}
-
+/**
+ * Camada de serviço que atua como intermediário entre a UI e a Camada de Infraestrutura.
+ * Responsabilidades:
+ * 1. Validar os dados de entrada (payloads) usando Zod.
+ * 2. Chamar o método correspondente no `infraProvider` com os dados validados.
+ * 3. Lidar com erros de validação e propagar erros da API.
+ */
 class C_DadosProvider {
 
+  private async handleRequest(validationSchema: z.ZodSchema<any>, data: unknown, apiCall: (validatedData: any) => Promise<any>) {
+    try {
+      const dadosValidos = validationSchema.parse(data);
+      return await apiCall(dadosValidos);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        logger.error("Erro de validação Zod", { issues: error.issues });
+        // Estrutura de erro consistente para a UI
+        return { sucesso: false, mensagem: "Dados inválidos.", issues: error.issues };
+      }
+      logger.error("Erro na camada de dados", error);
+      // Propaga o erro da camada de infraestrutura ou um erro genérico
+      throw error;
+    }
+  }
+
   async login(email: string, senha: string): Promise<any> {
-    try {
-      const response = await infraProvider.post(ENDPOINTS_AUTH.LOGIN, { email, senha });
-      return response.data; // Acessa .data se o infraProvider retornar o objeto de resposta completo
-    } catch (error: any) {
-      logger.error("Erro no login", error);
-      // O infraProvider já loga o erro, mas podemos relançar ou tratar aqui
-      throw error;
-    }
+    return this.handleRequest(LoginSchema, { email, senha }, (dadosValidos) => 
+      infraProvider.login(dadosValidos)
+    );
   }
 
-  async completarPerfil(perfilData: any): Promise<any> {
-    try {
-      const response = await infraProvider.put(ENDPOINTS_AUTH.PROFILE, perfilData);
-      return { sucesso: true, mensagem: "Perfil completado com sucesso!", usuarioAtualizado: response.data };
-    } catch (error: any) {
-      return { sucesso: false, mensagem: error.response?.data?.message || "Falha na comunicação com o servidor." };
-    }
+  async completarPerfil(perfilData: unknown): Promise<any> {
+    return this.handleRequest(PerfilUpdateRequestSchema, perfilData, (dadosValidos) => 
+      infraProvider.completarPerfil(dadosValidos)
+    );
   }
 
-  async lidarComLoginSocial(dadosLogin: ILoginSocialData): Promise<any> {
-    try {
-      const response = await infraProvider.post(ENDPOINTS_AUTH.LOGIN_GOOGLE, dadosLogin);
-      return response.data;
-    } catch (error) {
-      logger.error("Erro ao lidar com login social", error);
-      throw error;
-    }
+  async lidarComLoginSocial(dadosLogin: unknown): Promise<any> {
+    return this.handleRequest(LoginSocialSchema, dadosLogin, (dadosValidos) => 
+      infraProvider.lidarComLoginSocial(dadosValidos)
+    );
   }
 
-  async criarUsuario(dadosUsuario: any): Promise<any> {
-    try {
-      // Usando o post genérico do infraProvider. 
-      // Se houver validação específica, o ideal seria usar um método como infraProvider.postUsuario
-      const response = await infraProvider.post(ENDPOINTS_AUTH.REGISTER, dadosUsuario);
-      return response.data; // Supondo que a resposta de sucesso esteja em .data
-    } catch (error: any) {
-      return { sucesso: false, mensagem: error.response?.data?.message || "Falha ao criar usuário." };
-    }
+  async criarUsuario(dadosUsuario: unknown): Promise<any> {
+    return this.handleRequest(UsuarioRequestSchema, dadosUsuario, (dadosValidos) => 
+      infraProvider.criarUsuario(dadosValidos)
+    );
   }
 
   async buscarUsuarioPorId(id: string): Promise<any> {
+    // IDs geralmente não precisam de validação complexa, chamamos a infra diretamente.
     try {
-      // Este método já estava usando o provider correto
-      const response = await infraProvider.get(ENDPOINTS_AUTH.USER_BY_ID(id));
-      return { sucesso: true, dados: response.data };
-    } catch (error: any) {
-      return { sucesso: false, mensagem: error.response?.data?.message || "Falha ao buscar usuário." };
+      return await infraProvider.buscarUsuarioPorId(id);
+    } catch (error) {
+        logger.error(`Erro ao buscar usuário por ID: ${id}`, error);
+        throw error;
     }
   }
 
   async buscarUsuarioPorEmail(email: string): Promise<any> {
+     // A validação de email pode ser feita aqui se necessário, mas por simplicidade, delegamos.
     try {
-       // Este endpoint não existe no ENDPOINTS_AUTH, o ideal seria adicioná-lo lá.
-       // Por agora, vou manter a URL, mas usando o infraProvider.
-      const response = await infraProvider.get(`/api/v1/users?email=${email}`);
-      const usuario = response.data && response.data.length > 0 ? response.data[0] : null;
-      return { sucesso: true, dados: usuario };
-    } catch (error: any) {
-      if (error.response && error.response.status === 404) {
-          return { sucesso: true, dados: null };
-      }
-      return { sucesso: false, mensagem: error.response?.data?.message || "Falha ao buscar usuário por e-mail." };
+        return await infraProvider.buscarUsuarioPorEmail(email);
+    } catch (error) {
+        logger.error(`Erro ao buscar usuário por Email: ${email}`, error);
+        throw error;
     }
   }
 }
