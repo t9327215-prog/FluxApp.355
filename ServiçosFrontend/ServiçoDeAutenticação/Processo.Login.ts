@@ -1,12 +1,16 @@
 
-import { IUsuario } from './Processo.Login';
 import { AuthStorage } from './Auth.Storage'; 
 import { createServiceLogger } from '../SistemaObservabilidade/Log.Servicos.Frontend';
 
 export interface IUsuario {
   id: string;
   nome: string;
+  nickname: string;
   email: string;
+  avatarUrl?: string;
+  website?: string;
+  bio?: string;
+  perfilCompleto: boolean;
 }
 
 export interface IEstadoAutenticacao {

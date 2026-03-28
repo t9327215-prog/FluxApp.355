@@ -2,7 +2,7 @@
 import { processoLogin, IEstadoAutenticacao, IUsuario } from './Processo.Login';
 import { IPerfilParaCompletar, IResultadoCompletarPerfil, processoCompletarPerfil } from './Processo.Completar.Perfil';
 import { IRegistroParams, IResultadoRegistro } from './Processo.Registrar';
-import { infraProvider } from '../serviços/provedor/InfraProvider';
+import { infraProvider } from '../Infra/Infra.Provider.Usuario';
 import { loginGoogle } from './Login.Google';
 import { createServiceLogger } from '../SistemaObservabilidade/Log.Servicos.Frontend';
 
@@ -21,11 +21,14 @@ class ServicoAutenticacao {
     const operation = 'login';
     logger.logOperationStart(operation, params);
     try {
-      const respostaAPI = (await infraProvider.post('/auth/login', params)).data;
+      // REATORADO: A chamada de API agora usa o método especializado do InfraProvider.
+      // A string '/auth/login' foi removida desta camada.
+      const respostaAPI = (await infraProvider.realizarLoginComEmail(params)).data;
       const usuario: IUsuario = {
         id: respostaAPI.usuario.id,
         nome: respostaAPI.usuario.apelido,
-        email: respostaAPI.usuario.email
+        email: respostaAPI.usuario.email,
+        perfilCompleto: respostaAPI.usuario.perfilCompleto, // Garantindo que o campo seja mapeado
       };
       processoLogin.definirEstadoAutenticado(usuario, respostaAPI.token);
       logger.logOperationSuccess(operation, { usuario });
@@ -78,7 +81,7 @@ class ServicoAutenticacao {
 
     if (resultado.sucesso && resultado.usuarioAtualizado) {
         const { usuarioAtualizado } = resultado;
-        const novoEstadoUsuario: IUsuario = { ...estadoAtual.usuario, nome: usuarioAtualizado.apelido };
+        const novoEstadoUsuario: IUsuario = { ...estadoAtual.usuario, nome: usuarioAtualizado.apelido, perfilCompleto: true };
         
         processoLogin.definirEstadoAutenticado(novoEstadoUsuario, estadoAtual.token || '');
         this.notificarListeners();
@@ -111,7 +114,8 @@ class ServicoAutenticacao {
       const usuario: IUsuario = {
         id: respostaAPI.usuario.id,
         nome: respostaAPI.usuario.apelido,
-        email: respostaAPI.usuario.email
+        email: respostaAPI.usuario.email,
+        perfilCompleto: respostaAPI.usuario.perfilCompleto,
       };
       processoLogin.definirEstadoAutenticado(usuario, respostaAPI.token);
       logger.logOperationSuccess(operation, { usuario });

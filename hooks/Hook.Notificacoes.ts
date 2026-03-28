@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { notificacoesApplicationService } from '../ServiçosFrontend/ServicosDeAplicacao/Notificacoes.ServicoDeAplicacao';
+import { notificacoesApplicationService } from '../ServiçosFrontend/ServicosDeAplicacao/Application.Layer.Notificacoes';
 import { Notificacao, Grupo, InfoPreco } from '../types/Saida/Types.Estrutura.Notificacao';
 
 export const HookNotificacoes = () => {

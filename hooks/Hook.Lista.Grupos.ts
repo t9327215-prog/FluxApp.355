@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Auth.Application';
-import { listaGruposApplicationService } from '../ServiçosFrontend/ServicosDeAplicacao/ListaGrupos.ServicoDeAplicacao';
+import { listaGruposApplicationService } from '../ServiçosFrontend/ServicosDeAplicacao/Application.Layer.ListaGrupos';
 import { Group } from '../tipos/types.Grupo';
 
 export const HookListaGrupos = () => {
