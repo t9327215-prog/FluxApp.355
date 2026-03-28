@@ -4,16 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { servicoDeAplicacaoDeAutenticacao } from '../ServiçosFrontend/ServicosDeAplicacao/Autenticacao.ServicoDeAplicacao';
-import { useAuth } from '../ServiçosFrontend/serviços/provedor/AuthProvider'; // Importa o hook de contexto
+import { useAuth } from '../ServiçosFrontend/serviços/provedor/AuthProvider';
 
 const authService = servicoDeAplicacaoDeAutenticacao;
 
 export const useCompleteProfile = () => {
     const navigate = useNavigate();
-    // Utiliza o estado de autenticação centralizado
     const { usuario, autenticado, processando } = useAuth();
 
-    // Estado para o upload e corte da imagem de perfil
     const [previaImagem, setPreviaImagem] = useState<string | null>(null);
     const [arquivoSelecionado, setArquivoSelecionado] = useState<File | null>(null);
     const [cortarAberto, setCortarAberto] = useState(false);
@@ -26,21 +24,12 @@ export const useCompleteProfile = () => {
         formState: { errors, isSubmitting },
     } = useForm<any>({ mode: 'onChange' });
 
-    // Reage às mudanças de estado de autenticação
     useEffect(() => {
-        if (!processando) {
-            // Se não estiver autenticado, volta para a tela de login.
-            if (!autenticado) {
-                navigate('/login');
-            } 
-            // Se o usuário já tiver o perfil completo (isNewUser é false), redireciona para o feed.
-            else if (usuario && !usuario.isNewUser) {
-                navigate('/feed');
-            }
+        if (!processando && !autenticado) {
+            navigate('/login');
         }
-    }, [navigate, usuario, autenticado, processando]);
+    }, [navigate, autenticado, processando]);
 
-    // Funções de manipulação da imagem de perfil
     const aoMudarImagem = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -65,17 +54,10 @@ export const useCompleteProfile = () => {
 
     const aoSubmeter = async (data: any) => {
         try {
-            // TODO: Adicionar lógica de upload da imagem de perfil (arquivoSelecionado)
-            // const urlDaFoto = arquivoSelecionado ? await uploadService.upload(arquivoSelecionado) : '';
-
             await authService.completarPerfil({
                 ...data,
-                // urlFoto: urlDaFoto
             });
-
-            // A navegação pode ser removida, pois o `handleAuthChange` no serviço de aplicação
-            // já cuida do redirecionamento para o feed após o perfil ser completado.
-
+            navigate('/feed');
         } catch (err: any) {
             console.error("Falha ao completar o perfil:", err);
             const errorMessage = err.message || 'Ocorreu um erro desconhecido.';
