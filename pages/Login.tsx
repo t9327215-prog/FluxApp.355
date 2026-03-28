@@ -1,14 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../ServiçosFrontend/serviços/provedor/AuthProvider';
-import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Auth.Application';
+import { useAuth } from '../ServiçosFrontend/hooks/Hook.Autenticacao';
 import { CardOpcoesLogin } from '../Componentes/ComponentesDeAuth/Componentes/Card.Opcoes.Login';
 import { CardLoginEmailSenha } from '../Componentes/ComponentesDeAuth/Componentes/Card.Login.Email.Senha';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
-    const { autenticado, processando, erro, login, usuario } = useAuth(); 
+    const { autenticado, processando, erro, usuario, loginComEmail, iniciarLoginComGoogle } = useAuth(); 
 
     const [mostrarFormEmail, setMostrarFormEmail] = useState(false);
     const [email, definirEmail] = useState('');
@@ -26,11 +25,7 @@ export const Login: React.FC = () => {
 
     const submeterLoginEmail = (e: React.FormEvent) => {
         e.preventDefault();
-        login({ email, senha });
-    };
-
-    const iniciarLoginComGoogle = () => {
-        servicoAutenticacao.iniciarLoginComGoogle();
+        loginComEmail({ email, senha });
     };
 
     const CamadaDeProcessamento = () => (

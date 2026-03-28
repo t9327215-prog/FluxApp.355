@@ -4,25 +4,32 @@ import { Usuario } from '../../../types/Usuario';
 import { servicoAutenticacao, AuthState, LoginEmailParams } from '../ServiçoDeAutenticação/Auth.Application';
 import { LoginUseCase } from '../UseCases/Login.usecase';
 import { LogoutUseCase } from '../UseCases/Logout.usecase';
+import { IniciarLoginComGoogleUseCase } from '../UseCases/IniciarLoginComGoogle.usecase';
+import { FinalizarLoginComGoogleUseCase } from '../UseCases/FinalizarLoginComGoogle.usecase';
 
 const appServiceLogger = createApplicationServiceLogger('AuthApplicationService');
 
-// --- Interfaces ---
 export interface AuthApplicationState extends AuthState {}
 
 class AuthApplicationService {
   private state: AuthApplicationState;
   private listeners: ((state: AuthApplicationState) => void)[] = [];
+
+  // Casos de Uso
   private loginUseCase: LoginUseCase;
   private logoutUseCase: LogoutUseCase;
+  private iniciarLoginComGoogleUseCase: IniciarLoginComGoogleUseCase;
+  private finalizarLoginComGoogleUseCase: FinalizarLoginComGoogleUseCase;
 
   constructor() {
     this.state = servicoAutenticacao.getState();
     servicoAutenticacao.subscribe(this.handleAuthStateChange);
     
-    // Injeção de dependência dos UseCases
+    // Injeção de dependência dos Casos de Uso
     this.loginUseCase = new LoginUseCase(servicoAutenticacao);
     this.logoutUseCase = new LogoutUseCase(servicoAutenticacao);
+    this.iniciarLoginComGoogleUseCase = new IniciarLoginComGoogleUseCase(servicoAutenticacao);
+    this.finalizarLoginComGoogleUseCase = new FinalizarLoginComGoogleUseCase(servicoAutenticacao);
 
     appServiceLogger.logOperationStart('constructor', { initialState: this.state });
   }
@@ -37,9 +44,7 @@ class AuthApplicationService {
     appServiceLogger.logOperationStart('loginComEmail', { email: params.email });
     this.updateState({ processando: true, erro: null });
     try {
-      // Chama o UseCase em vez do serviço diretamente
       await this.loginUseCase.execute(params);
-      // O estado será atualizado através do subscribe
     } catch (err: any) {
       const errorMessage = err.message || 'Erro ao fazer login';
       appServiceLogger.logOperationError('loginComEmail', err, { email: params.email });
@@ -50,9 +55,31 @@ class AuthApplicationService {
 
   async logout() {
     appServiceLogger.logOperationStart('logout');
-    // Chama o UseCase em vez do serviço diretamente
     await this.logoutUseCase.execute();
-    // O estado será atualizado através do subscribe
+  }
+
+  async iniciarLoginComGoogle() {
+    appServiceLogger.logOperationStart('iniciarLoginComGoogle');
+    this.updateState({ processando: true, erro: null });
+    try {
+      await this.iniciarLoginComGoogleUseCase.execute();
+    } catch (err: any) {
+      const errorMessage = err.message || 'Erro ao iniciar login com Google';
+      appServiceLogger.logOperationError('iniciarLoginComGoogle', err);
+      this.updateState({ erro: errorMessage, processando: false });
+    }
+  }
+
+  async finalizarLoginComGoogle(idToken: string) {
+    appServiceLogger.logOperationStart('finalizarLoginComGoogle');
+    this.updateState({ processando: true, erro: null });
+    try {
+      await this.finalizarLoginComGoogleUseCase.execute(idToken);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Erro ao finalizar login com Google';
+      appServiceLogger.logOperationError('finalizarLoginComGoogle', err);
+      this.updateState({ erro: errorMessage, processando: false });
+    }
   }
 
   private updateState(partialState: Partial<AuthApplicationState>) {

@@ -1,36 +1,31 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../ServiçosFrontend/serviços/provedor/AuthProvider';
-import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Auth.Application';
+import { useAuth } from '../ServiçosFrontend/hooks/Hook.Autenticacao';
 
 export const GoogleAuthCallback: React.FC = () => {
     const navigate = useNavigate();
-    const { erro, autenticado, usuario } = useAuth();
+    const { erro, autenticado, usuario, finalizarLoginComGoogle } = useAuth();
 
     useEffect(() => {
-        // Extrai o fragmento da URL (parte após o '#')
         const hash = window.location.hash.substring(1);
         const params = new URLSearchParams(hash);
         const idToken = params.get('id_token');
 
         if (idToken) {
-            // Usa o id_token para finalizar o login
-            servicoAutenticacao.finalizarLoginComGoogle(idToken);
+            finalizarLoginComGoogle(idToken);
         } else {
             console.error("Nenhum id_token encontrado no callback do Google.");
             navigate('/login?error=auth_failed');
         }
-    }, [navigate]);
+    }, [navigate, finalizarLoginComGoogle]);
 
-    // Lida com erros durante o processo
     useEffect(() => {
         if (erro) {
             navigate(`/login?error=${erro}`);
         }
     }, [erro, navigate]);
 
-    // Redireciona o usuário após a autenticação
     useEffect(() => {
         if (autenticado) {
             if (usuario && !usuario.perfilCompleto) {

@@ -1,13 +1,12 @@
 
 import React from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useAuth } from '../ServiçosFrontend/serviços/provedor/AuthProvider'; // Importa o hook correto
+import { useAuth } from '../ServiçosFrontend/hooks/Hook.Autenticacao'; // Caminho corrigido
 import { useHookCriacaoPerfilFlux } from '../hooks/Hook.Criacao.Perfil.Flux';
 import { CardCriacaoContaEmailSenha } from '../Componentes/ComponentesDeAuth/Componentes/Card.Criacao.Conta.Email.Senha';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
-  // Substitui o hook antigo pelo novo e centralizado
   const { usuario: user, processando: authLoading, autenticado } = useAuth(); 
   const {
     dados,
@@ -18,7 +17,6 @@ export const Register: React.FC = () => {
     handleSubmit,
   } = useHookCriacaoPerfilFlux();
 
-  // Mantém a tela de carregamento enquanto o estado de autenticação é verificado
   if (authLoading) {
     return (
         <div className="h-screen w-full bg-[#0c0f14] flex flex-col items-center justify-center gap-4">
@@ -30,9 +28,9 @@ export const Register: React.FC = () => {
     );
   }
 
-  // Se o usuário já estiver autenticado, redireciona para a página apropriada
   if (autenticado && user) {
-    return <Navigate to={user.profile_completed ? '/feed' : '/complete-profile'} replace />;
+    // Corrigido para usar as propriedades corretas do objeto de usuário
+    return <Navigate to={user.perfilCompleto ? '/feed' : '/CompleteProfile'} replace />;
   }
 
   return (
@@ -53,7 +51,7 @@ export const Register: React.FC = () => {
             termsAccepted={dados.termosAceitos}
             setTermsAccepted={(value) => updateField('termosAceitos', value)}
             errors={errors} 
-            loading={loading} // Loading do formulário de criação
+            loading={loading}
             isValid={isValid} 
             referredBy={dados.indicadoPor}
             onSubmit={handleSubmit}

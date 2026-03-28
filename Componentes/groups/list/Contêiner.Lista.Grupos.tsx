@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Group } from '../../../types';
 import { CardMenuConteinerListaGrupo } from './Card.Menu.Conteiner.Lista.Grupo';
 import { useConfiguracaoGrupo } from '../../../hooks/Hook.Configuracao.Grupo';
-import { useAuth } from '../../../ServiçosFrontend/serviços/provedor/AuthProvider'; // Corrigido
+import { useAuth } from '../../../ServiçosFrontend/hooks/Hook.Autenticacao';
 
 interface GroupListItemProps {
     group: Group & { navigateTo?: string; isSalesPlatformEnabled?: boolean };
@@ -26,7 +26,7 @@ export const ContêinerListaGrupos: React.FC<GroupListItemProps> = ({
 }) => {
     const navigate = useNavigate();
     const { resolverAcaoDoClique } = useConfiguracaoGrupo();
-    const { usuario: currentUser } = useAuth(); // Corrigido
+    const { usuario: currentUser } = useAuth();
 
     const isCreator = currentUser ? group.donoId === currentUser.id : false;
 
