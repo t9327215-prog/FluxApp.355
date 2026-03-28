@@ -3,7 +3,6 @@ import React from 'react';
 import { HashRouter } from 'react-router-dom';
 import { GlobalTracker } from '../../Componentes/layout/GlobalTracker';
 import { DeepLinkHandler } from '../../Componentes/layout/DeepLinkHandler';
-import { provedorLogger } from '../../ServiçosFrontend/SistemaObservabilidade/Log.Provedores';
 import { ProvedorTelemetria } from './Provedor.Telemetria';
 
 interface ProvedorNavegacaoProps {
@@ -15,7 +14,6 @@ interface ProvedorNavegacaoProps {
  * o roteador, rastreadores globais, manipuladores de deep link e telemetria de navegação.
  */
 export const ProvedorNavegacao: React.FC<ProvedorNavegacaoProps> = ({ children }) => {
-  provedorLogger.info('Provedor de Navegação inicializado.');
 
   return (
     <HashRouter>

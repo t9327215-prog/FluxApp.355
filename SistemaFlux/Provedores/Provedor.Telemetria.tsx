@@ -1,7 +1,6 @@
 
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { provedorLogger } from '../../ServiçosFrontend/SistemaObservabilidade/Log.Provedores';
 
 /**
  * Componente que centraliza a lógica de telemetria (logging) da aplicação.
@@ -9,13 +8,11 @@ import { provedorLogger } from '../../ServiçosFrontend/SistemaObservabilidade/L
  * e enviar eventos importantes, utilizando o logger de provedores.
  */
 export const ProvedorTelemetria = () => {
-  provedorLogger.info('Provedor de Telemetria inicializado.');
 
   // Hook para logs globais do app (online/offline, início do app)
   useEffect(() => {
-    provedorLogger.info('Telemetria.Global: App iniciado');
-    const onOnline = () => provedorLogger.info('Telemetria.Global: Conexão com a internet restaurada');
-    const onOffline = () => provedorLogger.warn('Telemetria.Global: Conexão com a internet perdida');
+    const onOnline = () => console.log('Telemetria.Global: Conexão com a internet restaurada');
+    const onOffline = () => console.warn('Telemetria.Global: Conexão com a internet perdida');
 
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
@@ -29,7 +26,7 @@ export const ProvedorTelemetria = () => {
   // Hook para log de navegação de rotas
   const location = useLocation();
   useEffect(() => {
-    provedorLogger.info(`Telemetria.Navegacao: Navegou para a rota: ${location.pathname}`);
+    console.log(`Telemetria.Navegacao: Navegou para a rota: ${location.pathname}`);
   }, [location]);
 
   return null; // Este componente não renderiza nada

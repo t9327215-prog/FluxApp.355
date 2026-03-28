@@ -2,7 +2,6 @@
 import React, { Suspense } from 'react';
 import { ProvedorModal } from '../../Componentes/ComponenteDeInterfaceDeUsuario/Sistema.Modal';
 import MonitorDeErrosDeInterface from '../../Componentes/ComponentesDePrevençãoDeErros/MonitorDeErrosDeInterface';
-import { provedorLogger } from '../../ServiçosFrontend/SistemaObservabilidade/Log.Provedores';
 
 // Componente de fallback para o Suspense
 const LoadingFallback = () => (
@@ -23,7 +22,6 @@ interface ProvedorInterfaceProps {
  * monitoramento de erros e o fallback de carregamento para componentes lazy-loaded.
  */
 export const ProvedorInterface: React.FC<ProvedorInterfaceProps> = ({ children }) => {
-  provedorLogger.info('Provedor de Interface inicializado.');
 
   return (
     <MonitorDeErrosDeInterface>
