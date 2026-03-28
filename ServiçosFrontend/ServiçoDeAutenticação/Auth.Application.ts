@@ -1,9 +1,26 @@
 
-import { processoLogin, IEstadoAutenticacao, IUsuario } from './Processo.Login';
 import { IRegistroParams, IResultadoRegistro } from './Processo.Registrar';
 import { infraProvider } from '../Infra/Infra.Provider.Usuario';
 import { loginGoogle, IUsuarioSocial } from './Login.Google';
 import { createServiceLogger } from '../SistemaObservabilidade/Log.Servicos.Frontend';
+
+export interface IUsuario {
+    id: string;
+    nome: string;
+    nickname: string;
+    email: string;
+    avatarUrl?: string;
+    website?: string;
+    bio?: string;
+    perfilCompleto: boolean;
+    googleId?: string;
+  }
+  
+  export interface IEstadoAutenticacao {
+    autenticado: boolean;
+    usuario: IUsuario | null;
+    token: string | null;
+  }
 
 type Listener = (estado: IEstadoAutenticacao) => void;
 
@@ -11,33 +28,78 @@ const logger = createServiceLogger('ServicoAutenticacao');
 
 class ServicoAutenticacao {
   private listeners: Listener[] = [];
+  private estado: IEstadoAutenticacao;
+
+  constructor() {
+    // In a real app, you would load the session from storage here
+    this.estado = {
+      autenticado: false,
+      usuario: null,
+      token: null,
+    };
+    logger.logInfo("Serviço de Autenticação inicializado.");
+  }
 
   private notificarListeners() {
     this.listeners.forEach(listener => listener(this.getState()));
   }
 
   public async login(params: { email: string, senha: string }): Promise<void> {
-    // ... (código existente)
-  }
+    const operation = 'login';
+    logger.logOperationStart(operation, params.email);
+    try {
+        const result = await infraProvider.login(params.email, params.senha);
+        if (result.sucesso && result.usuario && result.token) {
+            this.estado = {
+                autenticado: true,
+                usuario: result.usuario,
+                token: result.token
+            };
+            this.notificarListeners();
+            logger.logOperationSuccess(operation, { userId: result.usuario.id });
+        } else {
+            throw new Error(result.mensagem || 'Falha no login');
+        }
+    } catch (error) {
+        logger.logOperationError(operation, error as Error, { email: params.email });
+        this.estado = { autenticado: false, usuario: null, token: null };
+        this.notificarListeners();
+        throw error;
+    }
+}
 
   public async logout() {
     const operation = 'logout';
     logger.logOperationStart(operation);
-    processoLogin.limparEstado();
+    this.estado = { autenticado: false, usuario: null, token: null };
+    // In a real app, you would clear the session from storage here
     this.notificarListeners();
     logger.logOperationSuccess(operation);
   }
 
   public async registrar(dadosRegistro: IRegistroParams): Promise<IResultadoRegistro> {
-    // ... (código existente)
+    const operation = 'registrar';
+    logger.logOperationStart(operation, { email: dadosRegistro.email });
+    try {
+        const resultado = await infraProvider.criarUsuario(dadosRegistro);
+        if(resultado.sucesso) {
+            logger.logOperationSuccess(operation, { userId: resultado.usuarioId });
+        } else {
+            logger.logOperationError(operation, new Error(resultado.mensagem));
+        }
+        return resultado;
+    } catch (error) {
+        logger.logOperationError(operation, error as Error);
+        throw error;
+    }
   }
 
-  public async completarPerfil(dadosPerfil: Partial<IUsuario>): Promise<IResultadoAtualizacao> {
-    // ... (código existente)
+  public async completarPerfil(dadosPerfil: Partial<IUsuario>): Promise<any> {
+    // ... implementation
   }
 
-  public async deletarMinhaConta(): Promise<IResultadoDelecao> {
-    // ... (código existente)
+  public async deletarMinhaConta(): Promise<any> {
+    // ... implementation
   }
 
   public iniciarLoginComGoogle(): void {
@@ -56,7 +118,7 @@ class ServicoAutenticacao {
         const novoUsuario = {
             nome: dadosUsuarioSocial.nome,
             email: dadosUsuarioSocial.email,
-            senha: Math.random().toString(36).slice(-8), // Senha aleatória, pois o login é social
+            senha: Math.random().toString(36).slice(-8),
             aceitouTermos: true,
         };
         const resultadoRegistro = await infraProvider.criarUsuario(novoUsuario);
@@ -69,24 +131,30 @@ class ServicoAutenticacao {
         }
       }
 
-      processoLogin.definirEstado({ 
-        autenticado: true, 
-        usuario: { ...usuario, perfilCompleto: !!usuario.perfilCompleto }, 
-        token: idToken
-      });
+      this.estado = {
+        autenticado: true,
+        usuario: { ...usuario, perfilCompleto: !!usuario.perfilCompleto },
+        token: idToken,
+      };
 
       this.notificarListeners();
       logger.logOperationSuccess(operation, { userId: usuario.id });
 
     } catch (error) {
       logger.logOperationError(operation, error as Error);
-      processoLogin.definirErro((error as Error).message);
+      this.estado = { autenticado: false, usuario: null, token: null };
       this.notificarListeners();
+      throw error
     }
   }
 
-  public async buscarUsuarioPorId(id: string): Promise<IUsuario> {
-    return infraProvider.buscarUsuario(id);
+  public async buscarUsuarioPorId(id: string): Promise<IUsuario | null> {
+    try {
+        return await infraProvider.buscarUsuario(id);
+    } catch (error) {
+        logger.logOperationError('buscarUsuarioPorId', error as Error, { userId: id });
+        return null;
+    }
   }
 
   public subscribe(listener: Listener): () => void {
@@ -98,7 +166,7 @@ class ServicoAutenticacao {
   }
 
   public getState(): IEstadoAutenticacao {
-    return processoLogin.obterEstadoAtual();
+    return this.estado;
   }
 }
 
@@ -106,5 +174,3 @@ export const servicoAutenticacao = new ServicoAutenticacao();
 
 export type { IEstadoAutenticacao as AuthState };
 export type { IRegistroParams, IResultadoRegistro };
-export type { IAtualizacaoUsuarioParams as CompletarPerfilParams, IResultadoAtualizacao as ResultadoCompletarPerfil };
-export type { IResultadoDelecao };
