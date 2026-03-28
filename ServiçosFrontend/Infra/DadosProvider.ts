@@ -30,6 +30,18 @@ class C_DadosProvider {
 
   // --- MÉTODOS ORQUESTRADORES ---
 
+  async login(email: string, senha: string): Promise<any> {
+    try {
+      // Aqui usamos o infraProviderAutenticacao que já lida com a lógica de login.
+      const response = await infraProviderAutenticacao.login(email, senha);
+      // A resposta do login já vem no formato esperado pelo serviço de autenticação
+      return response;
+    } catch (error: any) {
+      // Em caso de erro, retornamos um objeto padronizado para falha.
+      return { sucesso: false, mensagem: error.response?.data?.message || "Falha na comunicação com o servidor durante o login." };
+    }
+  }
+
   async completarPerfil(perfilData: any): Promise<any> {
     for (const campo of this.camposPerfilObrigatorio()) {
       if (campo.campo === 'id') continue;
@@ -91,7 +103,8 @@ class C_DadosProvider {
   async criarUsuario(dadosUsuario: any): Promise<any> {
     try {
       const response = await infraProviderUsuario.post('/api/v1/users', dadosUsuario);
-      return { sucesso: true, dados: response.data };
+      // O `criarUsuario` do infra.provider.usuario já retorna o formato { sucesso, usuarioId, mensagem }
+      return response;
     } catch (error: any) {
       return { sucesso: false, mensagem: error.response?.data?.message || "Falha ao criar usuário." };
     }

@@ -1,6 +1,6 @@
 
 import { IRegistroParams, IResultadoRegistro } from './Processo.Registrar';
-import { infraProvider } from '../Infra/Infra.Provider.Usuario';
+import { DadosProvider } from '../Infra/DadosProvider';
 import { loginGoogle, IUsuarioSocial } from './Login.Google';
 import { createServiceLogger } from '../SistemaObservabilidade/Log.Servicos.Frontend';
 
@@ -31,7 +31,6 @@ class ServicoAutenticacao {
   private estado: IEstadoAutenticacao;
 
   constructor() {
-    // In a real app, you would load the session from storage here
     this.estado = {
       autenticado: false,
       usuario: null,
@@ -48,7 +47,7 @@ class ServicoAutenticacao {
     const operation = 'login';
     logger.logOperationStart(operation, params.email);
     try {
-        const result = await infraProvider.login(params.email, params.senha);
+        const result = await DadosProvider.login(params.email, params.senha);
         if (result.sucesso && result.usuario && result.token) {
             this.estado = {
                 autenticado: true,
@@ -72,7 +71,6 @@ class ServicoAutenticacao {
     const operation = 'logout';
     logger.logOperationStart(operation);
     this.estado = { autenticado: false, usuario: null, token: null };
-    // In a real app, you would clear the session from storage here
     this.notificarListeners();
     logger.logOperationSuccess(operation);
   }
@@ -81,7 +79,7 @@ class ServicoAutenticacao {
     const operation = 'registrar';
     logger.logOperationStart(operation, { email: dadosRegistro.email });
     try {
-        const resultado = await infraProvider.criarUsuario(dadosRegistro);
+        const resultado = await DadosProvider.criarUsuario(dadosRegistro);
         if(resultado.sucesso) {
             logger.logOperationSuccess(operation, { userId: resultado.usuarioId });
         } else {
@@ -112,7 +110,8 @@ class ServicoAutenticacao {
     try {
       const dadosUsuarioSocial: IUsuarioSocial = await loginGoogle.processarCallback(idToken);
       
-      let usuario = await infraProvider.buscarUsuarioPorEmail(dadosUsuarioSocial.email);
+      let response = await DadosProvider.buscarUsuarioPorEmail(dadosUsuarioSocial.email);
+      let usuario = response.dados;
 
       if (!usuario) {
         const novoUsuario = {
@@ -121,11 +120,12 @@ class ServicoAutenticacao {
             senha: Math.random().toString(36).slice(-8),
             aceitouTermos: true,
         };
-        const resultadoRegistro = await infraProvider.criarUsuario(novoUsuario);
+        const resultadoRegistro = await DadosProvider.criarUsuario(novoUsuario);
         if(!resultadoRegistro.sucesso) {
             throw new Error(resultadoRegistro.mensagem);
         }
-        usuario = await infraProvider.buscarUsuarioPorEmail(dadosUsuarioSocial.email);
+        response = await DadosProvider.buscarUsuarioPorEmail(dadosUsuarioSocial.email);
+        usuario = response.dados;
         if(!usuario) {
             throw new Error('Falha ao buscar usuário recém-criado.');
         }
@@ -150,7 +150,8 @@ class ServicoAutenticacao {
 
   public async buscarUsuarioPorId(id: string): Promise<IUsuario | null> {
     try {
-        return await infraProvider.buscarUsuario(id);
+        const response = await DadosProvider.buscarUsuarioPorId(id);
+        return response.sucesso ? response.dados : null;
     } catch (error) {
         logger.logOperationError('buscarUsuarioPorId', error as Error, { userId: id });
         return null;
