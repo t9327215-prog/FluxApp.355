@@ -1,6 +1,7 @@
 
-import ClienteBackend from '../Cliente.Backend.js'; 
+import backend from '../Cliente.Backend.js'; 
 import { ENDPOINTS_AUTH } from '../EndPoints/EndPoints.Auth';
+import LoggerParaInfra from '../SistemaObservabilidade/Log.Infra';
 import { IPerfilParaCompletar } from '../ServiçoDeAutenticação/Processo.Completar.Perfil';
 
 // Interface para os dados que chegam do login social
@@ -12,25 +13,26 @@ interface ILoginSocialData {
   tokenProvider: string;
 }
 
+const logger = new LoggerParaInfra('Provider.Autenticacao');
+
 class InfraProviderAutenticacao {
   
   async completarPerfil(perfilData: IPerfilParaCompletar): Promise<any> {
     try {
-      const response = await ClienteBackend.post(ENDPOINTS_AUTH.PROFILE, perfilData);
+      const response = await backend.post(ENDPOINTS_AUTH.PROFILE, perfilData);
       return response;
     } catch (error) {
-      console.error("Erro no provedor de infraestrutura ao completar o perfil:", error);
+      logger.error("Erro ao completar o perfil", error);
       throw error;
     }
   }
 
   async lidarComLoginSocial(dadosLogin: ILoginSocialData): Promise<any> {
     try {
-      // Este endpoint (LOGIN_GOOGLE) é um exemplo. Ele deve corresponder ao que seu backend espera.
-      const response = await ClienteBackend.post(ENDPOINTS_AUTH.LOGIN_GOOGLE, dadosLogin);
-      return response.data; // Retornando diretamente os dados da resposta (ex: token da sessão, dados do usuário)
+      const response = await backend.post(ENDPOINTS_AUTH.LOGIN_GOOGLE, dadosLogin);
+      return response.data;
     } catch (error) {
-      console.error("Erro no provedor de infraestrutura ao lidar com login social:", error);
+      logger.error("Erro ao lidar com login social", error);
       throw error;
     }
   }
