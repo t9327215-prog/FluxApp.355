@@ -7,30 +7,38 @@ import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticaç�
 export const GoogleAuthCallback: React.FC = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { erro, autenticado, usuario } = useAuth(); 
+    const { erro, autenticado, usuario } = useAuth();
 
     useEffect(() => {
-        const token = searchParams.get('token');
-        if (token) {
-            servicoAutenticacao.finalizarLoginComToken(token);
+        // CORREÇÃO: Procurar pelo 'code' na URL, não pelo 'token'.
+        const code = searchParams.get('code');
+
+        if (code) {
+            // CORREÇÃO: Chamar a função correta que implementamos.
+            servicoAutenticacao.finalizarLoginComGoogle(code);
         } else {
-            console.error("Nenhum token encontrado no callback do Google.");
+            console.error("Nenhum código de autorização encontrado no callback do Google.");
             navigate('/login?error=auth_failed');
         }
-    }, [searchParams, navigate]);
-    
+        // O array de dependências vazio garante que isso rode apenas uma vez.
+    }, []);
+
+    // Este useEffect lida com erros durante o processo.
     useEffect(() => {
         if (erro) {
             navigate(`/login?error=${erro}`);
         }
     }, [erro, navigate]);
 
+    // Este useEffect já está correto e faz o redirecionamento que você quer!
     useEffect(() => {
         if (autenticado) {
             if (usuario && !usuario.perfilCompleto) {
-                navigate('/complete-profile');
+                // A página de completar perfil que você já tem
+                navigate('/CompleteProfile'); 
             } else {
-                navigate('/feed');
+                // A página de feed que você já tem
+                navigate('/Feed');
             }
         }
     }, [autenticado, usuario, navigate]);
