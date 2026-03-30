@@ -1,7 +1,10 @@
 
-import ServicoHTTPResposta from '../ServicosBackend/Servico.HTTP.Resposta.js';
 import ServicoCriacaoGrupoPrivado from '../ServicosBackend/Servicos.Criacao.Grupo.Privado.js';
 import { validarCriacaoGrupo } from '../validators/Validator.Estrutura.Grupo.js';
+
+const httpRes = {
+    criado: (r, dados, m = "Criado com sucesso") => r.status(201).json({ sucesso: true, mensagem: m, dados }),
+};
 
 const criarGrupoPrivado = async (req, res, next) => {
     const donoId = req.user.id;
@@ -21,7 +24,7 @@ const criarGrupoPrivado = async (req, res, next) => {
         console.log('Criação de grupo privado bem-sucedida', { event: 'GROUP_PRIVATE_CREATE_SUCCESS', groupId: grupoSalvo.id, donoId });
 
         const resposta = grupoSalvo.paraRespostaHttp ? grupoSalvo.paraRespostaHttp() : grupoSalvo;
-        return ServicoHTTPResposta.criado(res, resposta);
+        return httpRes.criado(res, resposta);
 
     } catch (error) {
         console.error('Erro na criação de grupo privado', {

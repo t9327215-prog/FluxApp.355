@@ -1,7 +1,12 @@
 
 import ServicoComentariosMarketplace from '../ServicosBackend/Servicos.Publicacao.Comentarios.Marketplace.js';
-import ServicoRespostaHTTP from '../ServicosBackend/Servico.HTTP.Resposta.js';
 import { validarCriacaoComentario } from '../validators/Validator.Estrutura.Comentario.js';
+
+const httpRes = {
+    sucesso: (r, dados, m = "Sucesso") => r.status(200).json({ sucesso: true, mensagem: m, dados }),
+    criado: (r, dados, m = "Criado com sucesso") => r.status(201).json({ sucesso: true, mensagem: m, dados }),
+    erro: (r, m = "Erro interno", s = 500) => r.status(s).json({ sucesso: false, mensagem: m }),
+};
 
 const criarComentario = async (req, res) => {
     const { itemId } = req.params;
@@ -10,15 +15,13 @@ const criarComentario = async (req, res) => {
     console.log('Iniciando criação de comentário para item do Marketplace', { event: 'COMMENT_MARKETPLACE_CREATE_START', itemId, userId, body: req.body });
 
     try {
-        // 1. Validar a entrada
         const dadosParaValidar = { 
-            texto: req.body.content, // Mapeando 'content' para 'texto'
+            texto: req.body.content,
             autorId: userId, 
             parenteId: itemId 
         };
         const dadosValidados = validarCriacaoComentario(dadosParaValidar);
 
-        // 2. Chamar o serviço com o texto validado
         const novoComentario = await ServicoComentariosMarketplace.criarComentario(
             itemId, 
             userId, 
@@ -27,8 +30,7 @@ const criarComentario = async (req, res) => {
         
         console.log('Comentário de Marketplace criado com sucesso', { event: 'COMMENT_MARKETPLACE_CREATE_SUCCESS', commentId: novoComentario.id, itemId, userId });
         
-        // 3. Enviar a resposta
-        return ServicoRespostaHTTP.criado(res, novoComentario, "Comentário criado com sucesso");
+        return httpRes.criado(res, novoComentario, "Comentário criado com sucesso");
 
     } catch (error) {
         console.error('Erro ao criar comentário de Marketplace', { 
@@ -39,7 +41,7 @@ const criarComentario = async (req, res) => {
             data: req.body
         });
 
-        return ServicoRespostaHTTP.erro(res, error.message, 400);
+        return httpRes.erro(res, error.message, 400);
     }
 };
 
@@ -52,11 +54,11 @@ const obterComentariosPorItemId = async (req, res) => {
 
         console.log('Busca de comentários para item do Marketplace bem-sucedida', { event: 'COMMENT_MARKETPLACE_GET_SUCCESS', itemId, count: comentarios.length });
 
-        return ServicoRespostaHTTP.sucesso(res, comentarios);
+        return httpRes.sucesso(res, comentarios);
     } catch (error) {
         console.error('Erro ao buscar comentários de Marketplace', { event: 'COMMENT_MARKETPLACE_GET_ERROR', errorMessage: error.message, itemId });
 
-        return ServicoRespostaHTTP.erro(res, 'Falha ao buscar comentários.', 500, error.message);
+        return httpRes.erro(res, 'Falha ao buscar comentários.', 500);
     }
 };
 
@@ -71,11 +73,11 @@ const atualizarComentario = async (req, res) => {
         
         console.log('Comentário de Marketplace atualizado com sucesso', { event: 'COMMENT_MARKETPLACE_UPDATE_SUCCESS', commentId, userId });
         
-        return ServicoRespostaHTTP.sucesso(res, comentarioAtualizado, "Comentário atualizado com sucesso");
+        return httpRes.sucesso(res, comentarioAtualizado, "Comentário atualizado com sucesso");
     } catch (error) {
         console.error('Erro ao atualizar comentário de Marketplace', { event: 'COMMENT_MARKETPLACE_UPDATE_ERROR', errorMessage: error.message, commentId, userId });
 
-        return ServicoRespostaHTTP.erro(res, 'Falha ao atualizar comentário.', 500, error.message);
+        return httpRes.erro(res, 'Falha ao atualizar comentário.', 500);
     }
 };
 
@@ -90,11 +92,11 @@ const deletarComentario = async (req, res) => {
 
         console.log('Comentário de Marketplace excluído com sucesso', { event: 'COMMENT_MARKETPLACE_DELETE_SUCCESS', commentId, userId });
 
-        return ServicoRespostaHTTP.sucesso(res, null, "Comentário deletado com sucesso");
+        return httpRes.sucesso(res, null, "Comentário deletado com sucesso");
     } catch (error) {
         console.error('Erro ao excluir comentário de Marketplace', { event: 'COMMENT_MARKETPLACE_DELETE_ERROR', errorMessage: error.message, commentId, userId });
         
-        return ServicoRespostaHTTP.erro(res, 'Falha ao deletar comentário.', 500, error.message);
+        return httpRes.erro(res, 'Falha ao deletar comentário.', 500);
     }
 };
 

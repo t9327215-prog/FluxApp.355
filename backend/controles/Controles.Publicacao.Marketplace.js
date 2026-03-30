@@ -1,8 +1,15 @@
 
 // backend/controles/Controles.Publicacao.Marketplace.js
 import ServicoMarketplace from '../ServicosBackend/Servicos.Publicacao.Marketplace.js';
-import ServicoHTTPResposta from '../ServicosBackend/Servico.HTTP.Resposta.js';
 import { validarItemMarketplace } from '../validators/Validator.Estrutura.Publicacao.Marketplace.js';
+
+const httpRes = {
+    sucesso: (r, dados, m = "Sucesso") => r.status(200).json({ sucesso: true, mensagem: m, dados }),
+    criado: (r, dados, m = "Criado com sucesso") => r.status(201).json({ sucesso: true, mensagem: m, dados }),
+    erro: (r, m = "Erro interno", s = 500) => r.status(s).json({ sucesso: false, mensagem: m }),
+    naoEncontrado: (r, m = "Recurso não encontrado") => r.status(404).json({ sucesso: false, mensagem: m }),
+    semConteudo: (r) => r.status(204).send(),
+};
 
 const criarItem = async (req, res) => {
     const userId = req.user.id;
@@ -15,7 +22,7 @@ const criarItem = async (req, res) => {
 
         console.log('Item do marketplace criado com sucesso', { event: 'ITEM_CREATE_SUCCESS', itemId: item.id, userId });
         
-        ServicoHTTPResposta.criado(res, item);
+        httpRes.criado(res, item);
 
     } catch (error) {
         console.error('Erro ao criar item no marketplace', { 
@@ -24,7 +31,7 @@ const criarItem = async (req, res) => {
             userId, 
             data: req.body 
         });
-        ServicoHTTPResposta.erro(res, error.message, 400);
+        httpRes.erro(res, error.message, 400);
     }
 };
 
@@ -33,10 +40,10 @@ const obterTodosItens = async (req, res) => {
     try {
         const items = await ServicoMarketplace.obterTodosItens(req.query);
         console.log('Itens do marketplace obtidos com sucesso', { event: 'ITEMS_GET_ALL_SUCCESS', count: items.length });
-        ServicoHTTPResposta.sucesso(res, items);
+        httpRes.sucesso(res, items);
     } catch (error) {
         console.error('Erro ao obter itens do marketplace', { event: 'ITEMS_GET_ALL_ERROR', errorMessage: error.message });
-        ServicoHTTPResposta.erro(res, error.message, 500, error.message);
+        httpRes.erro(res, error.message, 500);
     }
 };
 
@@ -47,13 +54,13 @@ const obterItemPorId = async (req, res) => {
         const item = await ServicoMarketplace.obterItemPorId(itemId);
         if (!item) {
             console.warn('Item do marketplace não encontrado', { event: 'ITEM_GET_BY_ID_NOT_FOUND', itemId });
-            return ServicoHTTPResposta.naoEncontrado(res, 'Item não encontrado.');
+            return httpRes.naoEncontrado(res, 'Item não encontrado.');
         }
         console.log('Item do marketplace obtido com sucesso por ID', { event: 'ITEM_GET_BY_ID_SUCCESS', itemId });
-        ServicoHTTPResposta.sucesso(res, item);
+        httpRes.sucesso(res, item);
     } catch (error) {
         console.error('Erro ao obter item do marketplace por ID', { event: 'ITEM_GET_BY_ID_ERROR', errorMessage: error.message, itemId });
-        ServicoHTTPResposta.erro(res, error.message, 500, error.message);
+        httpRes.erro(res, error.message, 500);
     }
 };
 
@@ -64,10 +71,10 @@ const atualizarItem = async (req, res) => {
     try {
         const updatedItem = await ServicoMarketplace.atualizarItem(itemId, req.body, userId);
         console.log('Item do marketplace atualizado com sucesso', { event: 'ITEM_UPDATE_SUCCESS', itemId, userId });
-        ServicoHTTPResposta.sucesso(res, updatedItem);
+        httpRes.sucesso(res, updatedItem);
     } catch (error) {
         console.error('Erro ao atualizar item no marketplace', { event: 'ITEM_UPDATE_ERROR', errorMessage: error.message, itemId, userId, data: req.body });
-        ServicoHTTPResposta.erro(res, error.message, 400, error.message);
+        httpRes.erro(res, error.message, 400);
     }
 };
 
@@ -78,10 +85,10 @@ const deletarItem = async (req, res) => {
     try {
         await ServicoMarketplace.deletarItem(itemId, userId);
         console.log('Item do marketplace excluído com sucesso', { event: 'ITEM_DELETE_SUCCESS', itemId, userId });
-        ServicoHTTPResposta.semConteudo(res);
+        httpRes.semConteudo(res);
     } catch (error) {
         console.error('Erro ao excluir item do marketplace', { event: 'ITEM_DELETE_ERROR', errorMessage: error.message, itemId, userId });
-        ServicoHTTPResposta.erro(res, error.message, 400, error.message);
+        httpRes.erro(res, error.message, 400);
     }
 };
 

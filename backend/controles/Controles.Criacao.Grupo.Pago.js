@@ -1,8 +1,11 @@
 
 // backend/controles/Controles.Criacao.Grupo.Pago.js
-import ServicoHTTPResposta from '../ServicosBackend/Servico.HTTP.Resposta.js';
 import ServicoCriacaoGrupoPago from '../ServicosBackend/Servicos.Criacao.Grupo.Pago.js';
 import { validarCriacaoGrupo } from '../validators/Validator.Estrutura.Grupo.js';
+
+const httpRes = {
+    criado: (r, dados, m = "Criado com sucesso") => r.status(201).json({ sucesso: true, mensagem: m, dados }),
+};
 
 const criarGrupoPago = async (req, res, next) => {
     const donoId = req.user.id;
@@ -22,7 +25,7 @@ const criarGrupoPago = async (req, res, next) => {
         console.log('Criação de grupo pago bem-sucedida', { event: 'GROUP_PAID_CREATE_SUCCESS', groupId: grupoSalvo.id, donoId });
 
         const resposta = grupoSalvo.paraRespostaHttp ? grupoSalvo.paraRespostaHttp() : grupoSalvo;
-        return ServicoHTTPResposta.criado(res, resposta);
+        return httpRes.criado(res, resposta);
 
     } catch (error) {
         console.error('Erro na criação de grupo pago', {

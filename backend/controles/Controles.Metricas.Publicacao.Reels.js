@@ -1,6 +1,10 @@
 
-import ServicoHTTPResposta from '../ServicosBackend/Servico.HTTP.Resposta.js';
 import ServicoMetricasPublicacaoReels from '../ServicosBackend/Servicos.Metricas.Publicacao.Reels.js';
+
+const httpRes = {
+    sucesso: (r, dados, m = "Sucesso") => r.status(200).json({ sucesso: true, mensagem: m, dados }),
+    erro: (r, m = "Erro interno", s = 500) => r.status(s).json({ sucesso: false, mensagem: m }),
+};
 
 class ControlesMetricasPublicacaoReels {
     async getReelMetrics(req, res, next) {
@@ -10,10 +14,10 @@ class ControlesMetricasPublicacaoReels {
         try {
             const metrics = await ServicoMetricasPublicacaoReels.getReelMetrics(reelId);
             console.log('Métricas para Reel obtidas com sucesso', { event: 'METRIC_REEL_GET_SUCCESS', reelId });
-            return ServicoHTTPResposta.sucesso(res, metrics);
+            return httpRes.sucesso(res, metrics);
         } catch (error) {
             console.error('Erro ao buscar métricas para Reel', { event: 'METRIC_REEL_GET_ERROR', errorMessage: error.message, reelId });
-            return ServicoHTTPResposta.erro(res, 'Failed to fetch reel metrics', 500, error.message);
+            return httpRes.erro(res, 'Failed to fetch reel metrics', 500);
         }
     }
 }

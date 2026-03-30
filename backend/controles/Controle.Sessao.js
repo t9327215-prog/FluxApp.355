@@ -2,13 +2,19 @@
 import { OAuth2Client } from 'google-auth-library';
 import servicoUsuario from '../ServicosBackend/Servico.Usuario.js';
 import servicoSessao from '../ServicosBackend/Servico.Sessao.js';
-import ServicoResposta from '../ServicosBackend/Servico.HTTP.Resposta.js';
 import validadorUsuario from '../validators/Validator.Estrutura.Usuario.js';
 import validadorSessao from '../validators/Validator.Estrutura.Sessao.js';
 import variaveis from '../config/Variaveis.Backend.js';
 import createControllerLogger from '../config/Log.Controles.js';
 
 const logger = createControllerLogger('Controle.Sessao.js');
+
+const httpRes = {
+    sucesso: (r, dados, m = "Sucesso") => r.status(200).json({ sucesso: true, mensagem: m, dados }),
+    criado: (r, dados, m = "Criado com sucesso") => r.status(201).json({ sucesso: true, mensagem: m, dados }),
+    requisicaoInvalida: (r, m = "Requisição inválida") => r.status(400).json({ sucesso: false, mensagem: m }),
+    naoAutorizado: (r, m = "Não autorizado") => r.status(401).json({ sucesso: false, mensagem: m }),
+};
 
 const oAuth2Client = new OAuth2Client(
   variaveis.google.clientId,
@@ -30,12 +36,12 @@ const registrar = async (req, res, next) => {
         await servicoSessao.salvarSessao(dadosSessaoValidados);
 
         logger.info(`Usuário ${usuario.id} registrado com sucesso.`, { userId: usuario.id });
-        return ServicoResposta.criado(res, { token, user: usuario.paraRespostaHttp() });
+        return httpRes.criado(res, { token, user: usuario.paraRespostaHttp() });
 
     } catch (error) {
         logger.error(`Erro no registro do e-mail ${email}:`, { email, error });
         if (error.message.includes('está em uso')) {
-            return ServicoResposta.requisicaoInvalida(res, error.message);
+            return httpRes.requisicaoInvalida(res, error.message);
         }
         next(error);
     }
@@ -55,12 +61,12 @@ const login = async (req, res, next) => {
         await servicoSessao.salvarSessao(dadosSessaoValidados);
 
         logger.info(`Usuário ${usuario.id} logado com sucesso.`, { userId: usuario.id });
-        return ServicoResposta.sucesso(res, { token, user: usuario.paraRespostaHttp() });
+        return httpRes.sucesso(res, { token, user: usuario.paraRespostaHttp() });
 
     } catch (error) {
         logger.error(`Erro no login do e-mail ${email}:`, { email, error });
         if (error.message.includes('Credenciais inválidas')) {
-            return ServicoResposta.naoAutorizado(res, error.message);
+            return httpRes.naoAutorizado(res, error.message);
         }
         next(error);
     }
@@ -73,10 +79,9 @@ const googleAuth = async (req, res, next) => {
 
     try {
         if (!code) {
-            return ServicoResposta.requisicaoInvalida(res, "O código de autorização do Google é obrigatório.");
+            return httpRes.requisicaoInvalida(res, "O código de autorização do Google é obrigatório.");
         }
 
-        // Troca o código de autorização por tokens
         const { tokens } = await oAuth2Client.getToken(code);
         oAuth2Client.setCredentials(tokens);
 
@@ -109,14 +114,12 @@ const googleAuth = async (req, res, next) => {
 
         logger.info(`Usuário ${usuario.id} autenticado com Google com sucesso.`, { userId: usuario.id, isNewUser });
         
-        // Redireciona o usuário para o frontend com o token
         const redirectUrl = new URL(variaveis.frontendUrl + '/auth/google/success');
         redirectUrl.searchParams.append('token', sessionToken);
         res.redirect(redirectUrl.toString());
 
     } catch (error) {
         logger.error('Erro na autenticação com Google:', { error: { message: error.message, stack: error.stack } });
-        // Redireciona para uma página de erro no frontend
         const errorRedirectUrl = new URL(variaveis.frontendUrl + '/auth/google/failure');
         errorRedirectUrl.searchParams.append('error', error.message || 'Erro desconhecido');
         res.redirect(errorRedirectUrl.toString());
@@ -129,12 +132,12 @@ const logout = async (req, res, next) => {
 
     try {
         if (!token) {
-            return ServicoResposta.naoAutorizado(res, 'Token não fornecido');
+            return httpRes.naoAutorizado(res, 'Token não fornecido');
         }
         await servicoSessao.encerrarSessao(token);
 
         logger.info('Logout bem-sucedido.');
-        return ServicoResposta.sucesso(res, { message: 'Logout bem-sucedido' });
+        return httpRes.sucesso(res, { message: 'Logout bem-sucedido' });
 
     } catch (error) {
         logger.error('Erro no logout:', { error });
@@ -149,7 +152,7 @@ const googleLoginFromFrontend = async (req, res, next) => {
 
     try {
         if (!email || !googleId) {
-            return ServicoResposta.requisicaoInvalida(res, "Email e googleId são obrigatórios.");
+            return httpRes.requisicaoInvalida(res, "Email e googleId são obrigatórios.");
         }
 
         const dadosGoogle = { google_id: googleId, email, nome: nome || '', foto: avatarUrl || '' };
@@ -172,7 +175,7 @@ const googleLoginFromFrontend = async (req, res, next) => {
 
         logger.info(`Usuário ${usuario.id} autenticado com Google Frontend com sucesso.`, { userId: usuario.id, isNewUser, redirectRoute });
         
-        return ServicoResposta.sucesso(res, { 
+        return httpRes.sucesso(res, { 
             token: sessionToken, 
             user: usuario.paraRespostaHttp(),
             redirect: redirectRoute,

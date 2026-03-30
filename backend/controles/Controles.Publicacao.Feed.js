@@ -1,8 +1,13 @@
 
 // backend/controles/Controles.Publicacao.Feed.js
 import servicoPublicacaoFeed from '../ServicosBackend/Servicos.Publicacao.Feed.js';
-import ServicoHTTPResposta from '../ServicosBackend/Servico.HTTP.Resposta.js';
 import { validarPublicacaoFeed } from '../validators/Validator.Estrutura.Publicacao.Feed.js';
+
+const httpRes = {
+    sucesso: (r, dados, m = "Sucesso") => r.status(200).json({ sucesso: true, mensagem: m, dados }),
+    criado: (r, dados, m = "Criado com sucesso") => r.status(201).json({ sucesso: true, mensagem: m, dados }),
+    erro: (r, m = "Erro interno", s = 500) => r.status(s).json({ sucesso: false, mensagem: m }),
+};
 
 const criarPost = async (req, res) => {
     const userId = req.user.id;
@@ -15,7 +20,7 @@ const criarPost = async (req, res) => {
         
         console.log('Postagem no feed criada com sucesso', { event: 'POST_CREATE_SUCCESS', postId: post.id, userId });
         
-        ServicoHTTPResposta.criado(res, post);
+        httpRes.criado(res, post);
 
     } catch (error) {
         console.error('Erro ao criar postagem no feed', { 
@@ -24,7 +29,7 @@ const criarPost = async (req, res) => {
             userId, 
             data: req.body 
         });
-        ServicoHTTPResposta.erro(res, error.message, 400); 
+        httpRes.erro(res, error.message, 400); 
     }
 };
 
@@ -33,10 +38,10 @@ const obterTodosOsPosts = async (req, res) => {
     try {
         const posts = await servicoPublicacaoFeed.obterTodosOsPosts(req.query);
         console.log('Todas as postagens do feed obtidas com sucesso', { event: 'POSTS_GET_ALL_SUCCESS', count: posts.length });
-        ServicoHTTPResposta.sucesso(res, posts);
+        httpRes.sucesso(res, posts);
     } catch (error) {
         console.error('Erro ao obter todas as postagens do feed', { event: 'POSTS_GET_ALL_ERROR', errorMessage: error.message, query: req.query });
-        ServicoHTTPResposta.erro(res, error.message, error.statusCode || 500, error.message);
+        httpRes.erro(res, error.message, error.statusCode || 500);
     }
 };
 
@@ -46,10 +51,10 @@ const obterPostPorId = async (req, res) => {
     try {
         const post = await servicoPublicacaoFeed.obterPostPorId(postId);
         console.log('Postagem do feed obtida por ID com sucesso', { event: 'POST_GET_BY_ID_SUCCESS', postId });
-        ServicoHTTPResposta.sucesso(res, post);
+        httpRes.sucesso(res, post);
     } catch (error) {
         console.error('Erro ao obter postagem do feed por ID', { event: 'POST_GET_BY_ID_ERROR', errorMessage: error.message, postId });
-        ServicoHTTPResposta.erro(res, error.message, error.statusCode || 404, error.message);
+        httpRes.erro(res, error.message, error.statusCode || 404);
     }
 };
 
@@ -60,10 +65,10 @@ const atualizarPost = async (req, res) => {
     try {
         const updatedPost = await servicoPublicacaoFeed.atualizarPost(postId, req.body, req.user);
         console.log('Postagem do feed atualizada com sucesso', { event: 'POST_UPDATE_SUCCESS', postId, userId });
-        ServicoHTTPResposta.sucesso(res, updatedPost);
+        httpRes.sucesso(res, updatedPost);
     } catch (error) {
         console.error('Erro ao atualizar postagem do feed', { event: 'POST_UPDATE_ERROR', errorMessage: error.message, postId, userId, data: req.body });
-        ServicoHTTPResposta.erro(res, error.message, error.statusCode || 400, error.message);
+        httpRes.erro(res, error.message, error.statusCode || 400);
     }
 };
 
@@ -74,10 +79,10 @@ const deletarPost = async (req, res) => {
     try {
         await servicoPublicacaoFeed.deletarPost(postId, req.user);
         console.log('Postagem do feed excluída com sucesso', { event: 'POST_DELETE_SUCCESS', postId, userId });
-        ServicoHTTPResposta.sucesso(res, null, "Post deletado com sucesso.");
+        httpRes.sucesso(res, null, "Post deletado com sucesso.");
     } catch (error) {
         console.error('Erro ao excluir postagem do feed', { event: 'POST_DELETE_ERROR', errorMessage: error.message, postId, userId });
-        ServicoHTTPResposta.erro(res, error.message, error.statusCode || 403, error.message);
+        httpRes.erro(res, error.message, error.statusCode || 403);
     }
 };
 

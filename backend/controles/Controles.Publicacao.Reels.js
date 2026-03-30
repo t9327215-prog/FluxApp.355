@@ -1,8 +1,15 @@
 
 // backend/controles/Controles.Publicacao.Reels.js
 import ServicoReels from '../ServicosBackend/Servicos.Publicacao.Reels.js';
-import ServicoHTTPResposta from '../ServicosBackend/Servico.HTTP.Resposta.js';
 import { validarPublicacaoReels } from '../validators/Validator.Estrutura.Publicacao.Reels.js';
+
+const httpRes = {
+    sucesso: (r, dados, m = "Sucesso") => r.status(200).json({ sucesso: true, mensagem: m, dados }),
+    criado: (r, dados, m = "Criado com sucesso") => r.status(201).json({ sucesso: true, mensagem: m, dados }),
+    erro: (r, m = "Erro interno", s = 500) => r.status(s).json({ sucesso: false, mensagem: m }),
+    naoEncontrado: (r, m = "Recurso não encontrado") => r.status(404).json({ sucesso: false, mensagem: m }),
+    semConteudo: (r) => r.status(204).send(),
+};
 
 const createReel = async (req, res) => {
     const userId = req.user.id;
@@ -15,7 +22,7 @@ const createReel = async (req, res) => {
         
         console.log('Reel criado com sucesso', { event: 'REEL_CREATE_SUCCESS', reelId: reel.id, userId });
         
-        ServicoHTTPResposta.criado(res, reel);
+        httpRes.criado(res, reel);
 
     } catch (error) {
         console.error('Erro ao criar reel', { 
@@ -24,7 +31,7 @@ const createReel = async (req, res) => {
             userId, 
             data: req.body 
         });
-        ServicoHTTPResposta.erro(res, error.message, 400);
+        httpRes.erro(res, error.message, 400);
     }
 };
 
@@ -33,10 +40,10 @@ const getAllReels = async (req, res) => {
     try {
         const reels = await ServicoReels.getAllReels(req.query);
         console.log('Todos os reels obtidos com sucesso', { event: 'REELS_GET_ALL_SUCCESS', count: reels.length });
-        ServicoHTTPResposta.sucesso(res, reels);
+        httpRes.sucesso(res, reels);
     } catch (error) {
         console.error('Erro ao obter todos os reels', { event: 'REELS_GET_ALL_ERROR', errorMessage: error.message });
-        ServicoHTTPResposta.erro(res, error.message, 500, error.message);
+        httpRes.erro(res, error.message, 500);
     }
 };
 
@@ -47,13 +54,13 @@ const getReelById = async (req, res) => {
         const reel = await ServicoReels.getReelById(reelId);
         if (!reel) {
             console.warn('Reel não encontrado', { event: 'REEL_GET_BY_ID_NOT_FOUND', reelId });
-            return ServicoHTTPResposta.naoEncontrado(res, 'Reel não encontrado.');
+            return httpRes.naoEncontrado(res, 'Reel não encontrado.');
         }
         console.log('Reel obtido por ID com sucesso', { event: 'REEL_GET_BY_ID_SUCCESS', reelId });
-        ServicoHTTPResposta.sucesso(res, reel);
+        httpRes.sucesso(res, reel);
     } catch (error) {
         console.error('Erro ao obter reel por ID', { event: 'REEL_GET_BY_ID_ERROR', errorMessage: error.message, reelId });
-        ServicoHTTPResposta.erro(res, error.message, 500, error.message);
+        httpRes.erro(res, error.message, 500);
     }
 };
 
@@ -64,10 +71,10 @@ const updateReel = async (req, res) => {
     try {
         const updatedReel = await ServicoReels.updateReel(reelId, req.body, userId);
         console.log('Reel atualizado com sucesso', { event: 'REEL_UPDATE_SUCCESS', reelId, userId });
-        ServicoHTTPResposta.sucesso(res, updatedReel);
+        httpRes.sucesso(res, updatedReel);
     } catch (error) {
         console.error('Erro ao atualizar reel', { event: 'REEL_UPDATE_ERROR', errorMessage: error.message, reelId, userId, data: req.body });
-        ServicoHTTPResposta.erro(res, error.message, 400, error.message);
+        httpRes.erro(res, error.message, 400);
     }
 };
 
@@ -78,10 +85,10 @@ const deleteReel = async (req, res) => {
     try {
         await ServicoReels.deleteReel(reelId, userId);
         console.log('Reel excluído com sucesso', { event: 'REEL_DELETE_SUCCESS', reelId, userId });
-        ServicoHTTPResposta.semConteudo(res);
+        httpRes.semConteudo(res);
     } catch (error) {
         console.error('Erro ao excluir reel', { event: 'REEL_DELETE_ERROR', errorMessage: error.message, reelId, userId });
-        ServicoHTTPResposta.erro(res, error.message, 400, error.message);
+        httpRes.erro(res, error.message, 400);
     }
 };
 

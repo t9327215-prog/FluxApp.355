@@ -3,7 +3,17 @@
 import Stripe from 'stripe';
 import config from '../config/Variaveis.Backend.js';
 import SistemaTaxasStripe from '../ServicosBackend/Sistema.Taxas.Stripe.js';
-import ServicoHTTPResposta from '../ServicosBackend/Servico.HTTP.Resposta.js';
+
+const httpRes = {
+    sucesso: (r, dados, m = "Sucesso") => r.status(200).json({ sucesso: true, mensagem: m, dados }),
+    criado: (r, dados, m = "Criado com sucesso") => r.status(201).json({ sucesso: true, mensagem: m, dados }),
+    requisicaoInvalida: (r, m = "Requisição inválida") => r.status(400).json({ sucesso: false, mensagem: m }),
+    erro: (r, m = "Erro interno", s = 500) => r.status(s).json({ sucesso: false, mensagem: m }),
+    naoAutorizado: (r, m = "Não autorizado") => r.status(401).json({ sucesso: false, mensagem: m }),
+    naoEncontrado: (r, m = "Recurso não encontrado") => r.status(404).json({ sucesso: false, mensagem: m }),
+    servicoIndisponivel: (r, m = "Serviço indisponível") => r.status(503).json({ sucesso: false, mensagem: m }),
+    requisicaoMalSucedida: (r, m = "Requisição mal sucedida") => r.status(400).json({ sucesso: false, mensagem: m }),
+};
 
 let stripe = null;
 
@@ -23,7 +33,7 @@ const getSellerStripeAccountId = async (sellerEmail) => {
 const createPaymentIntent = async (req, res) => {
     if (!stripe) {
         console.error('Erro ao criar intenção de pagamento Stripe: Stripe não configurado', { event: 'STRIPE_PAYMENT_INTENT_ERROR', errorMessage: 'Stripe not configured' });
-        return ServicoHTTPResposta.servicoIndisponivel(res, "O sistema de pagamentos não está configurado. Contate o suporte.");
+        return httpRes.servicoIndisponivel(res, "O sistema de pagamentos não está configurado. Contate o suporte.");
     }
 
     const { amount, currency, creatorEmail } = req.body;
@@ -31,7 +41,7 @@ const createPaymentIntent = async (req, res) => {
 
     if (!creatorEmail) {
         console.warn('O e-mail do criador é obrigatório', { event: 'STRIPE_CREATE_PAYMENT_INTENT_WARN', message: 'Creator email is required' });
-        return ServicoHTTPResposta.requisicaoMalSucedida(res, "O e-mail do criador é obrigatório para processar o pagamento.");
+        return httpRes.requisicaoMalSucedida(res, "O e-mail do criador é obrigatório para processar o pagamento.");
     }
 
     try {
@@ -39,7 +49,7 @@ const createPaymentIntent = async (req, res) => {
 
         if (!destinationAccountId) {
             console.warn('Conta de destino não encontrada', { event: 'STRIPE_CREATE_PAYMENT_INTENT_WARN', message: 'Destination account not found' });
-            return ServicoHTTPResposta.naoEncontrado(res, "A conta de pagamento do vendedor não foi encontrada ou não está conectada.");
+            return httpRes.naoEncontrado(res, "A conta de pagamento do vendedor não foi encontrada ou não está conectada.");
         }
 
         const applicationFee = SistemaTaxasStripe.calcularTaxaPlataforma(amount);
@@ -55,18 +65,18 @@ const createPaymentIntent = async (req, res) => {
         });
 
         console.log('Intenção de pagamento Stripe criada com sucesso', { event: 'STRIPE_CREATE_PAYMENT_INTENT_SUCCESS', paymentIntentId: paymentIntent.id });
-        ServicoHTTPResposta.criado(res, { clientSecret: paymentIntent.client_secret });
+        httpRes.criado(res, { clientSecret: paymentIntent.client_secret });
 
     } catch (error) {
         console.error('Erro ao criar intenção de pagamento Stripe', { event: 'STRIPE_CREATE_PAYMENT_INTENT_ERROR', errorMessage: error.message, amount, currency, creatorEmail });
-        ServicoHTTPResposta.erro(res, error.message, 400, error.message);
+        httpRes.erro(res, error.message, 400);
     }
 };
 
 const checkSessionStatus = async (req, res) => {
     if (!stripe) {
         console.error('Erro ao verificar status da sessão Stripe: Stripe não configurado', { event: 'STRIPE_CHECK_SESSION_STATUS_ERROR', errorMessage: 'Stripe not configured' });
-        return ServicoHTTPResposta.servicoIndisponivel(res, "O sistema de pagamentos não está configurado. Contate o suporte.");
+        return httpRes.servicoIndisponivel(res, "O sistema de pagamentos não está configurado. Contate o suporte.");
     }
 
     const { sessionId } = req.params;
@@ -75,10 +85,10 @@ const checkSessionStatus = async (req, res) => {
     try {
         const session = await stripe.checkout.sessions.retrieve(sessionId);
         console.log('Status da sessão Stripe verificado com sucesso', { event: 'STRIPE_CHECK_SESSION_STATUS_SUCCESS', sessionId, status: session.status });
-        ServicoHTTPResposta.sucesso(res, { status: session.status, payment_status: session.payment_status });
+        httpRes.sucesso(res, { status: session.status, payment_status: session.payment_status });
     } catch (error) {
         console.error('Erro ao verificar status da sessão Stripe', { event: 'STRIPE_CHECK_SESSION_STATUS_ERROR', errorMessage: error.message, sessionId });
-        ServicoHTTPResposta.erro(res, error.message, 400, error.message);
+        httpRes.erro(res, error.message, 400);
     }
 };
 
