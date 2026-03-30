@@ -130,7 +130,7 @@ class ServicoAutenticacao {
     loginGoogle.iniciarLogin();
   }
 
-  public async finalizarLoginComGoogle(idToken: string): Promise<void> {
+  public async finalizarLoginComGoogle(idToken: string): Promise<string> {
     const operation = 'finalizarLoginComGoogle';
     logger.logOperationStart(operation);
     try {
@@ -141,14 +141,16 @@ class ServicoAutenticacao {
         tokenProvider: idToken,
       });
 
-      if (resultado && resultado.usuario && resultado.token) {
+      if (resultado && resultado.sucesso && resultado.dados && resultado.dados.user && resultado.dados.token) {
         this.estado = {
           autenticado: true,
-          usuario: resultado.usuario,
-          token: resultado.token,
+          usuario: resultado.dados.user,
+          token: resultado.dados.token,
         };
         this.notificarListeners();
-        logger.logOperationSuccess(operation, { userId: resultado.usuario.id });
+        logger.logOperationSuccess(operation, { userId: resultado.dados.user.id });
+        
+        return resultado.dados.redirect || "Feed";
       } else {
         throw new Error('A resposta do backend para o login social foi inválida.');
       }
@@ -157,7 +159,7 @@ class ServicoAutenticacao {
       logger.logOperationError(operation, error as Error);
       this.estado = { autenticado: false, usuario: null, token: null };
       this.notificarListeners();
-      throw error
+      throw error;
     }
   }
 
@@ -188,3 +190,10 @@ export const servicoAutenticacao = new ServicoAutenticacao();
 
 export type { IEstadoAutenticacao as AuthState };
 export type { IRegistroParams, IResultadoRegistro };
+
+export interface LoginEmailParams {
+  email: string;
+  senha: string;
+}
+
+export type IAuthService = typeof servicoAutenticacao;

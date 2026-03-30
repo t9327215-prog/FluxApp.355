@@ -142,9 +142,53 @@ const logout = async (req, res, next) => {
     }
 };
 
+const googleLoginFromFrontend = async (req, res, next) => {
+    const dadosRequisicao = { userAgent: req.headers['user-agent'], ipAddress: req.ip };
+    const { email, nome, googleId, avatarUrl, tokenProvider } = req.body;
+    logger.info(`Iniciando login Google via Frontend para o e-mail ${email}.`, { email, ...dadosRequisicao });
+
+    try {
+        if (!email || !googleId) {
+            return ServicoResposta.requisicaoInvalida(res, "Email e googleId são obrigatórios.");
+        }
+
+        const dadosGoogle = { google_id: googleId, email, nome: nome || '', foto: avatarUrl || '' };
+        const dadosGoogleValidados = validadorUsuario.validarGoogleAuth(dadosGoogle);
+
+        const { usuario, isNewUser } = await servicoUsuario.autenticarOuCriarPorGoogle(dadosGoogleValidados);
+        
+        if (!usuario || !usuario.id) {
+            throw new Error('Falha ao autenticar ou criar usuário via Google Frontend.');
+        }
+
+        const { token: sessionToken, dadosSessao } = await servicoSessao.prepararNovaSessao({ usuario, dadosRequisicao });
+        const dadosSessaoValidados = validadorSessao.validarNovaSessao(dadosSessao);
+        await servicoSessao.salvarSessao(dadosSessaoValidados);
+
+        let redirectRoute = 'Feed';
+        if (isNewUser || !usuario.perfilCompleto) {
+            redirectRoute = 'CompleteProfile';
+        }
+
+        logger.info(`Usuário ${usuario.id} autenticado com Google Frontend com sucesso.`, { userId: usuario.id, isNewUser, redirectRoute });
+        
+        return ServicoResposta.sucesso(res, { 
+            token: sessionToken, 
+            user: usuario.paraRespostaHttp(),
+            redirect: redirectRoute,
+            isNewUser
+        });
+
+    } catch (error) {
+        logger.error(`Erro no login Google via Frontend do e-mail ${email}:`, { email, error });
+        next(error);
+    }
+};
+
 export default {
     registrar,
     login,
     googleAuth,
+    googleLoginFromFrontend,
     logout
 };

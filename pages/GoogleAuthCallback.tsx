@@ -13,7 +13,14 @@ export const GoogleAuthCallback: React.FC = () => {
         const idToken = params.get('id_token');
 
         if (idToken) {
-            finalizarLoginComGoogle(idToken);
+            finalizarLoginComGoogle(idToken)
+                .then((redirectRoute) => {
+                    navigate('/' + redirectRoute);
+                })
+                .catch((err) => {
+                    console.error("Falha ao finalizar login do Google", err);
+                    navigate('/login?error=auth_failed');
+                });
         } else {
             console.error("Nenhum id_token encontrado no callback do Google.");
             navigate('/login?error=auth_failed');
@@ -25,16 +32,6 @@ export const GoogleAuthCallback: React.FC = () => {
             navigate(`/login?error=${erro}`);
         }
     }, [erro, navigate]);
-
-    useEffect(() => {
-        if (autenticado) {
-            if (usuario && !usuario.perfilCompleto) {
-                navigate('/CompleteProfile'); 
-            } else {
-                navigate('/Feed');
-            }
-        }
-    }, [autenticado, usuario, navigate]);
 
     return (
         <div className="h-screen w-full bg-[#0c0f14] flex flex-col items-center justify-center gap-4">

@@ -68,16 +68,18 @@ class AuthApplicationService {
     }
   }
 
-  async finalizarLoginComGoogle(idToken: string) {
+  async finalizarLoginComGoogle(idToken: string): Promise<string> {
     appServiceLogger.logOperationStart('finalizarLoginComGoogle');
     authStateManager.setState({ processando: true, erro: null });
     try {
-      await this.finalizarLoginComGoogleUseCase.execute(idToken);
+      const redirect = await this.finalizarLoginComGoogleUseCase.execute(idToken);
       authStateManager.setState({ processando: false });
+      return redirect;
     } catch (err: any) {
       const errorMessage = err.message || 'Erro ao finalizar login com Google';
       appServiceLogger.logOperationError('finalizarLoginComGoogle', err);
       authStateManager.setState({ erro: errorMessage, processando: false });
+      throw new Error(errorMessage);
     }
   }
 }

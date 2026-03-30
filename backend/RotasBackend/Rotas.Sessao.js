@@ -13,6 +13,7 @@ logger.info('Configurando rotas de sessão...');
 // Rotas públicas
 router.post('/registrar', controleSessao.registrar);
 router.post('/login', controleSessao.login);
+router.post('/google/login', controleSessao.googleLoginFromFrontend);
 router.get('/google/callback', controleSessao.googleAuth); // Corrigido de POST para GET
 
 // Rota protegida
