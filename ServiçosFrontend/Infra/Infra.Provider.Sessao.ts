@@ -11,7 +11,7 @@ class InfraProviderSessao {
     }
 
     public async lidarComLoginSocial(dadosLogin: any): Promise<any> {
-        return httpClient.post(API_ENDPOINTS.AUTH.LOGIN + '/google', dadosLogin);
+        return httpClient.post(API_ENDPOINTS.AUTH.GOOGLE_LOGIN, dadosLogin);
     }
 }
 

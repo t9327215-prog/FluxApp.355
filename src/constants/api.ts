@@ -6,6 +6,7 @@ export const API_ENDPOINTS = {
     REGISTER: `${BASE_URL}/auth/register`,
     REFRESH: `${BASE_URL}/auth/refresh`,
     LOGOUT: `${BASE_URL}/auth/logout`,
+    GOOGLE_LOGIN: `${BASE_URL}/auth/google/login`,
   },
 
   USERS: {
