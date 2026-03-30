@@ -1,6 +1,7 @@
 
 import { IRegistroParams, IResultadoRegistro } from './Processo.Registrar';
-import { DadosProvider } from '../Infra/DadosProvider';
+import { dadosProviderSessao } from '../Infra/Dados.Provider.Sessao';
+import { dadosProviderUsuario } from '../Infra/Dados.Provider.Usuario';
 import { loginGoogle, IUsuarioSocial } from './Login.Google';
 import { createServiceLogger } from '../SistemaObservabilidade/Log.Servicos.Frontend';
 
@@ -45,9 +46,9 @@ class ServicoAutenticacao {
 
   public async login(params: { email: string, senha: string }): Promise<void> {
     const operation = 'login';
-    logger.logOperationStart(operation, params.email);
+    logger.logOperationStart(operation, { email: params.email });
     try {
-        const result = await DadosProvider.login(params.email, params.senha);
+        const result = await dadosProviderSessao.login(params.email, params.senha);
         if (result.sucesso && result.usuario && result.token) {
             this.estado = {
                 autenticado: true,
@@ -79,7 +80,7 @@ class ServicoAutenticacao {
     const operation = 'registrar';
     logger.logOperationStart(operation, { email: dadosRegistro.email });
     try {
-        const resultado = await DadosProvider.criarUsuario(dadosRegistro);
+        const resultado = await dadosProviderSessao.criarUsuario(dadosRegistro);
         if(resultado.sucesso) {
             logger.logOperationSuccess(operation, { userId: resultado.usuarioId });
         } else {
@@ -102,9 +103,9 @@ class ServicoAutenticacao {
     }
 
     try {
-      const dadosCompletos = { ...dadosPerfil, id: this.estado.usuario.id };
+      const dadosCompletos = { ...dadosPerfil, id: this.estado.usuario!.id };
 
-      const resultado = await DadosProvider.completarPerfil(dadosCompletos);
+      const resultado = await dadosProviderUsuario.completarPerfil(dadosCompletos);
 
       if (resultado.sucesso && resultado.usuarioAtualizado) {
         this.estado = {
@@ -112,7 +113,7 @@ class ServicoAutenticacao {
           usuario: resultado.usuarioAtualizado,
         };
         this.notificarListeners();
-        logger.logOperationSuccess(operation, { userId: this.estado.usuario.id });
+        logger.logOperationSuccess(operation, { userId: this.estado.usuario!.id });
       } else {
         throw new Error(resultado.mensagem || 'Falha ao completar o perfil no provedor de dados.');
       }
@@ -136,7 +137,7 @@ class ServicoAutenticacao {
     try {
       const dadosUsuarioSocial: IUsuarioSocial = await loginGoogle.processarCallback(idToken);
       
-      const resultado = await DadosProvider.lidarComLoginSocial({
+      const resultado = await dadosProviderSessao.lidarComLoginSocial({
         ...dadosUsuarioSocial,
         tokenProvider: idToken,
       });
@@ -165,7 +166,7 @@ class ServicoAutenticacao {
 
   public async buscarUsuarioPorId(id: string): Promise<IUsuario | null> {
     try {
-        const response = await DadosProvider.buscarUsuarioPorId(id);
+        const response = await dadosProviderUsuario.buscarUsuarioPorId(id);
         return response.sucesso ? response.dados : null;
     } catch (error) {
         logger.logOperationError('buscarUsuarioPorId', error as Error, { userId: id });
