@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ServicoGestaoCredencialSyncPay as syncPayService } from '../../ServiçosFrontend/ServiçoDeProvedoresDePagamentos/ServiçoGestãoCredencialSyncPay.js';
-import { getInstanciaSuprema } from '../../ServiçosFrontend/ServiçoDeAutenticação/Auth.Application';
+import { getInstanciaSuprema } from '../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
 const authService = servicoAutenticacao;
 import { Group, User } from '../../types';
 

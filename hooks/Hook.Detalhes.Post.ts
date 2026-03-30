@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Auth.Application';
+import { servicoAutenticacao } from '../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
 const authService = servicoAutenticacao;
 import { PublicacaoFeed } from '../types/Saida/Types.Estrutura.Publicacao.Feed';
 import { HookAcoesPost } from './Hook.Acoes.Post';

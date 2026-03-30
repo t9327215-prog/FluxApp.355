@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Auth.Application';
+import { servicoAutenticacao } from '../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
 const authService = servicoAutenticacao;
 import { chatService } from '../ServiçosFrontend/ServiçoDeChat/chatService';
 import { User } from '../types';

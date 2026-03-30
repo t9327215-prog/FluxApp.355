@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Auth.Application';
+import { servicoAutenticacao } from '../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
 import { feedApplicationService } from '../ServiçosFrontend/ServicosDeAplicacao/Application.Layer.Feed';
 import { PublicacaoFeed } from '../types/Saida/Types.Estrutura.Publicacao.Feed';
 

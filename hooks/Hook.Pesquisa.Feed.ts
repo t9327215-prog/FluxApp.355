@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { feedPublicationService } from '../ServiçosFrontend/ServiçosDePublicações/Servico.Publicacao.Feed';
-import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Auth.Application';
+import { servicoAutenticacao } from '../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
 const authService = servicoAutenticacao;
 import { PublicacaoFeed } from '../types/Saida/Types.Estrutura.Publicacao.Feed';
 import { Autor } from '../types/Saida/Types.Estrutura.Autor';

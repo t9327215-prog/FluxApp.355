@@ -5,7 +5,7 @@ import SistemaNucleoApp from './Sistema.Nucleo.App';
 import { loadEnvironment } from '../ServiçosFrontend/ValidaçãoDeAmbiente/config.ts';
 import AppFlux from './App.Flux';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { servicoAutenticacao } from '../ServiçosFrontend/ServiçoDeAutenticação/Auth.Application.ts';
+import { servicoAutenticacao } from '../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
