@@ -1,83 +1,58 @@
-
 import { createApplicationServiceLogger } from '../SistemaObservabilidade/Log.Aplication';
-import { servicoAutenticacao, LoginEmailParams } from '../ServiçoDeAutenticação/Auth.Application';
-import { LoginUseCase } from '../UseCases/Login.usecase';
-import { LogoutUseCase } from '../UseCases/Logout.usecase';
-import { IniciarLoginComGoogleUseCase } from '../UseCases/IniciarLoginComGoogle.usecase';
-import { FinalizarLoginComGoogleUseCase } from '../UseCases/FinalizarLoginComGoogle.usecase';
-// Importa o novo gerenciador de estado
+import { authService } from '../Auth/AuthService';
 import { authStateManager } from '../Estados/Manager.Estado.Autenticacao';
+import { ILoginParams } from '../Auth/types';
 
 const appServiceLogger = createApplicationServiceLogger('AuthApplicationService');
 
 class AuthApplicationService {
-  // Casos de Uso permanecem os mesmos
-  private loginUseCase: LoginUseCase;
-  private logoutUseCase: LogoutUseCase;
-  private iniciarLoginComGoogleUseCase: IniciarLoginComGoogleUseCase;
-  private finalizarLoginComGoogleUseCase: FinalizarLoginComGoogleUseCase;
-
   constructor() {
-    this.loginUseCase = new LoginUseCase(servicoAutenticacao);
-    this.logoutUseCase = new LogoutUseCase(servicoAutenticacao);
-    this.iniciarLoginComGoogleUseCase = new IniciarLoginComGoogleUseCase(servicoAutenticacao);
-    this.finalizarLoginComGoogleUseCase = new FinalizarLoginComGoogleUseCase(servicoAutenticacao);
-
-    // Medida de transição: Sincroniza o estado do serviço legado com o novo state manager.
-    servicoAutenticacao.subscribe((legacyState) => {
-        authStateManager.setState({
-            autenticado: legacyState.autenticado,
-            usuario: legacyState.usuario,
-            token: legacyState.token
-        });
+    authService.subscribe((serviceState) => {
+      authStateManager.setState({
+        autenticado: serviceState.autenticado,
+        usuario: serviceState.usuario,
+        token: serviceState.token,
+      });
     });
-
-    appServiceLogger.logOperationStart('constructor');
   }
 
-  // --- MÉTODOS PÚBLICOS ---
-
-  async loginComEmail(params: LoginEmailParams) {
+  async loginComEmail(params: ILoginParams): Promise<void> {
     appServiceLogger.logOperationStart('loginComEmail', { email: params.email });
     authStateManager.setState({ processando: true, erro: null });
+
     try {
-      await this.loginUseCase.execute(params);
+      await authService.loginWithEmail(params.email, params.senha);
       authStateManager.setState({ processando: false });
-    } catch (err: any) {
-      const errorMessage = err.message || 'Erro ao fazer login';
-      appServiceLogger.logOperationError('loginComEmail', err, { email: params.email });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao fazer login';
+      appServiceLogger.logOperationError('loginComEmail', err as Error, { email: params.email });
       authStateManager.setState({ erro: errorMessage, processando: false });
       throw new Error(errorMessage);
     }
   }
 
-  async logout() {
+  async logout(): Promise<void> {
     appServiceLogger.logOperationStart('logout');
-    await this.logoutUseCase.execute();
+    await authService.logout();
   }
 
-  async iniciarLoginComGoogle() {
+  iniciarLoginComGoogle(): void {
     appServiceLogger.logOperationStart('iniciarLoginComGoogle');
     authStateManager.setState({ processando: true, erro: null });
-    try {
-      await this.iniciarLoginComGoogleUseCase.execute();
-    } catch (err: any) {
-      const errorMessage = err.message || 'Erro ao iniciar login com Google';
-      appServiceLogger.logOperationError('iniciarLoginComGoogle', err);
-      authStateManager.setState({ erro: errorMessage, processando: false });
-    }
+    authService.iniciarLoginGoogle();
   }
 
   async finalizarLoginComGoogle(idToken: string): Promise<string> {
     appServiceLogger.logOperationStart('finalizarLoginComGoogle');
     authStateManager.setState({ processando: true, erro: null });
+
     try {
-      const redirect = await this.finalizarLoginComGoogleUseCase.execute(idToken);
+      const redirect = await authService.finalizarLoginGoogle(idToken);
       authStateManager.setState({ processando: false });
       return redirect;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Erro ao finalizar login com Google';
-      appServiceLogger.logOperationError('finalizarLoginComGoogle', err);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao finalizar login';
+      appServiceLogger.logOperationError('finalizarLoginComGoogle', err as Error);
       authStateManager.setState({ erro: errorMessage, processando: false });
       throw new Error(errorMessage);
     }

@@ -1,14 +1,4 @@
-
-import { IUsuario } from "./Auth.Application";
-
-// 1. DEFINIÇÃO DA INTERFACE DO ESTADO
-export interface IAuthState {
-    autenticado: boolean;
-    usuario: IUsuario | null;
-    token: string | null;
-    processando: boolean;
-    erro: string | null;
-}
+import { IAuthState } from "../Auth/types";
 
 // 2. CLASSE DO GERENCIADOR DE ESTADO
 class AuthStateManager {
