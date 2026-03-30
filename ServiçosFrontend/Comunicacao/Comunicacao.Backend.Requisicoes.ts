@@ -61,12 +61,18 @@ class HttpClient {
     public async customFetch(endpoint: string, options: RequestInit = {}, isRetry = false): Promise<any> {
         const startTime = performance.now();
         
-        // --- CONSTRUÇÃO DA URL (Estratégia Observabilidade) ---
-        // Garante que o endpoint use a URL base da API se não for uma URL completa
+        // --- DIAGNÓSTICO DE URL ---
+        const baseUrl = VariaveisFrontend.API_BASE_URL || '/api';
+        
         let url = endpoint;
-        if (!endpoint.startsWith('http') && !endpoint.startsWith(VariaveisFrontend.API_BASE_URL)) {
-            url = `${VariaveisFrontend.API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+        // Se o endpoint não começar com http(s) nem com o baseUrl, nós o prefixamos
+        if (!endpoint.startsWith('http') && !endpoint.startsWith(baseUrl)) {
+            const separator = (baseUrl.endsWith('/') || endpoint.startsWith('/')) ? '' : '/';
+            url = `${baseUrl}${separator}${endpoint}`;
         }
+
+        // Diagnostic log: ajuda a identificar se a URL está sendo construída corretamente
+        console.log(`[HTTP CLIENT] Preparando requisição: ${options.method || 'GET'} para ${url}`);
 
         // --- CONSTRUÇÃO DOS HEADERS (Estratégia Simples) ---
         const headers: Record<string, string> = {
@@ -109,7 +115,7 @@ class HttpClient {
                     return new Promise((resolve, reject) => {
                         this.failedQueue.push({ resolve, reject });
                     }).then(newToken => {
-                        headers.set('Authorization', `Bearer ${newToken}`);
+                        headers['Authorization'] = `Bearer ${newToken}`;
                         return this.customFetch(endpoint, { ...options, headers }, true);
                     });
                 }
@@ -131,7 +137,7 @@ class HttpClient {
                     localStorage.setItem('userToken', newToken);
                     this.processQueue(null, newToken);
                     
-                    headers.set('Authorization', `Bearer ${newToken}`);
+                    headers['Authorization'] = `Bearer ${newToken}`;
                     return await this.customFetch(endpoint, { ...options, headers }, true);
                 } catch (error) {
                     logger.error('Sessão expirada. Redirecionando para login.', error);

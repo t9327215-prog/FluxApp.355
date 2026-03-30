@@ -8,7 +8,8 @@
 
 // --- Processamento do Ambiente ---
 
-const env = import.meta.env;
+// Garante que o objeto env exista mesmo em ambientes onde import.meta.env não esteja definido (ex: testes unitários ou falha de injecção do Vite)
+const env = (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env : { MODE: 'development' };
 const isProduction = env.MODE === 'production';
 
 // --- Definição das Configurações ---
