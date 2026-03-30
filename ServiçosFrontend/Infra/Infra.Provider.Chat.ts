@@ -1,17 +1,17 @@
 import { httpClient } from '../Comunicacao/Comunicacao.Backend.Requisicoes';
-import { createLogger } from '../Comunicacao/Comunicacao.Backend.Observabilidade';
+import { API_ENDPOINTS } from '../../src/constants/api';
 
 class InfraProviderChat {
     public async listarConversas(): Promise<any[]> {
-        return httpClient.get('/api/chat/conversas');
+        return httpClient.get(API_ENDPOINTS.CONVERSATIONS.BASE);
     }
 
     public async obterMensagens(conversaId: string): Promise<any[]> {
-        return httpClient.get(`/api/chat/conversas/${conversaId}/mensagens`);
+        return httpClient.get(API_ENDPOINTS.CONVERSATIONS.MESSAGES(conversaId));
     }
 
     public async enviarMensagem(conversaId: string, mensagem: any): Promise<any> {
-        return httpClient.post(`/api/chat/conversas/${conversaId}/mensagens`, mensagem);
+        return httpClient.post(API_ENDPOINTS.CONVERSATIONS.MESSAGES(conversaId), mensagem);
     }
 }
 
