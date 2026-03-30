@@ -95,18 +95,22 @@ class Usuario {
 
         return {
             id: this.id,
-            nome: nomeGarantido, // Usa o nome garantido.
+            nome: nomeGarantido,
+            name: nomeGarantido, // Compatibilidade
             email: this.email,
             apelido: this.apelido,
+            nickname: this.apelido, // Compatibilidade
             bio: this.bio,
             site: this.site,
+            website: this.site, // Compatibilidade
             urlFoto: this.urlFoto,
+            photo_url: this.urlFoto, // Compatibilidade
             privado: this.privado,
+            is_private: this.privado, // Compatibilidade
             perfilCompleto: this.perfilCompleto,
-            contagemSeguidores: this.seguidores.length,
-            contagemSeguindo: this.seguindo.length,
-            seguidores: this.seguidores,
-            seguindo: this.seguindo,
+            profile_completed: this.perfilCompleto, // Compatibilidade
+            contagemSeguidores: (this.seguidores || []).length,
+            contagemSeguindo: (this.seguindo || []).length,
             dataCriacao: this.dataCriacao,
             dataAtualizacao: this.dataAtualizacao,
         };

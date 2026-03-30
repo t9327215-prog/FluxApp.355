@@ -15,7 +15,8 @@ const validarRegistro = (data = {}) => {
     logger.info('Iniciando validação para registro de novo usuário.', { data });
     const erros = [];
 
-    if (!data.nome || validator.isEmpty(data.nome, { ignore_whitespace: true })) {
+    const nome = data.nome || data.name;
+    if (!nome || validator.isEmpty(nome, { ignore_whitespace: true })) {
         erros.push("O nome é obrigatório.");
     }
 
@@ -35,9 +36,10 @@ const validarRegistro = (data = {}) => {
     
     logger.info('Validação de registro bem-sucedida.');
     return {
-        nome: data.nome.trim(),
+        nome: (data.nome || data.name).trim(),
         email: data.email.toLowerCase().trim(),
         senha: data.senha,
+        nickname: data.nickname || data.apelido,
     };
 };
 
@@ -80,7 +82,8 @@ const validarGoogleAuth = (data = {}) => {
     logger.info('Iniciando validação para autenticação Google.', { email: data.email });
     const erros = [];
 
-    if (!data.nome || validator.isEmpty(data.nome, { ignore_whitespace: true })) {
+    const nome = data.nome || data.name;
+    if (!nome || validator.isEmpty(nome, { ignore_whitespace: true })) {
         erros.push("O nome do Google é obrigatório.");
     }
 
@@ -100,7 +103,7 @@ const validarGoogleAuth = (data = {}) => {
 
     logger.info('Validação Google Auth bem-sucedida.');
     return {
-        nome: data.nome.trim(),
+        nome: (data.nome || data.name).trim(),
         email: data.email.toLowerCase().trim(),
         google_id: data.google_id.trim(),
     };
@@ -116,20 +119,22 @@ const validarAtualizacaoPerfil = (data = {}) => {
     const erros = [];
     const dadosValidados = {};
 
-    if (data.apelido !== undefined) {
-        if (!validator.isLength(data.apelido.trim(), { min: 3 })) {
+    const apelido = data.apelido || data.nickname;
+    if (apelido !== undefined) {
+        if (!validator.isLength(apelido.trim(), { min: 3 })) {
             erros.push("Apelido, se fornecido, deve ter no mínimo 3 caracteres.");
         } else {
-            dadosValidados.apelido = data.apelido.trim();
+            dadosValidados.nickname = apelido.trim();
         }
     }
 
-    if (data.site !== undefined) {
-        const siteTrimmed = data.site.trim();
+    const site = data.site || data.website;
+    if (site !== undefined) {
+        const siteTrimmed = site.trim();
         if (siteTrimmed !== '' && !validator.isURL(siteTrimmed)) {
             erros.push("O site, se fornecido, deve ser uma URL válida.");
         } else {
-            dadosValidados.site = siteTrimmed;
+            dadosValidados.website = siteTrimmed;
         }
     }
     
@@ -141,11 +146,12 @@ const validarAtualizacaoPerfil = (data = {}) => {
         }
     }
 
-    if (data.privado !== undefined) {
-        if (typeof data.privado !== 'boolean') {
+    const privado = data.privado !== undefined ? data.privado : data.is_private;
+    if (privado !== undefined) {
+        if (typeof privado !== 'boolean') {
             erros.push("O campo 'privado', se fornecido, deve ser um valor booleano.");
         } else {
-            dadosValidados.privado = data.privado;
+            dadosValidados.is_private = privado;
         }
     }
 

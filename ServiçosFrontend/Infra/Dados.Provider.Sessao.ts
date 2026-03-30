@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { DadosBase } from './Dados.Base';
 import { infraProviderSessao } from './Infra.Provider.Sessao';
+import { mapearFrontendParaBackend } from '../Contratos/Contrato.Comunicacao.Usuario';
 
 const UsuarioRequestSchema = z.object({
   nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres."),
@@ -28,7 +29,7 @@ class DadosProviderSessao extends DadosBase {
 
     async login(email: string, senha: string): Promise<any> {
         return this.handleRequest(LoginSchema, { email, senha }, (dadosValidos) => 
-            infraProviderSessao.login(dadosValidos)
+            infraProviderSessao.login(mapearFrontendParaBackend(dadosValidos))
         );
     }
 
@@ -40,7 +41,7 @@ class DadosProviderSessao extends DadosBase {
 
     async criarUsuario(dadosUsuario: unknown): Promise<any> {
         return this.handleRequest(UsuarioRequestSchema, dadosUsuario, (dadosValidos) => 
-            infraProviderSessao.criarUsuario(dadosValidos)
+            infraProviderSessao.criarUsuario(mapearFrontendParaBackend(dadosValidos))
         );
     }
 }

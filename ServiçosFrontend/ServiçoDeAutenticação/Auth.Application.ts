@@ -1,27 +1,15 @@
-
 import { IRegistroParams, IResultadoRegistro } from './Processo.Registrar';
+import { IUsuarioDto, mapearBackendParaFrontend } from '../Contratos/Contrato.Comunicacao.Usuario';
 import { dadosProviderSessao } from '../Infra/Dados.Provider.Sessao';
 import { dadosProviderUsuario } from '../Infra/Dados.Provider.Usuario';
 import { loginGoogle, IUsuarioSocial } from './Login.Google';
 import { createServiceLogger } from '../SistemaObservabilidade/Log.Servicos.Frontend';
 
-export interface IUsuario {
-    id: string;
-    nome: string;
-    nickname: string;
-    email: string;
-    avatarUrl?: string;
-    website?: string;
-    bio?: string;
-    perfilCompleto: boolean;
-    googleId?: string;
-  }
-  
-  export interface IEstadoAutenticacao {
-    autenticado: boolean;
-    usuario: IUsuario | null;
-    token: string | null;
-  }
+export interface IEstadoAutenticacao {
+  autenticado: boolean;
+  usuario: IUsuarioDto | null;
+  token: string | null;
+}
 
 type Listener = (estado: IEstadoAutenticacao) => void;
 
@@ -52,11 +40,11 @@ class ServicoAutenticacao {
         if (result.sucesso && result.usuario && result.token) {
             this.estado = {
                 autenticado: true,
-                usuario: result.usuario,
+                usuario: mapearBackendParaFrontend(result.usuario),
                 token: result.token
             };
             this.notificarListeners();
-            logger.logOperationSuccess(operation, { userId: result.usuario.id });
+            logger.logOperationSuccess(operation, { userId: result.usuario.id || result.usuario.id });
         } else {
             throw new Error(result.mensagem || 'Falha no login');
         }
@@ -76,13 +64,22 @@ class ServicoAutenticacao {
     logger.logOperationSuccess(operation);
   }
 
-  public async registrar(dadosRegistro: IRegistroParams): Promise<IResultadoRegistro> {
-    const operation = 'registrar';
+  public async criarConta(dadosRegistro: IRegistroParams): Promise<IResultadoRegistro> {
+    const operation = 'criarConta';
     logger.logOperationStart(operation, { email: dadosRegistro.email });
     try {
         const resultado = await dadosProviderSessao.criarUsuario(dadosRegistro);
         if(resultado.sucesso) {
             logger.logOperationSuccess(operation, { userId: resultado.usuarioId });
+            // Se o registro retornar o usuário e token, já autenticamos
+            if (resultado.usuario && resultado.token) {
+                this.estado = {
+                    autenticado: true,
+                    usuario: mapearBackendParaFrontend(resultado.usuario),
+                    token: resultado.token
+                };
+                this.notificarListeners();
+            }
         } else {
             logger.logOperationError(operation, new Error(resultado.mensagem));
         }
@@ -93,7 +90,7 @@ class ServicoAutenticacao {
     }
   }
 
-  public async completarPerfil(dadosPerfil: Partial<IUsuario>): Promise<void> {
+  public async completarPerfil(dadosPerfil: Partial<IUsuarioDto>): Promise<void> {
     const operation = 'completarPerfil';
     logger.logOperationStart(operation);
 
@@ -110,7 +107,7 @@ class ServicoAutenticacao {
       if (resultado.sucesso && resultado.usuarioAtualizado) {
         this.estado = {
           ...this.estado,
-          usuario: resultado.usuarioAtualizado,
+          usuario: mapearBackendParaFrontend(resultado.usuarioAtualizado),
         };
         this.notificarListeners();
         logger.logOperationSuccess(operation, { userId: this.estado.usuario!.id });
@@ -145,7 +142,7 @@ class ServicoAutenticacao {
       if (resultado && resultado.sucesso && resultado.dados && resultado.dados.user && resultado.dados.token) {
         this.estado = {
           autenticado: true,
-          usuario: resultado.dados.user,
+          usuario: mapearBackendParaFrontend(resultado.dados.user),
           token: resultado.dados.token,
         };
         this.notificarListeners();
@@ -164,10 +161,10 @@ class ServicoAutenticacao {
     }
   }
 
-  public async buscarUsuarioPorId(id: string): Promise<IUsuario | null> {
+  public async buscarUsuarioPorId(id: string): Promise<IUsuarioDto | null> {
     try {
         const response = await dadosProviderUsuario.buscarUsuarioPorId(id);
-        return response.sucesso ? response.dados : null;
+        return response.sucesso ? mapearBackendParaFrontend(response.dados) : null;
     } catch (error) {
         logger.logOperationError('buscarUsuarioPorId', error as Error, { userId: id });
         return null;
