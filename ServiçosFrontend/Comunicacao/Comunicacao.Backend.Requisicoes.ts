@@ -1,23 +1,40 @@
 // ServiçosFrontend/Comunicacao/Comunicacao.Backend.Requisicoes.ts
 
-import LoggerParaInfra from '../SistemaObservabilidade/Log.Infra';
+import { createLogger } from './Comunicacao.Backend.Observabilidade';
 
-const logger = new LoggerParaInfra('HttpClient');
+// Diagnóstico de carregamento de módulo (visível no console do navegador e logs do Render)
+console.log('[SISTEMA] Módulo Comunicacao.Backend.Requisicoes carregando...');
 
-// Palavras-chave para mascaramento de dados sensíveis
-const chavesSensiveis = ['password', 'token', 'authorization', 'cookie', 'senha', 'refreshToken'];
+// Criando o logger via fábrica direta para evitar dependências circulares com Log.Infra
+const logger = createLogger('Infra.HttpClient');
 
-const mascararDados = (obj: any): any => {
-    if (obj === null || typeof obj !== 'object') return obj;
-    if (Array.isArray(obj)) return obj.map(mascararDados);
-    return Object.keys(obj).reduce((acc, key) => {
-        if (chavesSensiveis.some(k => key.toLowerCase().includes(k))) {
-            acc[key] = '[MASCARADO]';
-        } else {
-            acc[key] = mascararDados(obj[key]);
+const chavesSensiveis = ['password', 'token', 'authorization', 'cookie', 'senha', 'refreshToken', 'secret'];
+
+/**
+ * Mascaramento leve de objetos para log.
+ * @param obj - O dado a ser mascarado.
+ * @returns - O dado mascarado (cópia superficial ou parcial).
+ */
+const mascararLog = (obj: any): any => {
+    try {
+        if (obj === null || typeof obj !== 'object') return obj;
+        if (obj instanceof FormData) return '[FormData]';
+        if (Array.isArray(obj)) return `[Array(${obj.length})]`;
+        
+        const clone: any = {};
+        for (const key in obj) {
+            if (chavesSensiveis.some(k => key.toLowerCase().includes(k))) {
+                clone[key] = '[MASCARADO]';
+            } else {
+                const val = obj[key];
+                // Evita recursão profunda para evitar estouros de pilha no log
+                clone[key] = (typeof val === 'object' && val !== null) ? '[Object]' : val;
+            }
         }
-        return acc;
-    }, {} as any);
+        return clone;
+    } catch (e) {
+        return '[Erro ao mascarar log]';
+    }
 };
 
 class HttpClient {
@@ -33,53 +50,47 @@ class HttpClient {
     }
 
     public async customFetch(endpoint: string, options: RequestInit = {}, isRetry = false): Promise<any> {
-        // Gera um ID de rastreio para correlação entre logs de frontend e backend
-        const traceId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
+        // Geração de Trace ID compatível com browsers antigos e Capacitor
+        const traceId = (typeof crypto !== 'undefined' && crypto.randomUUID) 
+            ? crypto.randomUUID() 
+            : Math.random().toString(36).substring(2, 15);
         
-        // --- GESTÃO DE HEADERS ---
         const headers = new Headers();
-        // Define o tipo de conteúdo padrão como JSON
         headers.set('Content-Type', 'application/json');
-        // Adiciona o trace-id
         headers.set('x-trace-id', traceId);
 
-        // Mescla headers passados nas opções (podem ser um objeto simples ou um objeto Headers)
         if (options.headers) {
             const extraHeaders = new Headers(options.headers);
-            extraHeaders.forEach((valor, chave) => {
-                headers.set(chave, valor);
-            });
+            extraHeaders.forEach((valor, chave) => headers.set(chave, valor));
         }
 
-        // Adiciona o token de autorização, se existir
         const token = localStorage.getItem('userToken');
-        if (token) {
-            headers.set('Authorization', `Bearer ${token}`);
-        }
+        if (token) headers.set('Authorization', `Bearer ${token}`);
 
         const config: RequestInit = { ...options, headers };
         const startTime = performance.now();
         const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
 
-        // --- LOG DE REQUISIÇÃO (Frontend) ---
-        try {
-            const requestLog = {
-                method: config.method || 'GET',
-                url: url,
-                headers: Object.fromEntries(headers.entries()),
-                // Exibe o corpo sem tentar fazer parse (evita crash se já for um objeto ou se for FormData)
-                body: config.body || null
-            };
-            logger.info(`Request: ${requestLog.method} ${requestLog.url}`, mascararDados(requestLog));
-        } catch (e) {
-            // Silenciosamente ignora falhas de log para não interromper a requisição principal
+        // Se for FormData, removemos o Content-Type manual para o navegador definir o boundary correto
+        if (config.body instanceof FormData) {
+            headers.delete('Content-Type');
         }
+
+        // --- Log Simples de Requisição ---
+        try {
+            logger.info(`Request: ${config.method || 'GET'} ${url}`, {
+                traceId,
+                url,
+                method: config.method || 'GET',
+                // Mascaramos apenas os headers para segurança básica
+                headers: mascararLog(Object.fromEntries(headers.entries()))
+            });
+        } catch (e) {}
 
         try {
             const response = await fetch(url, config);
             const duration = (performance.now() - startTime).toFixed(2);
 
-            // --- TRATAMENTO DE RENOVAÇÃO DE TOKEN (401 Unauthorized) ---
             if (response.status === 401 && !isRetry) {
                 if (this.isRefreshing) {
                     return new Promise((resolve, reject) => {
@@ -93,15 +104,15 @@ class HttpClient {
                 this.isRefreshing = true;
                 try {
                     const refreshToken = localStorage.getItem('refreshToken');
-                    if (!refreshToken) throw new Error('Nenhum refresh token disponível.');
+                    if (!refreshToken) throw new Error('Refresh token não encontrado.');
                     
-                    const refreshResponse = await fetch(`/api/auth/refresh`, {
+                    const refreshResponse = await fetch('/api/auth/refresh', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ refreshToken })
                     });
 
-                    if (!refreshResponse.ok) throw new Error('Falha ao renovar o token.');
+                    if (!refreshResponse.ok) throw new Error('Falha na renovação do token.');
                     
                     const { token: newToken } = await refreshResponse.json();
                     localStorage.setItem('userToken', newToken);
@@ -110,7 +121,7 @@ class HttpClient {
                     headers.set('Authorization', `Bearer ${newToken}`);
                     return await this.customFetch(endpoint, { ...options, headers }, true);
                 } catch (error) {
-                    logger.error('Erro ao renovar o token, deslogando usuário.', error);
+                    logger.error('Sessão expirada. Redirecionando para login.', error);
                     this.processQueue(error, null);
                     localStorage.removeItem('userToken');
                     localStorage.removeItem('refreshToken');
@@ -121,31 +132,31 @@ class HttpClient {
                 }
             }
 
-            // --- PROCESSAMENTO DA RESPOSTA ---
-            const data = await response.json().catch(() => null);
+            // Tratamento de resposta vazia ou não JSON
+            const text = await response.text();
+            let data = null;
+            try {
+                data = text ? JSON.parse(text) : null;
+            } catch (e) {
+                data = { raw: text };
+            }
             
             if (!response.ok) {
                 logger.error(`Response Error: ${response.status} ${url}`, { 
                     duration: `${duration}ms`, 
-                    status: response.status, 
-                    data: mascararDados(data) 
+                    data: mascararLog(data) 
                 });
-                const error = new Error(data?.mensagem || data?.message || `Requisição falhou com status ${response.status}`);
+                const error = new Error(data?.mensagem || data?.message || `Erro ${response.status}`);
                 (error as any).response = { data, status: response.status };
                 throw error;
             }
 
-            logger.info(`Response Success: ${response.status} ${url}`, { 
-                duration: `${duration}ms`, 
-                status: response.status, 
-                data: mascararDados(data) 
-            });
+            logger.info(`Response Success: ${response.status} ${url}`, { duration: `${duration}ms` });
             return data;
 
         } catch (error: any) {
-            // Captura erros de rede (DNS falhou, timeout, CORS bloqueado, etc)
             if (!(error instanceof Error && (error as any).response)) {
-                logger.error(`Network or Parsing Error: ${url}`, { error: error.message || error });
+                logger.error(`Connection Failed: ${url}`, { error: error.message });
             }
             throw error;
         }
@@ -156,13 +167,12 @@ class HttpClient {
     }
 
     public post<T = any>(url: string, data?: any, config?: any): Promise<T> {
-        // Se já for uma string ou FormData, usa diretamente. Caso contrário, stringifica.
-        const body = (typeof data === 'string' || data instanceof FormData) ? data : JSON.stringify(data);
+        const body = (data instanceof FormData || typeof data === 'string') ? data : JSON.stringify(data);
         return this.customFetch(url, { ...config, method: 'POST', body });
     }
 
     public put<T = any>(url: string, data?: any, config?: any): Promise<T> {
-        const body = (typeof data === 'string' || data instanceof FormData) ? data : JSON.stringify(data);
+        const body = (data instanceof FormData || typeof data === 'string') ? data : JSON.stringify(data);
         return this.customFetch(url, { ...config, method: 'PUT', body });
     }
 
@@ -172,3 +182,4 @@ class HttpClient {
 }
 
 export const httpClient = new HttpClient();
+console.log('[SISTEMA] Módulo Comunicacao.Backend.Requisicoes inicializado com sucesso.');

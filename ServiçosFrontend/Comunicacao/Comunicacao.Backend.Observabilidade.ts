@@ -29,6 +29,16 @@ interface LogEntry {
   data?: any;
 }
 
+// --- FÁBRICA DE LOGGER (Exportada no topo para evitar problemas de dependência circular) ---
+
+export const createLogger = (module: string) => ({
+  log: (message: any, data?: any) => performLog('INFO', module, message, data),
+  info: (message: any, data?: any) => performLog('INFO', module, message, data),
+  warn: (message: any, data?: any) => performLog('WARN', module, message, data),
+  error: (message: any, error?: any) => performLog('ERROR', module, message, error),
+  debug: (message: any, data?: any) => performLog('DEBUG', module, message, data),
+});
+
 // --- LÓGICA DE MASCARAMENTO ---
 
 const chavesSensiveis = ['token', 'password', 'senha', 'authorization', 'secret', 'apiKey', 'clientSecret'];
@@ -96,16 +106,6 @@ const enviarLogParaBackend = async (logEntry: LogEntry) => {
     console.error('Falha ao enviar log para o backend:', error);
   }
 };
-
-// --- FÁBRICA DE LOGGER ---
-
-export const createLogger = (module: string) => ({
-  log: (message: any, data?: any) => performLog('INFO', module, message, data),
-  info: (message: any, data?: any) => performLog('INFO', module, message, data),
-  warn: (message: any, data?: any) => performLog('WARN', module, message, data),
-  error: (message: any, error?: any) => performLog('ERROR', module, message, error),
-  debug: (message: any, data?: any) => performLog('DEBUG', module, message, data),
-});
 
 // --- INTERFACE PÚBLICA LEGADA ---
 
