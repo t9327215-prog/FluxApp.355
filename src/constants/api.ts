@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
     LOGOUT: `${BASE_URL}/auth/logout`,
     GOOGLE_LOGIN: `${BASE_URL}/auth/google/login`,
     GET_CURRENT_USER: `${BASE_URL}/auth/me`,
+    COMPLETE_PROFILE: `${BASE_URL}/auth/complete-profile`,
   },
 
   USERS: {

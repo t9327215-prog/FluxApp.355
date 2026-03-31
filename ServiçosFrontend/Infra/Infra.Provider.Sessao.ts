@@ -13,6 +13,11 @@ class InfraProviderSessao {
     public async lidarComLoginSocial(dadosLogin: any): Promise<any> {
         return httpClient.post(API_ENDPOINTS.AUTH.GOOGLE_LOGIN, dadosLogin);
     }
+
+    public async completarPerfil(dados: any): Promise<any> {
+        return httpClient.post(API_ENDPOINTS.AUTH.COMPLETE_PROFILE, dados);
+    }
+
 }
 
 export const infraProviderSessao = new InfraProviderSessao();

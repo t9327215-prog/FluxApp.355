@@ -22,6 +22,12 @@ const LoginSocialSchema = z.object({
     tokenProvider: z.string(),
 });
 
+const CompletarPerfilSchema = z.object({
+  apelido: z.string().min(3, "O apelido deve ter pelo menos 3 caracteres."),
+  nome: z.string().min(3, "O nome de usuário deve ter pelo menos 3 caracteres."),
+  bio: z.string().optional(),
+});
+
 class DadosProviderSessao extends DadosBase {
     constructor() {
         super('DadosProvider.Sessao');
@@ -43,6 +49,25 @@ class DadosProviderSessao extends DadosBase {
         return this.handleRequest(UsuarioRequestSchema, dadosUsuario, (dadosValidos) => 
             infraProviderSessao.criarUsuario(mapearFrontendParaBackend(dadosValidos))
         );
+    }
+
+    async completarPerfil(idUsuario: string, apelido: string, nome: string, bio: string, avatar: File | null): Promise<any> {
+        const formData = new FormData();
+        formData.append('idUsuario', idUsuario);
+        formData.append('apelido', apelido);
+        formData.append('nome', nome);
+        formData.append('bio', bio);
+        if (avatar) {
+          formData.append('avatar', avatar, avatar.name);
+        }
+
+        try {
+            CompletarPerfilSchema.parse({ apelido, nome, bio });
+            return await infraProviderSessao.completarPerfil(formData);
+        } catch (error) {
+            this.log.error('Erro de validação ou de requisição ao completar perfil', { error });
+            throw error;
+        }
     }
 }
 
