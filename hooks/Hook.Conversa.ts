@@ -3,8 +3,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { chatService } from '../ServiçosFrontend/ServiçoDeChat/chatService';
 import { ChatMessage, User } from '../types';
-import { servicoAutenticacao } from '../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
-const authService = servicoAutenticacao;
+
 import { servicoDeSimulacao } from '../ServiçosFrontend/ServiçoDeSimulação';
 import { VirtuosoHandle } from 'react-virtuoso';
 import { socketService } from '../ServiçosFrontend/ServiçoDeSoquete/ServiçoDeSoquete.js';

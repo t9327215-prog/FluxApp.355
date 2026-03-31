@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { servicoAutenticacao } from '../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
-const authService = servicoAutenticacao;
+
 import { feedPublicationService } from '../ServiçosFrontend/ServiçosDePublicações/Servico.Publicacao.Feed';
 import { marketplacePublicationService } from '../ServiçosFrontend/ServiçosDePublicações/Servico.Publicacao.Marketplace';
 import { Usuario } from '../../types/Saida/Types.Estrutura.Usuario';

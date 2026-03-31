@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { servicoAutenticacao } from '../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
-const authService = servicoAutenticacao;
+
 
 export const HookConfiguracoes = () => {
     const [isPrivate, setIsPrivate] = useState(false);

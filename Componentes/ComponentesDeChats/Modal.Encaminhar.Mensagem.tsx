@@ -2,8 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { SistemaGrupoSupremo } from '../../ServiçosFrontend/ServiçoDeGrupos/Sistema.Grupo.Supremo';
 import { chatService } from '../../ServiçosFrontend/ServiçoDeChat/chatService';
-import { getInstanciaSuprema, servicoAutenticacao } from '../../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
-const authService = servicoAutenticacao;
+
 
 
 interface Conversation {

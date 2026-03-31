@@ -1,8 +1,7 @@
 
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getInstanciaSuprema, servicoAutenticacao } from '../../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
-const authService = servicoAutenticacao;
+
 
 import { ModalPreviaSyncPay } from './Modal.Previa.SyncPay';
 import { ModalPreviaStripe } from './Modal.Previa.Stripe';

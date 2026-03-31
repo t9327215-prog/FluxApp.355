@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { servicoAutenticacao } from '../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
-const authService = servicoAutenticacao;
+
 import { Usuario } from '../../types/Saida/Types.Estrutura.Usuario';
 
 export const HookPerfilTerceiro = (userId: string) => {

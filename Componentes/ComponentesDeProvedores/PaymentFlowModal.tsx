@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ModalOpcoesPagamentosSyncPay } from './CardsOpcoesDePagamentos/ModalOpcoesPagamentosSyncPay';
 import { ModalOpcoesPagamentosPayPal } from './CardsOpcoesDePagamentos/ModalOpcoesPagamentosPayPal';
 import { ModalOpcoesPagamentosStripe } from './CardsOpcoesDePagamentos/ModalOpcoesPagamentosStripe';
-import { getInstanciaSuprema, servicoAutenticacao } from '../../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
-const authService = servicoAutenticacao;
+
 import { GeoData } from '../../ServiçosFrontend/geoService';
 import { ConversionResult } from '../../ServiçosFrontend/currencyService';
 import { Group } from '../../types';

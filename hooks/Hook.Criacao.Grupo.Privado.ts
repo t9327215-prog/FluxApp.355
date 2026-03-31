@@ -2,8 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SistemaGrupoSupremo } from '../ServiçosFrontend/ServiçoDeGrupos/Sistema.Grupo.Supremo';
-import { servicoAutenticacao } from '../ServiçosFrontend/Estados/Manager.Estado.Autenticacao';
-const authService = servicoAutenticacao;
+
 
 export const useCreatePrivateGroup = () => {
     const navigate = useNavigate();
