@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/Hook.Autenticacao';
+import { useAuth } from '../SistemaFlux/Provedores/Provedor.Autenticacao';
 
 export const GoogleAuthCallback: React.FC = () => {
   const navigate = useNavigate();
