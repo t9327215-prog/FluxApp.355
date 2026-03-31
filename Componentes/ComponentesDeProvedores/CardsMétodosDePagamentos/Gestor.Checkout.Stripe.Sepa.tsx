@@ -3,26 +3,23 @@ import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { ServicoGestaoCredencialStripe } from '../../../ServiçosFrontend/ServiçoDeProvedoresDePagamentos/ServiçoGestãoCredencialStripe';
-import VariaveisFrontend from '../../../ServiçosFrontend/Config/Variaveis.Frontend.js';
 import { StripeSepaForm } from './StripeSepaForm';
 import { Group } from '../../../types';
 import { GeoData } from '../../../ServiçosFrontend/geoService';
 
 // Carrega a instância da Stripe. Isso deve ser feito fora da renderização para evitar recriações.
-const stripePromise = loadStripe(VariaveisFrontend.stripePublicKey);
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 interface GestorCheckoutStripeSepaProps {
     group: Group;
     geo: GeoData | null;
     onBack: () => void;
-    // A função onSuccess pode receber o ID da intenção de pagamento para referência futura.
     onSuccess: (paymentIntentId: string) => void;
 }
 
 /**
- * Componente "Wrapper" (Gestor) para o formulário de Débito SEPA.
- * Sua responsabilidade é criar uma Intenção de Pagamento no backend e
- * preparar o ambiente seguro da Stripe para o formulário de coleta de dados.
+ * Componente Gestor para o formulário de Débito Direto SEPA.
+ * Responsável por criar a Intenção de Pagamento e configurar o ambiente Stripe.
  */
 export const GestorCheckoutStripeSepa: React.FC<GestorCheckoutStripeSepaProps> = ({ group, geo, onBack, onSuccess }) => {
     const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -33,7 +30,7 @@ export const GestorCheckoutStripeSepa: React.FC<GestorCheckoutStripeSepaProps> =
         const createIntent = async () => {
             setLoading(true);
             try {
-                // Solicita ao backend a criação de uma intenção de pagamento específica para 'sepa_debit'.
+                // Cria uma intenção de pagamento para 'sepa_debit'.
                 const intent = await ServicoGestaoCredencialStripe.createPaymentIntent(group, group.creatorEmail!, 'sepa_debit');
                 if (intent.clientSecret) {
                     setClientSecret(intent.clientSecret);
@@ -47,9 +44,8 @@ export const GestorCheckoutStripeSepa: React.FC<GestorCheckoutStripeSepaProps> =
         };
 
         createIntent();
-    }, [group]); // Recria a intenção se o 'group' (produto) mudar.
+    }, [group]);
 
-    // Feedback visual durante o carregamento inicial.
     if (loading) {
         return (
             <div className="py-20 text-center animate-pulse">
@@ -59,7 +55,6 @@ export const GestorCheckoutStripeSepa: React.FC<GestorCheckoutStripeSepaProps> =
         );
     }
 
-    // Feedback visual em caso de erro na criação da intenção.
     if (error) {
         return (
             <div className="py-10 text-center text-red-400">
@@ -70,22 +65,18 @@ export const GestorCheckoutStripeSepa: React.FC<GestorCheckoutStripeSepaProps> =
         );
     }
 
-    // Não renderiza nada se o clientSecret não estiver pronto.
     if (!clientSecret) return null;
 
-    // Passa o clientSecret para o provider <Elements>.
     const options = { clientSecret };
 
     return (
         <Elements stripe={stripePromise} options={options}>
             <StripeSepaForm 
                 geo={geo} 
-                onBack={onBack} 
-                onSuccess={onSuccess}
-                // Passa o 'group' e o email do criador para o formulário,
-                // que precisará deles para preencher os dados de pagamento.
+                onBack={onBack}
                 group={group}
                 creatorEmail={group.creatorEmail!}
+                onSuccess={onSuccess}
             />
         </Elements>
     );

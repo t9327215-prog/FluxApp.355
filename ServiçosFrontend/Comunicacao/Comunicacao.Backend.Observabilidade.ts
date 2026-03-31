@@ -1,4 +1,4 @@
-import VariaveisFrontend from '../Config/Variaveis.Frontend';
+import VariaveisFrontend from '../../SistemaFlux/Variaveis.Frontend.js';
 
 // --- ESTRUTURA E TIPOS ---
 

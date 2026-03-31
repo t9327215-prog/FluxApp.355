@@ -3,12 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { ServicoGestaoCredencialStripe } from '../../../ServiçosFrontend/ServiçoDeProvedoresDePagamentos/ServiçoGestãoCredencialStripe.js';
-import VariaveisFrontend from '../../../ServiçosFrontend/Config/Variaveis.Frontend.js';
 import { FormularioStripePix } from './Formulário.Stripe.Pix'; // <-- Corrigido para importar o novo componente
 import { Group } from '../../../types';
 import { GeoData } from '../../../ServiçosFrontend/geoService';
 
-const stripePromise = loadStripe(VariaveisFrontend.stripePublicKey);
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 interface GestorCheckoutStripePixProps {
     group: Group;

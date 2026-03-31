@@ -1,5 +1,5 @@
 import { createLogger } from './Comunicacao.Backend.Observabilidade';
-import VariaveisFrontend from '../Config/Variaveis.Frontend';
+import VariaveisFrontend from '../../SistemaFlux/Variaveis.Frontend.js';
 
 // Diagnóstico de carregamento de módulo (visível no console do navegador e logs do Render)
 console.log('[SISTEMA] Módulo Comunicacao.Backend.Requisicoes carregando...');

@@ -3,8 +3,9 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import SistemaNucleoApp from './Sistema.Nucleo.App';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import VariaveisFrontend from './Variaveis.Frontend.js';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const { googleClientId } = VariaveisFrontend;
 
 function iniciarApp() {
   try {
@@ -20,14 +21,14 @@ function montaReact() {
     throw new Error("Elemento 'root' não foi encontrado.");
   }
 
-  if (!GOOGLE_CLIENT_ID) {
+  if (!googleClientId || googleClientId === 'CHAVE_NAO_DEFINIDA') {
     console.error("VITE_GOOGLE_CLIENT_ID não está definido. O login com Google não funcionará.");
   }
 
   const root = createRoot(rootElement);
   root.render(
     <React.StrictMode>
-      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID!}>
+      <GoogleOAuthProvider clientId={googleClientId!}>
         <SistemaNucleoApp />
       </GoogleOAuthProvider>
     </React.StrictMode>
