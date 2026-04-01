@@ -30,7 +30,7 @@ const logFormat = combine(
         // Monta a segunda linha
         let body = `[${info.timestamp}] ${info.message}`;
 
-        // Adiciona metadados extras, se existirem
+        // Adiciona metadados extras, se existirem, para a parte legível
         const extra = Object.keys(info).reduce((acc, key) => {
             if (!['level', 'message', 'timestamp', 'modulo', 'arquivo', 'splat', 'stack'].includes(key)) {
                 acc[key] = info[key];
@@ -44,13 +44,27 @@ const logFormat = combine(
         
         // Se houver stack trace (para erros), adicione-o
         if (info.stack) {
-            body += `
-Stack: ${info.stack}`;
+            body += `\nStack: ${info.stack}`;
         }
 
-        return `${header}
-${body}
-`;
+        // Função para lidar com referências circulares no JSON
+        const getCircularReplacer = () => {
+            const seen = new WeakSet();
+            return (key, value) => {
+                if (typeof value === 'object' && value !== null) {
+                    if (seen.has(value)) {
+                        return '[Circular]';
+                    }
+                    seen.add(value);
+                }
+                return value;
+            };
+        };
+
+        // Adiciona a representação JSON completa no final do log
+        const jsonString = JSON.stringify(info, getCircularReplacer(), 2);
+
+        return `${header}\n${body}\n\n--- JSON ---:\n${jsonString}\n----------------\n`;
     })
 );
 
