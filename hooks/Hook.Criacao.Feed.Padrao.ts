@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { feedPublicationService } from '../ServiçosFrontend/ServiçosDePublicações/Servico.Publicacao.Feed';
-import { servicoAutenticacao } from '../ServiçosFrontend/Servico.Autenticacao';
+import { useAuth } from '../SistemaFlux/Provedores/Provedor.Autenticacao'; // Caminho corrigido para o hook
 
 interface PostFormData {
     texto: string;
@@ -17,6 +17,7 @@ interface PostFormData {
 export const HookCriarPost = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { usuario } = useAuth(); // Utiliza o hook useAuth para obter o usuário
     const locationState = location.state as { isAd?: boolean } | null;
 
     const [dadosPost, setDadosPost] = useState<PostFormData>({
@@ -32,19 +33,6 @@ export const HookCriarPost = () => {
     const [isPublishDisabled, setIsPublishDisabled] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState<{ geral?: string } | null>(null);
-    
-    // Estado para armazenar o usuário atual
-    const [currentUser, setCurrentUser] = useState<any>(null);
-
-    useEffect(() => {
-        const verificarUsuario = async () => {
-            // Tentativa de obter o usuário da sessão
-            const user = await servicoAutenticacao.verificarSessao();
-            setCurrentUser(user);
-        };
-
-        verificarUsuario();
-    }, []);
 
     const updateField = useCallback((key: keyof PostFormData, value: any) => {
         setDadosPost(prev => ({ ...prev, [key]: value }));
@@ -60,7 +48,7 @@ export const HookCriarPost = () => {
 
     const handlePublishClick = async (e: React.MouseEvent) => {
         e.preventDefault();
-        if (isPublishDisabled || !currentUser) return;
+        if (isPublishDisabled || !usuario) return; // Verifica a existência do usuário
 
         setIsProcessing(true);
         setError(null);
@@ -105,6 +93,7 @@ export const HookCriarPost = () => {
         updateField('arquivosMidia', dadosPost.arquivosMidia.filter((_, i) => i !== index));
     };
 
+    // Lógica de localização mockada
     const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
     const [targetCountry, setTargetCountry] = useState('');
     const [targetState, setTargetState] = useState('');
@@ -115,17 +104,14 @@ export const HookCriarPost = () => {
 
     const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setTargetCountry(e.target.value);
-        setTargetState('');
-        setTargetCity('');
-        if (e.target.value === 'Brasil') setStates(['São Paulo', 'Rio de Janeiro']);
-        else setStates([]);
+        setTargetState(''); setTargetCity('');
+        if (e.target.value === 'Brasil') setStates(['São Paulo', 'Rio de Janeiro']); else setStates([]);
     };
 
     const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setTargetState(e.target.value);
         setTargetCity('');
-        if(e.target.value === 'São Paulo') setCities(['São Paulo', 'Campinas']);
-        else setCities([]);
+        if(e.target.value === 'São Paulo') setCities(['São Paulo', 'Campinas']); else setCities([]);
     };
 
     const saveLocation = () => {
@@ -144,8 +130,8 @@ export const HookCriarPost = () => {
         handleRemoveMedia,
         handleBack,
         handlePublishClick,
-        avatarUrl: currentUser?.photo_url,
-        username: currentUser?.nickname || currentUser?.name,
+        avatarUrl: usuario?.avatarUrl, // Corrigido para usar a propriedade do objeto usuario
+        username: usuario?.apelido || usuario?.nome, // Corrigido para usar as propriedades corretas
         navigate,
         isLocationModalOpen,
         setIsLocationModalOpen,
