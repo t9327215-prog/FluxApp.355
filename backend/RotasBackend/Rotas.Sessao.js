@@ -14,7 +14,7 @@ logger.info('Configurando rotas de sessão...');
 router.post('/registrar', controleSessao.registrar);
 router.post('/login', controleSessao.login);
 router.post('/google/login', controleSessao.googleLoginFromFrontend);
-router.get('/google/callback', controleSessao.googleAuth); // Corrigido de POST para GET
+router.get('/google/callback', controleSessao.googleAuth);
 
 // Rota protegida
 router.post('/logout', controleSessao.logout);

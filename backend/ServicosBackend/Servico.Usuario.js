@@ -1,6 +1,4 @@
 
-// backend/ServicosBackend/Servico.Usuario.js
-
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcryptjs';
 import Usuario from '../models/Models.Estrutura.Usuario.js';
@@ -8,6 +6,34 @@ import repositorioUsuario from '../Repositorios/Repositorio.Usuario.js';
 import createServicoLogger from '../config/Log.Servicos.Backend.js';
 
 const logger = createServicoLogger('Servico.Usuario.js');
+
+const completarPerfil = async (idUsuario, dadosPerfil, avatar) => {
+    logger.info(`Iniciando o processo de completar perfil para o usuário ${idUsuario}.`);
+
+    const usuarioExistente = await repositorioUsuario.encontrarPorId(idUsuario);
+    if (!usuarioExistente) {
+        logger.warn(`Usuário com ID ${idUsuario} não encontrado.`);
+        throw new Error('Usuário não encontrado.');
+    }
+
+    let urlAvatar = usuarioExistente.avatar;
+    if (avatar) {
+        // TODO: Implementar upload de arquivo para um serviço de armazenamento
+        logger.info(`Simulando upload do avatar para o usuário ${idUsuario}.`);
+        urlAvatar = `https://storage.googleapis.com/fictional-bucket/${avatar.originalname}`;
+    }
+
+    const dadosParaAtualizar = {
+        ...dadosPerfil,
+        avatar: urlAvatar,
+        perfilCompleto: true,
+    };
+
+    const usuarioAtualizadoDb = await repositorioUsuario.updateUser(idUsuario, dadosParaAtualizar);
+    logger.info(`Perfil do usuário ${idUsuario} completado com sucesso.`);
+
+    return Usuario.deBancoDeDados(usuarioAtualizadoDb);
+};
 
 const registrarNovoUsuario = async (dadosUsuario) => {
     const { nome, email, senha } = dadosUsuario;
@@ -122,6 +148,7 @@ const encontrarUsuarioPorId = async (id) => {
 };
 
 export default {
+    completarPerfil,
     registrarNovoUsuario,
     autenticarUsuarioPorCredenciais,
     autenticarOuCriarPorGoogle,
