@@ -1,6 +1,6 @@
 
 import React, { Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../SistemaFlux/Provedores/Provedor.Autenticacao';
 
 // Importa os arrays de rotas dos módulos
@@ -24,9 +24,10 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// Componente de Rota Protegida
+// Componente de Rota Protegida (AuthGate)
 const RotaProtegida = ({ children }) => {
-  const { autenticado, processando } = useAuth();
+  const { autenticado, processando, usuario } = useAuth();
+  const location = useLocation();
 
   if (processando) {
     return <LoadingSpinner />;
@@ -36,9 +37,18 @@ const RotaProtegida = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
+  // Redireciona para completar o perfil se não estiver completo
+  if (usuario && !usuario.perfilCompleto && location.pathname !== '/complete-profile') {
+    return <Navigate to="/complete-profile" replace />;
+  }
+
+  // Se o perfil está completo, não deixa acessar a página de completar perfil
+  if (usuario && usuario.perfilCompleto && location.pathname === '/complete-profile') {
+    return <Navigate to="/feed" replace />;
+  }
+
   return children;
 };
-
 
 // Rotas que exigem autenticação
 const protectedRoutes = [
@@ -55,13 +65,20 @@ const protectedRoutes = [
 ];
 
 const AppRoutes = () => {
+  const { autenticado } = useAuth();
+
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
-        {/* Rotas Públicas */}
+        {/* Rotas Públicas de Autenticação */}
         {authRoutes.map((route, index) => (
-          <Route key={index} path={route.path} element={route.element} />
+          <Route
+            key={index}
+            path={route.path}
+            element={autenticado ? <Navigate to="/feed" replace /> : route.element}
+          />
         ))}
+        {/* Outras Rotas Públicas */}
         {miscRoutes.map((route, index) => (
           <Route key={index} path={route.path} element={route.element} />
         ))}
@@ -75,8 +92,8 @@ const AppRoutes = () => {
           />
         ))}
 
-        {/* Rota Fallback: Redireciona para o feed (que será protegido) se nenhuma outra rota corresponder */}
-        <Route path="*" element={<Navigate to="/feed" replace />} />
+        {/* Rota Fallback */}
+        <Route path="*" element={<Navigate to={autenticado ? "/feed" : "/login"} replace />} />
       </Routes>
     </Suspense>
   );
