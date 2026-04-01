@@ -1,8 +1,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+// Importa o hook de autenticação
+import { useAuth } from '../SistemaFlux/Provedores/Provedor.Autenticacao';
+
 import { feedPublicationService } from '../ServiçosFrontend/ServiçosDePublicações/Servico.Publicacao.Feed';
 import { marketplacePublicationService } from '../ServiçosFrontend/ServiçosDePublicações/Servico.Publicacao.Marketplace';
+
+// Mantendo os imports de tipo como estavam, assumindo que a resolução de caminho lida com eles.
 import { Usuario } from '../../types/Saida/Types.Estrutura.Usuario';
 import { PublicacaoFeed } from '../../types/Saida/Types.Estrutura.Publicacao.Feed';
 import { PublicacaoMarketplace } from '../../types/Saida/Types.Estrutura.Publicacao.Marketplace';
@@ -11,25 +16,22 @@ import { PublicacaoMarketplace } from '../../types/Saida/Types.Estrutura.Publica
 type PerfilCompleto = Usuario & {
     posts: PublicacaoFeed[];
     products: PublicacaoMarketplace[];
+    // Adicionando campos que a página usa para evitar erros
+    photos?: any[]; 
+    reels?: any[];
 };
 
 export const HookPerfilProprio = () => {
+    // Usa o hook de autenticação para obter o usuário e o status
+    const { usuario, autenticado } = useAuth();
+    
     const [profile, setProfile] = useState<PerfilCompleto | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Se inscreve no estado de autenticação
-    const [authState, setAuthState] = useState(authService.getState());
-    const isAuthenticated = !!authState.user;
-
-    useEffect(() => {
-        const unsubscribe = authService.subscribe(setAuthState);
-        return () => unsubscribe();
-    }, []);
-
     const fetchProfileData = useCallback(async () => {
-        // Não faz nada se não estiver autenticado ou se já estiver carregando
-        if (!isAuthenticated || !authState.user?.id) {
+        // Não faz nada se não estiver autenticado ou se não houver usuário
+        if (!autenticado || !usuario) {
             setIsLoading(false);
             setProfile(null);
             return;
@@ -39,9 +41,8 @@ export const HookPerfilProprio = () => {
         setError(null);
 
         try {
-            const userId = authState.user.id;
-            const userData = authState.user; // Usando o usuário do estado de autenticação
-
+            const userId = usuario.id;
+            
             // Busca posts e produtos em paralelo
             const [allPosts, allProducts] = await Promise.all([
                 feedPublicationService.getPosts(),
@@ -52,9 +53,9 @@ export const HookPerfilProprio = () => {
             const userPosts = allPosts.filter(post => post.autorId === userId);
             const userProducts = allProducts.filter(product => product.usuarioId === userId);
 
-            // Combina os dados do usuário com suas publicações
+            // Combina os dados do usuário do contexto de autenticação com suas publicações
             const perfilCompleto: PerfilCompleto = {
-                ...userData,
+                ...(usuario as Usuario), // Cast para o tipo Usuario importado
                 posts: userPosts,
                 products: userProducts,
             };
@@ -68,9 +69,9 @@ export const HookPerfilProprio = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [isAuthenticated, authState.user]); // Depende do usuário do authState
+    }, [autenticado, usuario]); // A dependência agora é o usuário do contexto
 
-    // Lógica para buscar o perfil quando o estado de autenticação muda
+    // Efeito para buscar os dados do perfil quando o componente é montado ou o usuário muda
     useEffect(() => {
         fetchProfileData();
     }, [fetchProfileData]);
