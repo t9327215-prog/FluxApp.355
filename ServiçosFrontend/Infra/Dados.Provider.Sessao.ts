@@ -51,12 +51,13 @@ class DadosProviderSessao extends DadosBase {
         );
     }
 
-    async completarPerfil(idUsuario: string, apelido: string, nome: string, bio: string, avatar: File | null): Promise<any> {
+    async completarPerfil(idUsuario: string, apelido: string, nome: string, bio: string, avatar: File | null, tipoDeConta: 'public' | 'private'): Promise<any> {
         const formData = new FormData();
         formData.append('idUsuario', idUsuario);
         formData.append('apelido', apelido);
         formData.append('nome', nome);
         formData.append('bio', bio);
+        formData.append('tipoDeConta', tipoDeConta);
         if (avatar) {
           formData.append('avatar', avatar, avatar.name);
         }

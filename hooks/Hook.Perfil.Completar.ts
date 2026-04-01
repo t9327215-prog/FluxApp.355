@@ -2,7 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../SistemaFlux/Provedores/Provedor.Autenticacao';
-import { CompleteProfileViewModel, CompleteProfileForm } from '../viewmodels/CompleteProfileViewModel';
+
+interface CompleteProfileForm {
+    nickname: string;
+    name: string;
+    bio: string;
+    avatar: File | null;
+    accountType: 'public' | 'private';
+}
 
 export const useCompleteProfile = () => {
     const navigate = useNavigate();
@@ -17,6 +24,8 @@ export const useCompleteProfile = () => {
         register,
         handleSubmit,
         setError,
+        watch,
+        setValue,
         formState: { errors, isSubmitting },
     } = useForm<CompleteProfileForm>({
         mode: 'onChange',
@@ -24,6 +33,7 @@ export const useCompleteProfile = () => {
             nickname: usuario?.nome || '',
             name: '',
             bio: '',
+            accountType: 'public',
         }
     });
 
@@ -65,13 +75,14 @@ export const useCompleteProfile = () => {
 
     const aoSubmeter = async (form: CompleteProfileForm) => {
         try {
-            const { nickname, name, bio } = form;
+            const { nickname, name, bio, accountType } = form;
             if (usuario?.id) {
                 await completarPerfil({ 
                     apelido: nickname, 
                     nome: name, 
-                    bio, 
-                    avatar: arquivoSelecionado 
+                    bio,
+                    avatar: arquivoSelecionado,
+                    tipoDeConta: accountType
                 });
                 navigate('/feed');
             } else {
@@ -96,8 +107,9 @@ export const useCompleteProfile = () => {
 
     return {
         register,
-        handleSubmit,
-        aoSubmeter,
+        onSubmit: handleSubmit(aoSubmeter),
+        watch,
+        setValue,
         errors,
         isSubmitting,
         previaImagem,

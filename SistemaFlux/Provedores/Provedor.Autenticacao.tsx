@@ -19,7 +19,7 @@ export interface AuthContextType {
   processarLoginGoogle: (tokenResponse: any) => Promise<void>;
   logout: () => void;
   limparErro: () => void;
-  completarPerfil: (dados: { apelido: string; nome: string; bio: string; avatar: File | null }) => Promise<void>;
+  completarPerfil: (dados: { apelido: string; nome: string; bio: string; avatar: File | null; tipoDeConta: 'public' | 'private' }) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -81,7 +81,7 @@ export const ProvedorAutenticacao: React.FC<ProvedorAutenticacaoProps> = ({ chil
     }
   }, []);
 
-  const completarPerfil = useCallback(async (dados: { apelido: string; nome: string; bio: string; avatar: File | null }) => {
+  const completarPerfil = useCallback(async (dados: { apelido: string; nome: string; bio: string; avatar: File | null; tipoDeConta: 'public' | 'private' }) => {
     if (!usuario) throw new Error("Usuário não autenticado.");
     setProcessando(true);
     try {
@@ -90,7 +90,8 @@ export const ProvedorAutenticacao: React.FC<ProvedorAutenticacaoProps> = ({ chil
         dados.apelido,
         dados.nome,
         dados.bio,
-        dados.avatar
+        dados.avatar,
+        dados.tipoDeConta
       );
       setUsuario(usuarioAtualizado);
     } catch (error: any) {

@@ -5,8 +5,9 @@ import { ModalCorteImagem } from '../Componentes/ComponenteDeInterfaceDeUsuario/
 export const CompleteProfile: React.FC = () => {
     const {
         register,
-        handleSubmit,
-        aoSubmeter,
+        onSubmit,
+        watch,
+        setValue,
         errors,
         isSubmitting,
         previaImagem,
@@ -19,6 +20,11 @@ export const CompleteProfile: React.FC = () => {
     } = useCompleteProfile();
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const accountType = watch('accountType');
+
+    const handleToggle = () => {
+        setValue('accountType', accountType === 'public' ? 'private' : 'public');
+    };
 
     return (
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#0c0f14,_#0a0c10)] text-white font-['Inter'] flex flex-col justify-center items-center p-4">
@@ -34,6 +40,15 @@ export const CompleteProfile: React.FC = () => {
                 .error-message { color: #ff4d4d; font-size: 12px; margin-top: 5px; }
                 .submit-btn { width: 100%; padding: 14px; background: #00c2ff; color: #000; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; }
                 .logout-btn { background: none; border: none; color: #ff4d4d; font-size: 13px; cursor: pointer; display: block; text-align: center; margin-top: 20px; }
+                .account-type-group { display: flex; justify-content: space-between; align-items: center; background: #1a1e26; padding: 12px; border-radius: 8px; margin-bottom: 20px; }
+                .account-type-label { font-size: 15px; color: #fff; }
+                .account-type-value { font-size: 12px; color: #aaa; }
+                .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+                .switch input { opacity: 0; width: 0; height: 0; }
+                .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 28px; }
+                .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+                input:checked + .slider { background-color: #00c2ff; }
+                input:checked + .slider:before { transform: translateX(22px); }
             `}</style>
 
             <div className="form-container">
@@ -48,7 +63,7 @@ export const CompleteProfile: React.FC = () => {
                     <input type="file" ref={fileInputRef} onChange={aoMudarImagem} accept="image/*" hidden />
                 </div>
 
-                <form onSubmit={handleSubmit(aoSubmeter)}>
+                <form onSubmit={onSubmit}>
                     <div className="input-group">
                         <label>Seu apelido</label>
                         <input type="text" {...register('nickname')} placeholder="Ex: Seu Nome" />
@@ -65,6 +80,17 @@ export const CompleteProfile: React.FC = () => {
                         {errors.bio && <p className="error-message">{errors.bio.message}</p>}
                     </div>
 
+                    <div className="account-type-group">
+                        <div>
+                            <div className="account-type-label">Conta Privada</div>
+                            <div className="account-type-value">{accountType === 'private' ? 'Ativado' : 'Desativado'}</div>
+                        </div>
+                        <label className="switch">
+                            <input type="checkbox" checked={accountType === 'private'} onChange={handleToggle} />
+                            <span className="slider"></span>
+                        </label>
+                    </div>
+                    
                     {errors.root?.serverError && <p className="error-message text-center mb-4">{errors.root.serverError.message}</p>}
 
                     <button type="submit" className="submit-btn" disabled={isSubmitting}>{isSubmitting ? 'Finalizando...' : 'Concluir Cadastro'}</button>
