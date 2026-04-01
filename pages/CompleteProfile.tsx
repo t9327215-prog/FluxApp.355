@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { useCompleteProfile } from '../hooks/Hook.Perfil.Completar';
 import { ModalCorteImagem } from '../Componentes/ComponenteDeInterfaceDeUsuario/Modal.Corte.Imagem';

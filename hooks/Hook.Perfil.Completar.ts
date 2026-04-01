@@ -4,14 +4,9 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '../SistemaFlux/Provedores/Provedor.Autenticacao';
 import { CompleteProfileViewModel, CompleteProfileForm } from '../viewmodels/CompleteProfileViewModel';
 
-// Define a interface para as props do hook
-export interface UseCompleteProfileProps {
-  completarPerfil: (idUsuario: string, apelido: string, nome: string, bio: string, avatar: File | null) => Promise<any>;
-}
-
-export const useCompleteProfile = ({ completarPerfil }: UseCompleteProfileProps) => {
+export const useCompleteProfile = () => {
     const navigate = useNavigate();
-    const { usuario, autenticado, processando, logout } = useAuth();
+    const { usuario, autenticado, processando, logout, completarPerfil } = useAuth();
 
     const [previaImagem, setPreviaImagem] = useState<string | null>(null);
     const [arquivoSelecionado, setArquivoSelecionado] = useState<File | null>(null);
@@ -33,6 +28,10 @@ export const useCompleteProfile = ({ completarPerfil }: UseCompleteProfileProps)
     });
 
     useEffect(() => {
+        if (completarPerfil === undefined) {
+            throw new Error("A função 'completarPerfil' não foi fornecida pelo 'AuthContext'. Verifique o 'Provedor.Autenticacao' e certifique-se de que ela está sendo exportada no valor do provedor.");
+        }
+
         if (!processando) {
             if (!autenticado) {
                 navigate('/login');
@@ -40,7 +39,7 @@ export const useCompleteProfile = ({ completarPerfil }: UseCompleteProfileProps)
                 navigate('/feed');
             }
         }
-    }, [navigate, autenticado, processando, usuario]);
+    }, [navigate, autenticado, processando, usuario, completarPerfil]);
 
     const aoMudarImagem = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
