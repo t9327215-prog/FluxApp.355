@@ -93,7 +93,7 @@ export const ProvedorAutenticacao: React.FC<ProvedorAutenticacaoProps> = ({ chil
         dados.avatar,
         dados.tipoDeConta
       );
-      setUsuario(usuarioAtualizado);
+      setUsuario(prev => prev ? ({ ...prev, ...usuarioAtualizado, perfilCompleto: true }) : null);
     } catch (error: any) {
       setErro(error.message || 'Erro ao completar o perfil');
       throw error;
