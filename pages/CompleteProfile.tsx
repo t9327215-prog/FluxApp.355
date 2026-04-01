@@ -6,6 +6,7 @@ export const CompleteProfile: React.FC = () => {
     const {
         register,
         handleSubmit,
+        aoSubmeter,
         errors,
         isSubmitting,
         previaImagem,
@@ -47,7 +48,7 @@ export const CompleteProfile: React.FC = () => {
                     <input type="file" ref={fileInputRef} onChange={aoMudarImagem} accept="image/*" hidden />
                 </div>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit(aoSubmeter)}>
                     <div className="input-group">
                         <label>Seu apelido</label>
                         <input type="text" {...register('nickname')} placeholder="Ex: Seu Nome" />

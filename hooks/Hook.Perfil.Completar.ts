@@ -96,7 +96,8 @@ export const useCompleteProfile = () => {
 
     return {
         register,
-        handleSubmit: handleSubmit(aoSubmeter),
+        handleSubmit,
+        aoSubmeter,
         errors,
         isSubmitting,
         previaImagem,
