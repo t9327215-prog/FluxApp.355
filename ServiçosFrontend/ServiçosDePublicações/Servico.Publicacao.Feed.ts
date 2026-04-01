@@ -4,7 +4,8 @@ import { dadosProviderPublicacao } from '../Infra/Dados.Provider.Publicacao';
 class FeedPublicationService {
     async criarPost(formData: FormData): Promise<any> {
         try {
-            const response = await dadosProviderPublicacao.criarPostFeed(formData);
+            // Correção: O método foi renomeado de criarPostFeed para criarPost.
+            const response = await dadosProviderPublicacao.criarPost(formData);
             return response;
         } catch (error) {
             console.error("Erro no serviço ao criar a publicação do feed:", error);
@@ -12,7 +13,6 @@ class FeedPublicationService {
         }
     }
 
-    // Nova função para buscar um post específico pelo seu ID.
     async buscarPostPorId(id: string): Promise<any> {
         try {
             const response = await dadosProviderPublicacao.buscarPostPorId(id);
@@ -23,7 +23,6 @@ class FeedPublicationService {
         }
     }
 
-    // Nova função para deletar um post específico pelo seu ID.
     async deletarPost(id: string): Promise<any> {
         try {
             const response = await dadosProviderPublicacao.deletarPost(id);

@@ -15,38 +15,35 @@ class DadosProviderPublicacao extends DadosBase {
     }
 
     // --- Feed ---
-    async getPosts() {
-        return infraProviderPublicacao.getPosts();
+    async buscarPosts() { // Renomeado de getPosts para buscarPosts
+        return infraProviderPublicacao.buscarPosts();
     }
 
-    async getPostById(id: string) {
-        return infraProviderPublicacao.getPostById(id);
+    async buscarPostPorId(id: string) { // Renomeado de getPostById para buscarPostPorId
+        return infraProviderPublicacao.buscarPostPorId(id);
     }
 
-    async createPost(postData: FormData) {
+    async criarPost(postData: FormData) { // Renomeado de createPost para criarPost
         try {
-            // A chamada para a infraestrutura agora está dentro de um bloco try-catch.
-            const result = await infraProviderPublicacao.createPost(postData);
+            const result = await infraProviderPublicacao.criarPost(postData);
             return result;
         } catch (error) {
-            // Loga o erro usando o método da classe base.
-            this.logError('createPost', error);
-            // Relança o erro para que a camada de serviço e a UI possam reagir.
+            this.logError('criarPost', error);
             throw error;
         }
     }
 
-    async updatePost(id: string, postData: any) {
-        return infraProviderPublicacao.updatePost(id, postData);
+    async atualizarPost(id: string, postData: any) { // Renomeado de updatePost para atualizarPost
+        return infraProviderPublicacao.atualizarPost(id, postData);
     }
 
-    async deletePost(id: string) {
-        return infraProviderPublicacao.deletePost(id);
+    async deletarPost(id: string) { // Renomeado de deletePost para deletarPost
+        return infraProviderPublicacao.deletarPost(id);
     }
 
     // --- Marketplace ---
-    async getMarketplaceItems() {
-        return infraProviderPublicacao.getMarketplaceItems();
+    async buscarItensMarketplace() { // Renomeado de getMarketplaceItems para buscarItensMarketplace
+        return infraProviderPublicacao.buscarItensMarketplace();
     }
 }
 
