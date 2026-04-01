@@ -147,7 +147,8 @@ const logout = async (req, res, next) => {
 
 const googleLoginFromFrontend = async (req, res, next) => {
     const dadosRequisicao = { userAgent: req.headers['user-agent'], ipAddress: req.ip };
-    const { email, nome, googleId, avatarUrl, tokenProvider } = req.body;
+    // Pega apenas os dados essenciais para autenticação, ignorando o resto.
+    const { email, googleId } = req.body;
     logger.info(`Iniciando login Google via Frontend para o e-mail ${email}.`, { email, ...dadosRequisicao });
 
     try {
@@ -155,7 +156,9 @@ const googleLoginFromFrontend = async (req, res, next) => {
             return httpRes.requisicaoInvalida(res, "Email e googleId são obrigatórios.");
         }
 
-        const dadosGoogle = { google_id: googleId, email, nome: nome || '', foto: avatarUrl || '' };
+        // Força a criação de um usuário "incompleto" para novos usuários,
+        // passando nome e foto como vazios.
+        const dadosGoogle = { google_id: googleId, email, nome: '', foto: '' };
         const dadosGoogleValidados = validadorUsuario.validarGoogleAuth(dadosGoogle);
 
         const { usuario, isNewUser } = await servicoUsuario.autenticarOuCriarPorGoogle(dadosGoogleValidados);
@@ -169,7 +172,7 @@ const googleLoginFromFrontend = async (req, res, next) => {
         await servicoSessao.salvarSessao(dadosSessaoValidados);
 
         let redirectRoute = 'Feed';
-        if (isNewUser || !usuario.perfilCompleto) {
+        if (isNewUser) {
             redirectRoute = 'CompleteProfile';
         }
 
