@@ -73,7 +73,7 @@ const ProfilePageContent = () => {
                         {activeTab === 'posts' && <GradeDePostagens posts={profile.posts || []} />}
                         {activeTab === 'products' && <GradeDeProdutos products={profile.products || []} />}
                         {activeTab === 'fotos' && <GradeDeFotos photos={profile.photos || []} />}
-                        {activeTab === 'reels' && <GradeDeReels reels={profile.reels || []} />}
+                        {activeTab === 'reels' && <GradeDeReels />}
                     </div>
                 </div>
             </main>
@@ -81,7 +81,7 @@ const ProfilePageContent = () => {
             <Footer />
 
             <ModalListaDeSeguidores 
-                isOpen={isModalOpen} 
+                isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)} 
                 users={[] /* TODO: Fetch users */} 
                 title={modalTitle} 
@@ -109,4 +109,4 @@ export const PG_Perfil_Proprio = () => {
     }
 
     return <ProfilePageContent />;
-}; 
+};
