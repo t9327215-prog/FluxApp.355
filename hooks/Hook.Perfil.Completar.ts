@@ -77,9 +77,9 @@ export const useCompleteProfile = () => {
         try {
             const { nickname, name, bio, accountType } = form;
             if (usuario?.id) {
-                await completarPerfil({ 
-                    apelido: name, // Corrigido: 'name' agora é 'apelido'
-                    nome: nickname, 
+                await completarPerfil({
+                    nome: nickname,       // "Seu apelido" é o nome de exibição
+                    apelido: name,    // "Seu nome de usuário" é o apelido único
                     bio,
                     avatar: arquivoSelecionado,
                     tipoDeConta: accountType
