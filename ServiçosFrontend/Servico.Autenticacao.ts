@@ -1,4 +1,4 @@
-import { dadosProviderSessao } from './Infra/Dados.Provider.Sessao';
+import { dadosProviderUsuario } from './Infra/Dados.Provider.Usuario';
 import { mapearBackendParaFrontend } from './Contratos/Contrato.Comunicacao.Usuario';
 
 // Esta interface de usuário é uma duplicata do que está no Provedor. Futuramente, seria bom movê-la para um arquivo de tipos compartilhado.
@@ -13,7 +13,7 @@ interface Usuario {
 
 class ServicoAutenticacao {
   async loginComEmail(credenciais: { email: string; senha: string }): Promise<{ usuario: Usuario, token: string }> {
-    const resposta = await dadosProviderSessao.login(credenciais.email, credenciais.senha);
+    const resposta = await dadosProviderUsuario.login(credenciais.email, credenciais.senha);
     if (resposta.sucesso && resposta.dados?.user) {
       const usuario = mapearBackendParaFrontend(resposta.dados.user);
       const token = resposta.dados.token;
@@ -40,7 +40,7 @@ class ServicoAutenticacao {
       tokenProvider: accessToken,
     };
 
-    const resposta = await dadosProviderSessao.lidarComLoginSocial(dadosLogin);
+    const resposta = await dadosProviderUsuario.lidarComLoginSocial(dadosLogin);
     
     if (resposta.sucesso && resposta.dados?.user) {
       const dadosUsuario = mapearBackendParaFrontend(resposta.dados.user);
@@ -62,7 +62,7 @@ class ServicoAutenticacao {
     const token = localStorage.getItem('auth_token');
     if (token) {
         try {
-            const resposta = await dadosProviderSessao.verificarSessao();
+            const resposta = await dadosProviderUsuario.verificarSessao();
             if (resposta.sucesso && resposta.dados?.user) {
                 const usuario = mapearBackendParaFrontend(resposta.dados.user);
                 // Renova o token se um novo for enviado
@@ -83,7 +83,7 @@ class ServicoAutenticacao {
   }
 
   async completarPerfil(idUsuario: string, apelido: string, nome: string, bio: string, avatar: File | null, tipoDeConta: 'public' | 'private'): Promise<Usuario> {
-    const resposta = await dadosProviderSessao.completarPerfil(idUsuario, apelido, nome, bio, avatar, tipoDeConta);
+    const resposta = await dadosProviderUsuario.completarPerfilInicial(idUsuario, apelido, nome, bio, avatar, tipoDeConta);
 
     if (resposta.sucesso && resposta.dados?.user) {
         const usuarioAtualizado = mapearBackendParaFrontend(resposta.dados.user);
