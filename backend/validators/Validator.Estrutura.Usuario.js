@@ -82,11 +82,6 @@ const validarGoogleAuth = (data = {}) => {
     logger.info('Iniciando validação para autenticação Google.', { email: data.email });
     const erros = [];
 
-    const nome = data.nome || data.name;
-    if (!nome || validator.isEmpty(nome, { ignore_whitespace: true })) {
-        erros.push("O nome do Google é obrigatório.");
-    }
-
     if (!data.email || !validator.isEmail(data.email)) {
         erros.push("E-mail do Google é obrigatório e deve ser válido.");
     }
@@ -102,11 +97,17 @@ const validarGoogleAuth = (data = {}) => {
     }
 
     logger.info('Validação Google Auth bem-sucedida.');
-    return {
-        nome: (data.nome || data.name).trim(),
+    const dadosValidados = {
         email: data.email.toLowerCase().trim(),
         google_id: data.google_id.trim(),
     };
+
+    const nome = data.nome || data.name;
+    if (nome && !validator.isEmpty(nome, { ignore_whitespace: true })) {
+        dadosValidados.nome = nome.trim();
+    }
+
+    return dadosValidados;
 };
 
 /**
