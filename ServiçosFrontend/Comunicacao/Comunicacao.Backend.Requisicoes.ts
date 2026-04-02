@@ -61,25 +61,22 @@ class HttpClient {
     public async customFetch(endpoint: string, options: RequestInit = {}, isRetry = false): Promise<any> {
         const startTime = performance.now();
         
-        // --- DIAGNÓSTICO DE URL ---
         const baseUrl = VariaveisFrontend.API_BASE_URL || '/api';
         
         let url = endpoint;
-        // Se o endpoint não começar com http(s) nem com o baseUrl, nós o prefixamos
         if (!endpoint.startsWith('http') && !endpoint.startsWith(baseUrl)) {
             const separator = (baseUrl.endsWith('/') || endpoint.startsWith('/')) ? '' : '/';
             url = `${baseUrl}${separator}${endpoint}`;
         }
 
-        // Diagnostic log: ajuda a identificar se a URL está sendo construída corretamente
         console.log(`[HTTP CLIENT] Preparando requisição: ${options.method || 'GET'} para ${url}`);
 
-        // --- CONSTRUÇÃO DOS HEADERS (Estratégia Simples) ---
-        const headers: Record<string, string> = {
-            'Content-Type': 'application/json'
-        };
+        const headers: Record<string, string> = {};
 
-        // Adiciona headers extras das opções
+        if (!(options.body instanceof FormData)) {
+            headers['Content-Type'] = 'application/json';
+        }
+
         if (options.headers) {
             const extraHeaders = new Headers(options.headers);
             extraHeaders.forEach((valor, chave) => {
@@ -90,14 +87,8 @@ class HttpClient {
         const token = localStorage.getItem('auth_token');
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        // Se for FormData, deixamos o navegador definir o Content-Type
-        if (options.body instanceof FormData) {
-            delete headers['Content-Type'];
-        }
-
         const config: RequestInit = { ...options, headers };
 
-        // --- Log Simples de Requisição ---
         try {
             logger.info(`Request: ${config.method || 'GET'} ${url}`, {
                 url,
@@ -151,7 +142,6 @@ class HttpClient {
                 }
             }
 
-            // Tratamento de resposta vazia ou não JSON
             const text = await response.text();
             let data = null;
             try {
