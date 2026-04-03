@@ -38,6 +38,25 @@ const findByEmail = async (email) => {
     }
 };
 
+const encontrarPorId = async (id) => {
+    logger.info(`Buscando usuário por ID ${id}.`);
+    try {
+        const userRaw = await userQueries.encontrarPorId(id);
+        if (userRaw) {
+            logger.info(`Dados do usuário com ID ${id} encontrados no banco.`);
+            const user = Usuario.deBancoDeDados(userRaw); // Convertendo para entidade
+            logger.info(`Entidade de usuário para ${id} criada com sucesso.`);
+            return user;
+        } else {
+            logger.info(`Usuário com ID ${id} não encontrado.`);
+            return null;
+        }
+    } catch (error) {
+        logger.error(`Erro ao buscar usuário por ID ${id}.`, { error });
+        throw error;
+    }
+};
+
 const findByGoogleId = async (googleId) => {
     logger.info(`Buscando usuário por Google ID.`);
     try {
@@ -76,6 +95,7 @@ const userRepository = {
     findByEmail,
     findByGoogleId,
     updateUser,
+    encontrarPorId,
 };
 
 export default userRepository;
