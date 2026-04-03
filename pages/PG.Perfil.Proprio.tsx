@@ -15,7 +15,7 @@ import { ModalTelaCarregamento } from '../Componentes/ComponenteDeInterfaceDeUsu
 import { GradeDePostagens } from '../Componentes/ComponentesPerfilProprio/Grade.Postagens';
 import { GradeDeProdutos } from '../Componentes/ComponentesPerfilProprio/Grade.Produtos';
 import { GradeDeFotos } from '../Componentes/ComponentesPerfilProprio/Grade.Fotos';
-import { GradeDeReels } from '../Componentes/ComponentesPerfilProprio/Grade.Reels';
+// import { GradeDeReels } from '../Componentes/ComponentesPerfilProprio/Grade.Reels';
 
 const ProfilePageContent = () => {
     const { profile, isLoading, error } = HookPerfilProprio();
@@ -73,7 +73,7 @@ const ProfilePageContent = () => {
                         {activeTab === 'posts' && <GradeDePostagens posts={profile.posts || []} />}
                         {activeTab === 'products' && <GradeDeProdutos products={profile.products || []} />}
                         {activeTab === 'fotos' && <GradeDeFotos photos={profile.photos || []} />}
-                        {activeTab === 'reels' && <GradeDeReels reels={profile.reels || []} />}
+                        {/* {activeTab === 'reels' && <GradeDeReels reels={profile.reels || []} />} */}
                     </div>
                 </div>
             </main>
