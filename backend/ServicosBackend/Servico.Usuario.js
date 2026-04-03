@@ -27,9 +27,9 @@ const completarPerfil = async (idUsuario, dadosPerfil, avatar) => {
         nickname: dadosPerfil.apelido,
         name: dadosPerfil.nome,
         bio: dadosPerfil.bio,
-        accountType: dadosPerfil.tipoDeConta, 
-        avatar: urlAvatar,
-        perfilCompleto: true,
+        is_private: dadosPerfil.tipoDeConta === 'private',
+        photo_url: urlAvatar,
+        profile_completed: true,
     };
 
     const usuarioAtualizadoDb = await repositorioUsuario.updateUser(idUsuario, dadosParaAtualizar);
