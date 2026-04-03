@@ -1,3 +1,4 @@
+
 import { httpClient } from '../Comunicacao/Comunicacao.Backend.Requisicoes';
 import API_ENDPOINTS from '../../src/constants/api';
 
@@ -43,6 +44,25 @@ class InfraProviderPublicacao {
         return httpClient.post(API_ENDPOINTS.MARKETPLACE.BASE, itemData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
+    }
+    
+    // --- Reels ---
+    public async buscarTodosReels(): Promise<any[]> {
+        return httpClient.get(API_ENDPOINTS.REELS.BASE);
+    }
+
+    public async buscarReelPorId(reelId: string): Promise<any> {
+        return httpClient.get(API_ENDPOINTS.REELS.REEL(reelId));
+    }
+
+    public async criarReel(reelData: FormData): Promise<any> {
+        return httpClient.post(API_ENDPOINTS.REELS.BASE, reelData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+    }
+
+    public async deletarReel(reelId: string): Promise<void> {
+        return httpClient.delete(API_ENDPOINTS.REELS.REEL(reelId));
     }
 }
 

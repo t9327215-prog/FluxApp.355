@@ -6,6 +6,7 @@ import { MARKETPLACE_ENDPOINTS } from './API.Marketplace';
 import { NOTIFICATIONS_ENDPOINTS } from './API.Notificacoes';
 import { PAYMENTS_ENDPOINTS } from './API.Pagamentos';
 import { SUPPORT_ENDPOINTS } from './API.Suporte';
+import { REELS_ENDPOINTS } from './API.Reels';
 
 const API_ENDPOINTS = {
   AUTH: AUTH_ENDPOINTS,
@@ -16,6 +17,7 @@ const API_ENDPOINTS = {
   NOTIFICATIONS: NOTIFICATIONS_ENDPOINTS,
   PAYMENTS: PAYMENTS_ENDPOINTS,
   SUPPORT: SUPPORT_ENDPOINTS,
+  REELS: REELS_ENDPOINTS,
 };
 
 export default API_ENDPOINTS;

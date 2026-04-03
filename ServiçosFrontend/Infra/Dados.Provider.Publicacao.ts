@@ -46,6 +46,23 @@ class DadosProviderPublicacao extends DadosBase {
     async buscarItensMarketplace() {
         return infraProviderPublicacao.buscarItensMarketplace();
     }
+    
+    // Reels
+    async criarReel(formData: FormData) {
+        return infraProviderPublicacao.criarReel(formData);
+    }
+
+    async buscarTodosReels() {
+        return infraProviderPublicacao.buscarTodosReels();
+    }
+
+    async buscarReelPorId(id: string) {
+        return infraProviderPublicacao.buscarReelPorId(id);
+    }
+
+    async deletarReel(id: string) {
+        return infraProviderPublicacao.deletarReel(id);
+    }
 }
 
 export const dadosProviderPublicacao = new DadosProviderPublicacao();

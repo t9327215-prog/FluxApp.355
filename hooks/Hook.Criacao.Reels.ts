@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { ServiçoPublicacaoReels } from '../ServiçosFrontend/ServiçosDePublicações/ServiçoPublicaçãoReels.js';
+import { ServiçoPublicacaoReels } from '../ServiçosFrontend/ServiçosDePublicações/Servico.Publicacao.Reels';
 import { DadosCriacaoReel, ErrosCriacaoReel } from '../tipos';
 
 // A referência a 'Group' e 'groupService' foi completamente removida.
@@ -56,15 +56,15 @@ export const HookCriarReel = () => {
     setErrors({});
 
     try {
-      const user = authService.getCurrentUser();
-      if (!user) {
-        throw new Error("Usuário não autenticado.");
-      }
+      // const user = authService.getCurrentUser(); // Removido temporariamente
+      // if (!user) {
+      //   throw new Error("Usuário não autenticado.");
+      // }
       
       // A chamada de criação agora envia os dados sem qualquer referência a grupo.
       await ServiçoPublicacaoReels.create({
         ...dadosReel,
-        authorId: user.id,
+        authorId: "temp-user-id", // ID do usuário fixo temporariamente
       });
 
       // O redirecionamento agora é sempre para o feed principal.
